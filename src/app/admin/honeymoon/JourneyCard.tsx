@@ -169,7 +169,7 @@ export default function JourneyCard({ api, group, onAddLeg }: {
                                         <span>
                                             {layover.impossible
                                                 ? 'startet, bevor ihr landet'
-                                                : `${formatMinutes(layover.minutes) ?? '—'} in ${layover.at ?? 'Zwischenstopp'}`}
+                                                : `${formatMinutes(layover.minutes) ?? '—'} Aufenthalt${layover.at ? ` in ${layover.at}` : ''}`}
                                             {layover.tight && ' · knapp'}
                                             {layover.changesAirport && ' · anderer Flughafen'}
                                         </span>

@@ -96,21 +96,21 @@ console.log('\nOne place panel, from every entry point');
         await p.waitForTimeout(400);
         if (await clickFirst(p, '[data-sheet-panel] button[aria-label="More actions"]')) {
             await p.waitForTimeout(300);
-            await p.getByRole('button', { name: 'Edit everything' }).last().click({ timeout: 5000 }).catch(() => undefined);
+            await p.getByRole('button', { name: 'Alles bearbeiten' }).last().click({ timeout: 5000 }).catch(() => undefined);
             await p.waitForTimeout(500);
             formOpened = (await p.locator('[data-place-sheet="form"]').count()) === 1;
         }
         await p.keyboard.press('Escape');
         await p.waitForTimeout(300);
     }
-    check("the panel's ⋯ → Edit everything opens the form in the same panel", formOpened);
+    check("the panel's ⋯ → Alles bearbeiten opens the form in the same panel", formOpened);
 
     await go(p, '/stays');
-    const fromStays = (await clickFirst(p, '[data-place-card] button[aria-label^="Open"]')) ? await openedPanel(p) : null;
+    const fromStays = (await clickFirst(p, '[data-place-card] button[aria-label$="öffnen"]')) ? await openedPanel(p) : null;
     check('a stay card opens the panel, with the stay section', sectionsOf(fromStays).includes('stay'), String(fromStays));
 
     await go(p, '/excursions');
-    const fromExcursions = (await clickFirst(p, '[data-place-card] button[aria-label^="Open"]')) ? await openedPanel(p) : null;
+    const fromExcursions = (await clickFirst(p, '[data-place-card] button[aria-label$="öffnen"]')) ? await openedPanel(p) : null;
     check('an excursion card opens the same panel as any place',
         fromExcursions != null && sectionsOf(fromExcursions) === sectionsOf(fromPlaces),
         `${fromExcursions} vs ${fromPlaces}`);

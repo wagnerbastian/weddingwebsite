@@ -2432,8 +2432,8 @@ console.log('\nJourneys');
         empty.legs.length === 0 && empty.journey?.id === 7);
 
     check('durations read as hours and minutes',
-        formatMinutes(165) === '2 h 45 m' && formatMinutes(120) === '2 h'
-        && formatMinutes(45) === '45 m' && formatMinutes(null) === null);
+        formatMinutes(165) === '2 h 45 min' && formatMinutes(120) === '2 h'
+        && formatMinutes(45) === '45 min' && formatMinutes(null) === null);
 
     check('a landing time can be read in another zone',
         sameInstantIn('2026-09-14', '12:00', 'Asia/Makassar', 'America/Los_Angeles') === '21:00',

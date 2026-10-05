@@ -301,8 +301,8 @@ export function journeysOf(
                 problems.push({
                     kind: 'no-dates',
                     legId: entry.leg.id,
-                    message: `${legLabel(entry.leg)} has no departure date, so it cannot be placed `
-                        + 'on a day.',
+                    message: `${legLabel(entry.leg)} hat kein Abfahrtsdatum und kann deshalb keinem `
+                        + 'Tag zugeordnet werden.',
                 });
                 continue;
             }
@@ -311,15 +311,15 @@ export function journeysOf(
                 problems.push({
                     kind: 'no-day',
                     legId: entry.leg.id,
-                    message: `${legLabel(entry.leg)} leaves on ${entry.departDate}, which is `
-                        + `${dayNumber != null && dayNumber < 1 ? 'before the trip starts' : `day ${dayNumber} — a day the trip does not have yet`}.`,
+                    message: `${legLabel(entry.leg)} fährt am ${entry.departDate}, das ist `
+                        + `${dayNumber != null && dayNumber < 1 ? 'vor dem Beginn der Reise' : `Tag ${dayNumber} – ein Tag, den die Reise noch nicht hat`}.`,
                 });
             } else if (day && entry.leg.day_id !== day.id) {
                 problems.push({
                     kind: 'no-day',
                     legId: entry.leg.id,
-                    message: `${legLabel(entry.leg)} is filed on day `
-                        + `${dayOfLeg.get(entry.leg.id)?.day_number ?? '?'} but its date says day `
+                    message: `${legLabel(entry.leg)} liegt auf Tag `
+                        + `${dayOfLeg.get(entry.leg.id)?.day_number ?? '?'}, aber das Datum sagt Tag `
                         + `${day.day_number}.`,
                 });
             }
@@ -327,7 +327,7 @@ export function journeysOf(
                 problems.push({
                     kind: 'no-times',
                     legId: entry.leg.id,
-                    message: `${legLabel(entry.leg)} is missing a ${entry.leg.depart_time ? 'landing' : 'take-off'} time.`,
+                    message: `${legLabel(entry.leg)}: Es fehlt die ${entry.leg.depart_time ? 'Ankunftszeit' : 'Abfahrtszeit'}.`,
                 });
             }
         }
@@ -336,24 +336,24 @@ export function journeysOf(
                 problems.push({
                     kind: 'impossible-layover',
                     legId: layover.beforeLegId,
-                    message: `The connection at ${layover.at ?? 'the stopover'} leaves before you `
-                        + 'land.',
+                    message: `Der Anschluss in ${layover.at ?? 'diesem Zwischenstopp'} fährt ab, bevor ihr `
+                        + 'ankommt.',
                 });
             } else if (layover.tight) {
                 problems.push({
                     kind: 'tight-layover',
                     legId: layover.beforeLegId,
-                    message: `${layover.minutes} minutes at ${layover.at ?? 'the stopover'} — tight `
-                        + 'with bags.',
+                    message: `${layover.minutes} Minuten in ${layover.at ?? 'diesem Zwischenstopp'} – knapp `
+                        + 'mit Gepäck.',
                 });
             }
             if (layover.changesAirport) {
                 problems.push({
                     kind: 'airport-change',
                     legId: layover.beforeLegId,
-                    message: `You land at ${legsLandAt(withDates, layover.afterLegId)} and leave `
-                        + `from ${layover.at ?? 'somewhere else'} — that is a transfer, not a `
-                        + 'connection.',
+                    message: `Ihr landet in ${legsLandAt(withDates, layover.afterLegId)} und fahrt `
+                        + `ab ${layover.at ?? 'einem anderen Ort'} – das ist ein Transfer, kein `
+                        + 'Anschluss.',
                 });
             }
         }
@@ -400,7 +400,7 @@ function legLabel(leg: TravelLeg): string {
 function legsLandAt(
     entries: { leg: TravelLeg }[], legId: number,
 ): string {
-    return entries.find((entry) => entry.leg.id === legId)?.leg.to_text ?? 'the first airport';
+    return entries.find((entry) => entry.leg.id === legId)?.leg.to_text ?? 'dem ersten Flughafen';
 }
 
 /** A journey's name: what you called it, or where it goes. */
@@ -408,17 +408,17 @@ export function journeyTitle(group: JourneyGroup): string {
     const given = group.journey?.title?.trim();
     if (given) return given;
     if (group.route.length >= 2) return group.route.join(' → ');
-    return `${travelModeMeta(group.mode).label}${group.to ? ` to ${group.to}` : ''}`;
+    return `${travelModeMeta(group.mode).label}${group.to ? ` nach ${group.to}` : ''}`;
 }
 
-/** "2 h 40 m", or null. Shared by the duration and the layover chips. */
+/** "2 h 40 min", or null. Shared by the duration and the layover chips. */
 export function formatMinutes(minutes: number | null): string | null {
     if (minutes == null) return null;
     const total = Math.max(0, Math.round(minutes));
-    if (total < 60) return `${total} m`;
+    if (total < 60) return `${total} min`;
     const hours = Math.floor(total / 60);
     const rest = total % 60;
-    return rest ? `${hours} h ${rest} m` : `${hours} h`;
+    return rest ? `${hours} h ${rest} min` : `${hours} h`;
 }
 
 /**
