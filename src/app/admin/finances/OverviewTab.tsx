@@ -4,7 +4,7 @@ import { useState } from 'react';
 import type { PayerSummary } from '@/lib/finance';
 import type { FinancePayload } from './useFinances';
 import { ExportButtons, TrendCard, WhatIf } from './extras';
-import { Bar, Card, EmptyState, StatTile, formatMoney } from './ui';
+import { Bar, Card, EmptyState, StatTile, formatDate, formatMoney } from './ui';
 
 type Scenario = 'pledged' | 'cash';
 
@@ -42,21 +42,21 @@ export default function OverviewTab({ data }: { data: FinancePayload }) {
         <div className="space-y-5 xl:space-y-0 xl:columns-2 xl:gap-5
             [&>*]:xl:mb-5 [&>*]:xl:break-inside-avoid">
             <div className="grid grid-cols-2 gap-3 lg:grid-cols-4 xl:[column-span:all]">
-                <StatTile label="Total budget" value={formatMoney(summary.budgetTotal)}
-                    hint={`${summary.itemCount} line items`} />
-                <StatTile label="Paid toward budget" value={formatMoney(summary.paidTotal)}
+                <StatTile label="Gesamtbudget" value={formatMoney(summary.budgetTotal)}
+                    hint={`${summary.itemCount} Posten`} />
+                <StatTile label="Auf das Budget bezahlt" value={formatMoney(summary.paidTotal)}
                     hint={summary.giftAppliedTotal > 0
-                        ? `${formatMoney(summary.budgetedOutOfPocket)} yours + ${formatMoney(summary.giftAppliedTotal)} gift`
-                        : 'all from your own pocket'} />
-                <StatTile label="Gift money received" value={formatMoney(summary.receivedTotal)} tone="good"
+                        ? `${formatMoney(summary.budgetedOutOfPocket)} von euch + ${formatMoney(summary.giftAppliedTotal)} Geschenke`
+                        : 'alles aus eigener Tasche'} />
+                <StatTile label="Geldgeschenke erhalten" value={formatMoney(summary.receivedTotal)} tone="good"
                     hint={summary.giftUnapplied > 0
-                        ? `${formatMoney(summary.giftUnapplied)} not yet applied`
-                        : 'all applied to a bill'} />
+                        ? `${formatMoney(summary.giftUnapplied)} noch nicht angerechnet`
+                        : 'alles auf Rechnungen angerechnet'} />
                 <StatTile
-                    label="Left to pay"
+                    label="Noch zu zahlen"
                     value={formatMoney(Math.max(0, stillToSpend))}
                     tone={stillToSpend > 0 ? 'warn' : 'good'}
-                    hint={optimistic ? 'assuming pledges land' : 'cash in hand only'}
+                    hint={optimistic ? 'wenn alle Zusagen eintreffen' : 'nur Geld in der Hand'}
                 />
             </div>
 
@@ -67,12 +67,12 @@ export default function OverviewTab({ data }: { data: FinancePayload }) {
                         <span className={`text-sm font-semibold ${summary.overdueTotal > 0
                             ? 'text-rose-900' : 'text-amber-900'}`}>
                             {summary.overdueTotal > 0
-                                ? `${formatMoney(summary.overdueTotal)} overdue`
-                                : `${formatMoney(summary.dueSoonTotal)} due within 30 days`}
+                                ? `${formatMoney(summary.overdueTotal)} überfällig`
+                                : `${formatMoney(summary.dueSoonTotal)} fällig in den nächsten 30 Tagen`}
                         </span>
                         <span className="text-xs text-gray-500">
                             {summary.schedule.filter((sp) => !sp.settled).slice(0, 2)
-                                .map((sp) => `${sp.label} ${sp.due_on ?? ''}`).join(' · ')}
+                                .map((sp) => `${sp.label} ${formatDate(sp.due_on)}`).join(' · ')}
                         </span>
                     </div>
                 </Card>
@@ -81,19 +81,19 @@ export default function OverviewTab({ data }: { data: FinancePayload }) {
             <Card className="p-4">
                 <div className="flex flex-wrap items-center justify-between gap-3">
                     <div>
-                        <div className="text-sm font-semibold text-gray-800">Planning scenario</div>
+                        <div className="text-sm font-semibold text-gray-800">Planungsszenario</div>
                         <div className="text-xs text-gray-400 mt-0.5">
                             {optimistic
-                                ? 'Counting every pledge as money you will receive.'
-                                : 'Counting only money already in hand — the safe number.'}
+                                ? 'Jede Zusage zählt als Geld, das ihr bekommt.'
+                                : 'Nur Geld, das schon da ist – die sichere Zahl.'}
                         </div>
                     </div>
                     <div className="flex gap-1.5">
                         <ScenarioPill active={!optimistic} onClick={() => setScenario('cash')}>
-                            Cash in hand
+                            Geld in der Hand
                         </ScenarioPill>
                         <ScenarioPill active={optimistic} onClick={() => setScenario('pledged')}>
-                            If pledges land
+                            Wenn Zusagen eintreffen
                         </ScenarioPill>
                     </div>
                 </div>
@@ -101,51 +101,51 @@ export default function OverviewTab({ data }: { data: FinancePayload }) {
 
             <Card className="p-4">
                 <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-2 text-sm">
-                    <span className="font-semibold text-gray-800">Vendor bills</span>
+                    <span className="font-semibold text-gray-800">Rechnungen der Dienstleister</span>
                     <span className="text-gray-500">
-                        {formatMoney(summary.paidTotal)} paid of {formatMoney(summary.budgetTotal)}
+                        {formatMoney(summary.paidTotal)} von {formatMoney(summary.budgetTotal)} bezahlt
                         {' — '}
-                        <strong className="text-gray-800">{formatMoney(summary.billRemaining)} still owed</strong>
+                        <strong className="text-gray-800">{formatMoney(summary.billRemaining)} noch offen</strong>
                     </span>
                 </div>
                 {summary.giftUnapplied > 0 && (
                     <p className="text-[11px] text-gray-400 mt-2">
-                        You also hold {formatMoney(summary.giftUnapplied)} of gift money that isn&apos;t
-                        earmarked to anything yet — earmark it on the Gift Money tab and it will count
-                        toward a bill.
+                        Außerdem habt ihr {formatMoney(summary.giftUnapplied)} an Geldgeschenken, die noch
+                        keinem Zweck zugeordnet sind – ordne sie im Tab „Geldgeschenke“ zu, dann zählen sie
+                        für eine Rechnung.
                     </p>
                 )}
                 {summary.unlinkedSpend > 0 && (
                     <p className="text-[11px] text-gray-400 mt-1">
-                        And {formatMoney(summary.unlinkedSpend)} of spending isn&apos;t attached to any
-                        budget line, so it doesn&apos;t count here. Give it a home on the Purchases tab —
-                        or add a budget line for it — and these figures will pick it up.
+                        Und {formatMoney(summary.unlinkedSpend)} an Ausgaben gehören zu keinem
+                        Budgetposten und zählen deshalb hier nicht. Ordne sie im Tab „Ausgaben“ zu –
+                        oder lege einen Posten dafür an –, dann fließen sie in diese Zahlen ein.
                     </p>
                 )}
             </Card>
 
             <Card className="p-5">
-                <h3 className="font-semibold text-gray-900 mb-1">What you two have to cover</h3>
+                <h3 className="font-semibold text-gray-900 mb-1">Das müsst ihr beide tragen</h3>
                 <p className="text-xs text-gray-400 mb-4">
                     Budget {formatMoney(summary.budgetTotal)} minus{' '}
-                    {optimistic ? 'pledged' : 'received'} contributions{' '}
+                    {optimistic ? 'zugesagte' : 'erhaltene'} Beiträge{' '}
                     {formatMoney(optimistic ? summary.pledgedTotal : summary.receivedTotal)}
                     {' = '}
-                    <strong className="text-gray-700">{formatMoney(deficit)}</strong>, split by share below.
+                    <strong className="text-gray-700">{formatMoney(deficit)}</strong>, unten nach Anteil aufgeteilt.
                 </p>
 
                 {summary.isOverFunded && (
                     <p className="mb-3 rounded-xl bg-emerald-50 px-3 py-2 text-xs text-emerald-700">
-                        Contributions already cover the whole budget, with{' '}
-                        <strong>{formatMoney(-deficit)}</strong> to spare — nothing left for you two to fund
-                        under this scenario.
+                        Die Beiträge decken bereits das ganze Budget, mit{' '}
+                        <strong>{formatMoney(-deficit)}</strong> Überschuss – in diesem Szenario müsst ihr
+                        nichts mehr selbst finanzieren.
                     </p>
                 )}
                 {!summary.isOverFunded && Math.abs(summary.unallocatedDeficitCash) > 0.5 && (
                     <p className="mb-3 rounded-xl bg-amber-50 px-3 py-2 text-xs text-amber-800">
-                        <strong>{formatMoney(summary.unallocatedDeficitCash)}</strong> of the deficit
-                        isn&apos;t assigned to anyone. Give at least one payer a share above 0% in
-                        Settings so the split adds up.
+                        <strong>{formatMoney(summary.unallocatedDeficitCash)}</strong> der Lücke
+                        sind niemandem zugeordnet. Gib mindestens einem Zahler in den Einstellungen einen
+                        Anteil über 0 %, damit die Aufteilung aufgeht.
                     </p>
                 )}
 
@@ -162,23 +162,23 @@ export default function OverviewTab({ data }: { data: FinancePayload }) {
                                             <span className="font-semibold text-gray-900">{payer.name}</span>
                                             <span className="text-xs text-gray-400 ml-2">
                                                 {payer.isContributorOnly
-                                                    ? 'helping out — owes nothing'
-                                                    : `${payer.sharePct}% share`}
+                                                    ? 'hilft mit – schuldet nichts'
+                                                    : `${payer.sharePct} % Anteil`}
                                             </span>
                                         </div>
                                         <div className="text-right">
                                             <div className={`font-semibold tabular-nums ${ahead ? 'text-emerald-600' : 'text-gray-900'}`}>
                                                 {payer.isContributorOnly
-                                                    ? `${formatMoney(payer.spentOnBudget)} contributed`
+                                                    ? `${formatMoney(payer.spentOnBudget)} beigetragen`
                                                     : ahead
-                                                        ? `${formatMoney(-owed)} ahead`
-                                                        : `${formatMoney(owed)} to go`}
+                                                        ? `${formatMoney(-owed)} im Voraus bezahlt`
+                                                        : `${formatMoney(owed)} offen`}
                                             </div>
                                             <div className="text-[11px] text-gray-400">
-                                                {!payer.isContributorOnly && `share ${formatMoney(share(payer))} · `}
-                                                paid {formatMoney(payer.spentOnBudget)}
+                                                {!payer.isContributorOnly && `Anteil ${formatMoney(share(payer))} · `}
+                                                bezahlt {formatMoney(payer.spentOnBudget)}
                                                 {payer.spent !== payer.spentOnBudget && (
-                                                    <> · {formatMoney(payer.spent - payer.spentOnBudget)} off-budget</>
+                                                    <> · {formatMoney(payer.spent - payer.spentOnBudget)} außerhalb des Budgets</>
                                                 )}
                                             </div>
                                         </div>
@@ -186,26 +186,26 @@ export default function OverviewTab({ data }: { data: FinancePayload }) {
 
                                     {payer.isContributorOnly ? (
                                         <p className="text-xs text-gray-500 bg-gray-50 rounded-xl px-3 py-2">
-                                            {payer.name} has no share of the budget — everything they pay for
-                                            simply reduces what the two of you owe.
+                                            {payer.name} hat keinen Anteil am Budget – alles, was bezahlt wird,
+                                            verringert einfach, was ihr beide schuldet.
                                         </p>
                                     ) : ahead ? (
                                         <p className="text-xs text-emerald-700 bg-emerald-50 rounded-xl px-3 py-2">
-                                            {payer.name} has already paid more than their share — the next
-                                            expenses should come from someone else to even things out.
+                                            {payer.name} hat bereits mehr als den eigenen Anteil bezahlt – die
+                                            nächsten Ausgaben sollten von jemand anderem kommen, um auszugleichen.
                                         </p>
                                     ) : noHorizon ? (
                                         <p className="text-xs text-amber-700 bg-amber-50 rounded-xl px-3 py-2">
-                                            Due now — there&apos;s no time left to spread this over.{' '}
+                                            Jetzt fällig – es bleibt keine Zeit mehr, das zu verteilen.{' '}
                                             {weddingDate
-                                                ? 'Your wedding date has passed; set a planning horizon in Settings to keep using the plan.'
-                                                : 'Set your wedding date in General Settings, or a planning horizon in Settings, to see this broken down.'}
+                                                ? 'Euer Hochzeitsdatum ist vorbei; lege in den Einstellungen einen Planungszeitraum fest, um den Plan weiter zu nutzen.'
+                                                : 'Lege euer Hochzeitsdatum in den allgemeinen Einstellungen oder einen Planungszeitraum in den Einstellungen fest, um die Aufteilung zu sehen.'}
                                         </p>
                                     ) : (
                                         <div className="grid grid-cols-3 gap-2">
-                                            <PlanCell label="per month" value={p.perMonth} />
-                                            <PlanCell label="per paycheck" value={p.perPaycheck} />
-                                            <PlanCell label="per day" value={p.perDay} />
+                                            <PlanCell label="pro Monat" value={p.perMonth} />
+                                            <PlanCell label="pro Gehalt" value={p.perPaycheck} />
+                                            <PlanCell label="pro Tag" value={p.perDay} />
                                         </div>
                                     )}
                                 </div>
@@ -213,25 +213,25 @@ export default function OverviewTab({ data }: { data: FinancePayload }) {
                         })}
                     </div>
                 ) : (
-                    <EmptyState>Add payers in Settings to see the split.</EmptyState>
+                    <EmptyState>Lege in den Einstellungen Zahler an, um die Aufteilung zu sehen.</EmptyState>
                 )}
 
                 {!noHorizon && (
                     <p className="text-[11px] text-gray-400 mt-3">
-                        Spread over {summary.horizon.days.toLocaleString()} days
-                        {' '}({summary.horizon.months.toFixed(1)} months, ~{Math.floor(summary.horizon.paychecks)} paychecks)
+                        Verteilt auf {summary.horizon.days.toLocaleString('de-DE')} Tage
+                        {' '}({summary.horizon.months.toFixed(1).replace('.', ',')} Monate, ca. {Math.floor(summary.horizon.paychecks)} Gehälter)
                         {summary.horizon.derived && weddingDate
-                            ? ` until ${weddingDate}.`
-                            : ' from your custom planning horizon.'}
+                            ? ` bis zum ${formatDate(weddingDate)}.`
+                            : ' ab eurem eigenen Planungszeitraum.'}
                     </p>
                 )}
             </Card>
 
             <Card className="p-5">
-                <h3 className="font-semibold text-gray-900 mb-1">Section progress</h3>
+                <h3 className="font-semibold text-gray-900 mb-1">Fortschritt je Bereich</h3>
                 <p className="text-xs text-gray-400 mb-4">
-                    How far each section&apos;s bill has been paid down, counting installments and
-                    line-level payments together.
+                    Wie weit die Rechnung jedes Bereichs bezahlt ist – Teilzahlungen und Zahlungen
+                    auf einzelne Posten zusammengezählt.
                 </p>
                 <div className="space-y-4">
                     {summary.categories.map((category) => {
@@ -243,8 +243,8 @@ export default function OverviewTab({ data }: { data: FinancePayload }) {
                                         {category.name}
                                         {category.installmentCount > 0 && (
                                             <span className="text-[11px] text-gray-400 ml-2">
-                                                {category.installmentCount} installment
-                                                {category.installmentCount === 1 ? '' : 's'}
+                                                {category.installmentCount}{' '}
+                                                {category.installmentCount === 1 ? 'Teilzahlung' : 'Teilzahlungen'}
                                             </span>
                                         )}
                                         {category.giftApplied > 0 && (
@@ -257,30 +257,30 @@ export default function OverviewTab({ data }: { data: FinancePayload }) {
                                         <span className="tabular-nums font-medium text-gray-700">
                                             {formatMoney(category.paid)}
                                         </span>
-                                        {' of '}
+                                        {' von '}
                                         <span className="tabular-nums">{formatMoney(category.total)}</span>
                                     </span>
                                 </div>
                                 <Bar pct={category.paidPct} tone={overpaid ? 'rose' : 'accent'} />
                                 <div className="flex justify-between text-[11px] text-gray-400 mt-1">
-                                    <span>{category.paidPct.toFixed(0)}% paid</span>
+                                    <span>{category.paidPct.toFixed(0)} % bezahlt</span>
                                     <span className={overpaid ? 'text-rose-600 font-medium' : ''}>
                                         {overpaid
-                                            ? `overpaid by ${formatMoney(-category.remaining)}`
-                                            : `${formatMoney(category.remaining)} still owed`}
-                                        {' · '}{category.pct.toFixed(1)}% of budget
+                                            ? `${formatMoney(-category.remaining)} zu viel bezahlt`
+                                            : `${formatMoney(category.remaining)} noch offen`}
+                                        {' · '}{category.pct.toFixed(1).replace('.', ',')} % des Budgets
                                     </span>
                                 </div>
                             </div>
                         );
                     })}
-                    {!summary.categories.length && <EmptyState>No budget sections yet.</EmptyState>}
+                    {!summary.categories.length && <EmptyState>Noch keine Budgetbereiche.</EmptyState>}
                 </div>
             </Card>
 
             <Card className="p-5">
-                <h3 className="font-semibold text-gray-900 mb-1">Biggest line items</h3>
-                <p className="text-xs text-gray-400 mb-4">Top 10 by cost.</p>
+                <h3 className="font-semibold text-gray-900 mb-1">Größte Posten</h3>
+                <p className="text-xs text-gray-400 mb-4">Die zehn teuersten.</p>
                 <div className="space-y-2">
                     {[...summary.items]
                         .sort((a, b) => b.total - a.total)
@@ -291,53 +291,52 @@ export default function OverviewTab({ data }: { data: FinancePayload }) {
                                     {item.name}
                                     {item.isPaid && (
                                         <span className="ml-2 text-[10px] bg-emerald-100 text-emerald-700
-                                            font-semibold px-1.5 py-0.5 rounded-full align-middle">PAID</span>
+                                            font-semibold px-1.5 py-0.5 rounded-full align-middle">BEZAHLT</span>
                                     )}
                                 </span>
                                 <span className="text-[11px] text-gray-400 tabular-nums w-12 text-right">
-                                    {item.pct.toFixed(1)}%
+                                    {item.pct.toFixed(1).replace('.', ',')} %
                                 </span>
                                 <span className="tabular-nums w-24 text-right font-medium">
                                     {formatMoney(item.total)}
                                 </span>
                             </div>
                         ))}
-                    {!summary.items.length && <EmptyState>No line items yet.</EmptyState>}
+                    {!summary.items.length && <EmptyState>Noch keine Posten.</EmptyState>}
                 </div>
             </Card>
 
             <Card className="p-5">
-                <h3 className="mb-1 font-semibold text-gray-900">Cost per guest</h3>
+                <h3 className="mb-1 font-semibold text-gray-900">Kosten pro Gast</h3>
                 <p className="mb-4 text-xs text-gray-400">
-                    Useful when the invite list is still moving.
+                    Praktisch, solange sich die Gästeliste noch ändert.
                 </p>
                 <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
                     <div className="rounded-xl bg-gray-50 px-3 py-2">
                         <div className="text-[10px] font-semibold uppercase tracking-wide text-gray-400">
-                            per guest
+                            pro Gast
                         </div>
                         <div className="mt-0.5 text-sm font-semibold tabular-nums">
                             {formatMoney(summary.guestCost.perGuest)}
                         </div>
                         <div className="text-[11px] text-gray-400">
-                            {summary.guestCost.guests} guests
+                            {summary.guestCost.guests} Gäste
                         </div>
                     </div>
                     <div className="rounded-xl bg-gray-50 px-3 py-2">
                         <div className="text-[10px] font-semibold uppercase tracking-wide text-gray-400">
-                            one more adult
+                            ein Erwachsener mehr
                         </div>
                         <div className="mt-0.5 text-sm font-semibold tabular-nums text-amber-600">
                             +{formatMoney(summary.guestCost.marginalPerAdult)}
                         </div>
                         <div className="text-[11px] text-gray-400">
-                            {summary.guestCost.marginalLines.length} per-guest line
-                            {summary.guestCost.marginalLines.length === 1 ? '' : 's'}
+                            {summary.guestCost.marginalLines.length} Posten pro Gast
                         </div>
                     </div>
                     <div className="rounded-xl bg-gray-50 px-3 py-2">
                         <div className="text-[10px] font-semibold uppercase tracking-wide text-gray-400">
-                            a table of 10
+                            ein Tisch mit 10
                         </div>
                         <div className="mt-0.5 text-sm font-semibold tabular-nums text-amber-600">
                             +{formatMoney(summary.guestCost.marginalPerAdult * 10)}
@@ -346,7 +345,7 @@ export default function OverviewTab({ data }: { data: FinancePayload }) {
                 </div>
                 {summary.guestCost.marginalLines.length > 0 && (
                     <p className="mt-3 text-[11px] text-gray-400">
-                        From{' '}
+                        Aus{' '}
                         {summary.guestCost.marginalLines
                             .map((l) => `${l.name} ${formatMoney(l.unitCost)}`).join(' + ')}
                     </p>
@@ -355,10 +354,10 @@ export default function OverviewTab({ data }: { data: FinancePayload }) {
 
             {summary.warnings.length > 0 && (
                 <Card className="border-amber-200 bg-amber-50/40 p-5">
-                    <h3 className="mb-1 font-semibold text-amber-900">Possible mistakes</h3>
+                    <h3 className="mb-1 font-semibold text-amber-900">Mögliche Fehler</h3>
                     <p className="mb-3 text-xs text-amber-700">
-                        Things that look like they might have been entered twice, or a budget figure
-                        that no longer matches reality.
+                        Dinge, die doppelt erfasst sein könnten, oder ein Budgetwert, der nicht mehr
+                        zur Realität passt.
                     </p>
                     <div className="space-y-1.5">
                         {summary.warnings.map((w, i) => (
@@ -378,9 +377,9 @@ export default function OverviewTab({ data }: { data: FinancePayload }) {
             <Card className="p-4 print:hidden">
                 <div className="flex flex-wrap items-center justify-between gap-3">
                     <div>
-                        <div className="text-sm font-semibold text-gray-800">Share it</div>
+                        <div className="text-sm font-semibold text-gray-800">Teilen</div>
                         <div className="mt-0.5 text-xs text-gray-400">
-                            A spreadsheet for your records, or a printable copy for a vendor meeting.
+                            Eine Tabelle für eure Unterlagen oder eine druckbare Kopie für ein Gespräch mit Dienstleistern.
                         </div>
                     </div>
                     <ExportButtons data={data} />
@@ -389,20 +388,20 @@ export default function OverviewTab({ data }: { data: FinancePayload }) {
 
             {(overruns.length > 0 || overpaidSections.length > 0 || summary.unlinkedSpend > 0) && (
                 <Card className="p-5 border-amber-200 bg-amber-50/40">
-                    <h3 className="font-semibold text-amber-900 mb-1">Worth a look</h3>
+                    <h3 className="font-semibold text-amber-900 mb-1">Einen Blick wert</h3>
                     <p className="text-xs text-amber-700 mb-3">
-                        Places where payments have passed the budgeted amount, or money that isn&apos;t
-                        counted anywhere.
+                        Stellen, an denen die Zahlungen den Budgetbetrag überschritten haben, oder Geld,
+                        das nirgends mitgezählt wird.
                     </p>
                     <div className="space-y-1.5">
                         {overpaidSections.map((category) => (
                             <div key={`c${category.id}`} className="flex items-center gap-2 text-sm bg-white
                                 rounded-xl border border-amber-100 px-3 py-2">
                                 <span className="flex-1 truncate text-gray-700">
-                                    {category.name} <span className="text-gray-400 text-xs">(whole section)</span>
+                                    {category.name} <span className="text-gray-400 text-xs">(ganzer Bereich)</span>
                                 </span>
                                 <span className="text-[11px] text-gray-400">
-                                    budget {formatMoney(category.total)} · paid {formatMoney(category.paid)}
+                                    Budget {formatMoney(category.total)} · bezahlt {formatMoney(category.paid)}
                                 </span>
                                 <span className="text-rose-600 font-semibold tabular-nums text-xs">
                                     +{formatMoney(-category.remaining)}
@@ -414,7 +413,7 @@ export default function OverviewTab({ data }: { data: FinancePayload }) {
                                 border border-amber-100 px-3 py-2">
                                 <span className="flex-1 truncate text-gray-700">{item.name}</span>
                                 <span className="text-[11px] text-gray-400">
-                                    budget {formatMoney(item.total)} · paid {formatMoney(item.paid)}
+                                    Budget {formatMoney(item.total)} · bezahlt {formatMoney(item.paid)}
                                 </span>
                                 <span className="text-rose-600 font-semibold tabular-nums text-xs">
                                     +{formatMoney(item.variance)}
@@ -424,7 +423,7 @@ export default function OverviewTab({ data }: { data: FinancePayload }) {
                         {summary.unlinkedSpend > 0 && (
                             <div className="flex items-center gap-2 text-sm bg-white rounded-xl
                                 border border-amber-100 px-3 py-2">
-                                <span className="flex-1 text-gray-700">Purchases counted toward nothing</span>
+                                <span className="flex-1 text-gray-700">Ausgaben, die nirgends mitzählen</span>
                                 <span className="font-semibold tabular-nums text-xs text-amber-700">
                                     {formatMoney(summary.unlinkedSpend)}
                                 </span>

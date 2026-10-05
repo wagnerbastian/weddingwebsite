@@ -16,19 +16,19 @@ interface BarItem {
 
 /** The four a thumb reaches for on the trip, plus More. */
 const PRIMARY: BarItem[] = [
-    { href: `${BASE}/today`, label: 'Today', icon: '☀️' },
-    { href: `${BASE}/itinerary`, label: 'Itinerary', icon: '🗓️' },
-    { href: `${BASE}/map`, label: 'Map', icon: '🗺️' },
-    { href: `${BASE}/places`, label: 'Places', icon: '📍', also: [`${BASE}/stays`, `${BASE}/excursions`] },
+    { href: `${BASE}/today`, label: 'Heute', icon: '☀️' },
+    { href: `${BASE}/itinerary`, label: 'Reiseplan', icon: '🗓️' },
+    { href: `${BASE}/map`, label: 'Karte', icon: '🗺️' },
+    { href: `${BASE}/places`, label: 'Orte', icon: '📍', also: [`${BASE}/stays`, `${BASE}/excursions`] },
 ];
 
 const MORE: BarItem[] = [
-    { href: BASE, label: 'Overview', icon: '📊' },
-    { href: `${BASE}/travel`, label: 'Travel', icon: '✈️' },
-    { href: `${BASE}/checklist`, label: 'Checklist', icon: '✅' },
-    { href: `${BASE}/files`, label: 'Files', icon: '🗂️' },
-    { href: `${BASE}/guide`, label: 'Guide', icon: '📖' },
-    { href: `${BASE}/settings`, label: 'Settings', icon: '⚙️' },
+    { href: BASE, label: 'Überblick', icon: '📊' },
+    { href: `${BASE}/travel`, label: 'Verbindungen', icon: '✈️' },
+    { href: `${BASE}/checklist`, label: 'Checkliste', icon: '✅' },
+    { href: `${BASE}/files`, label: 'Dokumente', icon: '🗂️' },
+    { href: `${BASE}/guide`, label: 'Reiseführer', icon: '📖' },
+    { href: `${BASE}/settings`, label: 'Einstellungen', icon: '⚙️' },
 ];
 
 function isOn(item: BarItem, pathname: string | null): boolean {
@@ -51,7 +51,7 @@ export default function MobileTabBar() {
         <>
             <nav
                 data-mobile-tabbar
-                aria-label="Honeymoon sections"
+                aria-label="Bereiche der Flitterwochen"
                 className="md:hidden fixed inset-x-0 bottom-0 z-40 border-t border-gray-200 bg-white/95
                     pb-[env(safe-area-inset-bottom)] backdrop-blur"
             >
@@ -81,12 +81,12 @@ export default function MobileTabBar() {
                                 ${moreOn ? 'text-accent' : 'text-gray-500'}`}
                         >
                             <span aria-hidden className="text-lg leading-none">•••</span>
-                            More
+                            Mehr
                         </button>
                     </li>
                 </ul>
             </nav>
-            <Sheet open={more} onClose={() => setMore(false)} title={<h2 className="font-semibold text-gray-900">More</h2>}>
+            <Sheet open={more} onClose={() => setMore(false)} title={<h2 className="font-semibold text-gray-900">Mehr</h2>}>
                 <ul className="grid grid-cols-1 gap-1">
                     {MORE.map((item) => (
                         <li key={item.href}>

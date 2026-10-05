@@ -63,11 +63,11 @@ export function useFinances() {
     const refresh = useCallback(async () => {
         try {
             const res = await fetch(BASE, { cache: 'no-store' });
-            if (!res.ok) throw new Error('Failed to load finances');
+            if (!res.ok) throw new Error('Finanzen konnten nicht geladen werden');
             setData(await res.json());
             setError('');
         } catch (e) {
-            setError(e instanceof Error ? e.message : 'Failed to load finances');
+            setError(e instanceof Error ? e.message : 'Finanzen konnten nicht geladen werden');
         } finally {
             setLoading(false);
         }
@@ -81,16 +81,16 @@ export function useFinances() {
         try {
             const res = await fn();
             if (res.status === 401) {
-                throw new Error('Your session has expired — sign in again to keep editing.');
+                throw new Error('Deine Sitzung ist abgelaufen – melde dich erneut an, um weiterzubearbeiten.');
             }
             if (!res.ok) {
                 const body = await res.json().catch(() => ({}));
-                throw new Error(body.error || 'Request failed');
+                throw new Error(body.error || 'Anfrage fehlgeschlagen');
             }
             await refresh();
             return true;
         } catch (e) {
-            setError(e instanceof Error ? e.message : 'Request failed');
+            setError(e instanceof Error ? e.message : 'Anfrage fehlgeschlagen');
             return false;
         } finally {
             inFlight.current -= 1;

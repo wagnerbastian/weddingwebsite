@@ -319,7 +319,7 @@ console.log('\nSeed data');
     check('two custom categories differ',
         categoryMeta('hot springs').color !== categoryMeta('night market').color);
     check('blank still falls back to Other', categoryMeta('').key === 'misc');
-    check('a built-in still wins', categoryMeta('waterfall').label === 'Waterfall');
+    check('a built-in still wins', categoryMeta('waterfall').label === 'Wasserfall');
 
     check('beach, hiking and nature exist',
         ['beach', 'hiking', 'nature'].every((k) => CATEGORIES.some((c) => c.key === k)));
@@ -422,23 +422,23 @@ console.log('\nNightly price formatting');
 {
     const f = (v: string, c?: string) => formatPerNight(v, c);
 
-    check('a bare number becomes a rate', f('250') === '$250 per night', f('250'));
-    check('thousands get separated', f('1200') === '$1,200 per night', f('1200'));
-    check('cents are kept when typed', f('250.5') === '$250.50 per night', f('250.5'));
-    check('trailing .00 is dropped', f('250.00') === '$250 per night', f('250.00'));
-    check('an existing dollar sign is not doubled', f('$250') === '$250 per night', f('$250'));
-    check('typed separators survive', f('1,200') === '$1,200 per night', f('1,200'));
+    check('a bare number becomes a rate', f('250') === '$250 pro Nacht', f('250'));
+    check('thousands get separated', f('1200') === '$1.200 pro Nacht', f('1200'));
+    check('cents are kept when typed', f('250.5') === '$250,50 pro Nacht', f('250.5'));
+    check('trailing .00 is dropped', f('250.00') === '$250 pro Nacht', f('250.00'));
+    check('an existing dollar sign is not doubled', f('$250') === '$250 pro Nacht', f('$250'));
+    check('typed separators survive', f('1,200') === '$1.200 pro Nacht', f('1,200'));
 
     // The field commits on blur as well as Enter, so running over its own output
-    // must not compound into "$$250 per night per night".
+    // must not compound into "$$250 pro Nacht pro Nacht".
     check('re-formatting its own output is a no-op',
-        f(f('250')) === '$250 per night', f(f('250')));
-    check('idempotent over three passes', f(f(f('1200'))) === '$1,200 per night');
+        f(f('250')) === '$250 pro Nacht', f(f('250')));
+    check('idempotent over three passes', f(f(f('1200'))) === '$1.200 pro Nacht');
 
     check('"per night" already typed is not repeated',
-        f('250 per night') === '$250 per night', f('250 per night'));
+        f('250 per night') === '$250 pro Nacht', f('250 per night'));
     check('slash-night spelling is understood',
-        f('180/night') === '$180 per night', f('180/night'));
+        f('180/night') === '$180 pro Nacht', f('180/night'));
 
     // Free text must survive untouched: the seeded library has notes like
     // "~500k IDR entry", and rewriting those as dollars would be plain wrong.
@@ -448,18 +448,18 @@ console.log('\nNightly price formatting');
     check('blank stays blank', f('') === '' && f('   ') === '');
 
     // The trip's own currency wins when it isn't dollars.
-    check('honours a non-USD trip currency', f('250', 'GBP') === '£250 per night', f('250','GBP'));
+    check('honours a non-USD trip currency', f('250', 'GBP') === '£250 pro Nacht', f('250','GBP'));
     check('unknown currency codes fall back to the code',
-        f('250', 'THB') === 'THB 250 per night', f('250','THB'));
-    check('rupiah has a symbol', f('250', 'IDR') === 'Rp250 per night', f('250','IDR'));
-    check('a GBP amount is not re-prefixed', f('£250 per night', 'GBP') === '£250 per night');
+        f('250', 'THB') === 'THB 250 pro Nacht', f('250','THB'));
+    check('rupiah has a symbol', f('250', 'IDR') === 'Rp250 pro Nacht', f('250','IDR'));
+    check('a GBP amount is not re-prefixed', f('£250 per night', 'GBP') === '£250 pro Nacht');
 }
 
 console.log('\nExcursion pricing and naming');
 {
     const g = (v: string, c?: string) => formatPrice(v, c);
     check('a bare number becomes a price', g('120') === '$120', g('120'));
-    check('thousands separate', g('1500') === '$1,500', g('1500'));
+    check('thousands separate', g('1500') === '$1.500', g('1500'));
     // No suffix is invented — an excursion might be per person, per couple or
     // per boat, and guessing would put words in the user's mouth.
     check('no unit is invented', g('120') === '$120');
@@ -557,7 +557,7 @@ console.log('\nCalendar grid');
     check('spans every month the trip touches', months.length === 2,
         months.map((m) => m.key).join(','));
     check('months are labelled', months[0].label === 'September 2026'
-        && months[1].label === 'October 2026', months[0].label);
+        && months[1].label === 'Oktober 2026', months[0].label);
 
     for (const month of months) {
         check(`${month.key} is whole weeks`, month.cells.length % 7 === 0,
@@ -843,7 +843,7 @@ console.log('\nCalendar export');
     const flight = overnightEvents.find((e) => e.uid.startsWith('honeymoon-travel'));
     check('an overnight leg starts on its departure day', flight?.date === '2026-09-30');
     check('and ends on the day it lands', flight?.endDate === '2026-10-01');
-    check('and says so in the summary', /\(\+1 day\)/.test(flight?.summary ?? ''), flight?.summary);
+    check('and says so in the summary', /\(\+1 Tag\)/.test(flight?.summary ?? ''), flight?.summary);
 
     const events = tripEvents({ start_date: '2026-09-28', title: 'T' }, [day],
         (id) => (id === 9 ? 'Monkey Forest' : undefined));
@@ -854,7 +854,7 @@ console.log('\nCalendar export');
         && (events[0].description ?? '').includes('Lunch'));
     check('and its notes', (events[0].description ?? '').includes('bring cash'));
     check('travel legs become timed events',
-        events.some((e) => e.summary.startsWith('Car') && e.start === '08:00'));
+        events.some((e) => e.summary.startsWith('Auto') && e.start === '08:00'));
     check('a timed stop gets its own event',
         events.some((e) => e.summary === 'Monkey Forest' && e.start === '09:30'));
     check('an untimed stop does not',
@@ -898,7 +898,7 @@ console.log('\nSearch');
     check('respects the limit', searchHoneymoon('ubud', all, 2).length === 2);
     check('finds a place by name', searchHoneymoon('lotus', all)[0].label === 'Cafe Lotus');
     check('a day hit is labelled with its number',
-        searchHoneymoon('ubud day', all).some((h) => h.kind === 'day' && h.label.includes('Day 3')));
+        searchHoneymoon('ubud day', all).some((h) => h.kind === 'day' && h.label.includes('Tag 3')));
 
     // Two hundred places must not bury the one to-do that matches.
     const crowded = {
@@ -1058,7 +1058,7 @@ console.log('\nTrip mode — today');
 
     check('Indonesia has its own numbers',
         emergencyFor('Indonesia').numbers[0].number === '112'
-        && emergencyFor('Indonesia').numbers.some((n) => n.label === 'Ambulance'));
+        && emergencyFor('Indonesia').numbers.some((n) => n.label === 'Rettungsdienst'));
     check("Singapore's police and ambulance differ",
         emergencyFor('Singapore').numbers.map((n) => n.number).join(',') === '999,995,995');
     check('an unknown country falls back to 112, and says it is a guess',
@@ -1126,7 +1126,7 @@ console.log('\nOpening hours');
     check('nor nothing at all', openAt(null, 3, 600) === 'unknown' && parseHours('') === null);
 
     check('a date knows its weekday', dayOfWeek('2026-09-15') === 2);
-    check('24/7 describes itself', describeHours('24/7') === 'Open all hours');
+    check('24/7 describes itself', describeHours('24/7') === 'Rund um die Uhr geöffnet');
     check('and a spec is tidied for reading',
         describeHours('Mo-Fr 09:00-17:00; Sa 10:00-14:00')
         === 'Mo-Fr 09:00-17:00 · Sa 10:00-14:00');
@@ -1204,7 +1204,7 @@ console.log('\nDay timeline');
         ], places, hotel, () => ({ seconds: 100 * 60, meters: 90_000, source: 'road' as const }))
             .longDrive);
 
-    check('a drive reads as hours and minutes', formatDuration(6000) === '1 h 40 m');
+    check('a drive reads as hours and minutes', formatDuration(6000) === '1 h 40 min');
     check('a round hour drops the minutes', formatDuration(7200) === '2 h');
     check('and a short one is minutes', formatDuration(900) === '15 min');
 }
@@ -1271,8 +1271,8 @@ console.log('\nBudget');
     check('an unknown pair does not guess', convert(10, 'JPY', 'IDR', rates) === null);
     check('a missing currency is treated as the target',
         convert(10, null, 'USD', rates) === 10);
-    check('a rate describes itself', describeRate(rates[0]) === '1 USD = 15,800 IDR');
-    check('and a small one keeps its decimals', describeRate(rates[1]) === '1 USD = 1.35 SGD');
+    check('a rate describes itself', describeRate(rates[0]) === '1 USD = 15.800 IDR');
+    check('and a small one keeps its decimals', describeRate(rates[1]) === '1 USD = 1,35 SGD');
 
     const hotel = { ...makePlace(1, 'Amankila', -8.4, 115.5), cost: 420, cost_currency: 'USD',
         cost_per: 'night' as const };
@@ -1313,7 +1313,7 @@ console.log('\nBudget');
         String(budget.total));
     check('a place with only a price note is counted as unpriced', budget.unpriced === 1);
     check('the biggest line is first', budget.lines[0].label === 'Amankila');
-    check('the detail says how it was worked out', budget.lines[0].detail === '3 nights × 420');
+    check('the detail says how it was worked out', budget.lines[0].detail === '3 Nächte × 420');
     check('a budget gives a remainder',
         budget.remaining != null && Math.abs(budget.remaining - (5000 - budget.total)) < 0.01);
 
@@ -1345,8 +1345,8 @@ console.log('\nBudget');
     check('what has been paid is counted', booked.paid === 400);
     check('and what is left to pay', Math.abs(booked.outstanding - (booked.total - 400)) < 0.01);
 
-    check('money reads as money', formatMoney(1260, 'USD') === '$1,260');
-    check('and an unknown code still prints', formatMoney(1260, 'XXZ').includes('1,260'));
+    check('money reads as money', formatMoney(1260, 'USD').replace(/\s/g, ' ') === '1.260 $');
+    check('and an unknown code still prints', formatMoney(1260, 'XXZ').includes('1.260'));
 }
 
 console.log('\nOne price per stay');
@@ -1391,7 +1391,7 @@ console.log('\nOne price per stay');
     check('a booking costs the rate times the nights it covers',
         bookingTotal(bed(), priced)?.amount === 930);
     check('and says so, so a wrong figure is traceable',
-        bookingTotal(bed(), priced)?.detail === '3 nights × 310');
+        bookingTotal(bed(), priced)?.detail === '3 Nächte × 310');
     check('a rate with no dates is not a total',
         bookingTotal(bed({ check_out: null }), priced) === null);
     check('a price for the whole stay needs no nights',
@@ -1606,7 +1606,7 @@ console.log('\nSuggesting a day');
     check('the categories are mixed rather than three warungs',
         new Set(suggestion?.places.map((place) => place.category)).size === 3,
         suggestion?.places.map((p) => p.category).join(','));
-    check('it says why', (suggestion?.why ?? '').includes('within'));
+    check('it says why', (suggestion?.why ?? '').includes('Umkreis'));
     check('the loop has a length', (suggestion?.km ?? 0) > 0);
     check('already-scheduled places are skipped',
         !suggestDay(base, [base, ...liked], new Set([2, 3]))?.places
@@ -1940,10 +1940,10 @@ console.log('\nPacking');
     }];
     const suggestions = packingSuggestions({ places: [beach, temple, villa], days });
     const texts = suggestions.map((entry) => entry.text).join(' | ');
-    check('a beach day suggests sunscreen', texts.includes('sunscreen'));
+    check('a beach day suggests sunscreen', texts.includes('Sonnencreme'));
     check('a temple suggests a sarong', texts.includes('Sarong'));
-    check('a flight suggests passports', texts.includes('Passports'));
-    check('an overnight flight suggests an eye mask', texts.includes('Eye mask'));
+    check('a flight suggests passports', texts.includes('Reisepässe'));
+    check('an overnight flight suggests an eye mask', texts.includes('Schlafmaske'));
     check('every suggestion says why', suggestions.every((entry) => entry.why.length > 0));
     check('a trip with nothing planned still suggests the universals',
         packingSuggestions({ places: [], days: [] }).length >= 2);
@@ -2036,18 +2036,18 @@ console.log('\nConfirming a selection, and un-confirming it');
 
     const allConfirmed = of(false, false, false);
     check('a selection that is all confirmed offers to un-confirm it',
-        allConfirmed.needsReview === true && allConfirmed.label === 'Mark unconfirmed');
+        allConfirmed.needsReview === true && allConfirmed.label === 'Als unbestätigt markieren');
     check('and counts them', allConfirmed.confirmed === 3 && allConfirmed.unconfirmed === 0);
 
     const allUnconfirmed = of(true, true);
     check('a selection that is all unconfirmed offers to confirm it',
-        allUnconfirmed.needsReview === false && allUnconfirmed.label === 'Mark reviewed');
+        allUnconfirmed.needsReview === false && allUnconfirmed.label === 'Als geprüft markieren');
     check('and counts them', allUnconfirmed.unconfirmed === 2 && allUnconfirmed.confirmed === 0);
 
     // Mixed goes the way you are nearly always heading: confirm the lot.
     const mixed = of(true, false, false, true);
     check('a mixed selection confirms rather than un-confirming',
-        mixed.needsReview === false && mixed.label === 'Mark reviewed');
+        mixed.needsReview === false && mixed.label === 'Als geprüft markieren');
     check('and says how many are unconfirmed', mixed.unconfirmed === 2 && mixed.confirmed === 2);
 
     check('one unconfirmed in a big confirmed selection still confirms',
@@ -2055,7 +2055,7 @@ console.log('\nConfirming a selection, and un-confirming it');
 
     const none = reviewToggleFor([]);
     check('an empty selection rests on confirm rather than flipping',
-        none.needsReview === false && none.label === 'Mark reviewed');
+        none.needsReview === false && none.label === 'Als geprüft markieren');
     check('and counts nothing', none.confirmed === 0 && none.unconfirmed === 0);
 }
 
@@ -2432,8 +2432,8 @@ console.log('\nJourneys');
         empty.legs.length === 0 && empty.journey?.id === 7);
 
     check('durations read as hours and minutes',
-        formatMinutes(165) === '2 h 45 m' && formatMinutes(120) === '2 h'
-        && formatMinutes(45) === '45 m' && formatMinutes(null) === null);
+        formatMinutes(165) === '2 h 45 min' && formatMinutes(120) === '2 h'
+        && formatMinutes(45) === '45 min' && formatMinutes(null) === null);
 
     check('a landing time can be read in another zone',
         sameInstantIn('2026-09-14', '12:00', 'Asia/Makassar', 'America/Los_Angeles') === '21:00',
@@ -2495,9 +2495,9 @@ console.log('\nOffline copy');
     check('it is a whole HTML document', html.startsWith('<!doctype html>') && html.trimEnd().endsWith('</html>'));
     check('it loads nothing from anywhere — no external script, stylesheet or image',
         !/<script[^>]+src=/i.test(html) && !/<link[^>]+stylesheet/i.test(html) && !/<img\b/i.test(html));
-    check('the trip is named and dated', html.includes('Bali &amp; Singapore') && html.includes('Sat, Sep 12'));
+    check('the trip is named and dated', html.includes('Bali &amp; Singapore') && html.includes('Sa., 12. Sept.'));
     check('it says it is a snapshot, and when it was taken',
-        html.includes('snapshot') && html.includes('Oct 5, 2026'));
+        html.includes('Momentaufnahme') && html.includes('05.10.2026'));
     check('a place name cannot run script', !html.includes('<script>alert(1)')
         && html.includes('Villa &lt;script&gt;alert(1)&lt;/script&gt;'));
     check('a javascript: link stays text', !html.includes('href="javascript:'));
@@ -2519,7 +2519,7 @@ console.log('\nOffline copy');
     check('in 12-hour form when that is the setting',
         buildOfflineHtml({ ...payload, trip: { ...trip, time_format: '12h' } }).includes('8:30 AM'));
     check('an empty trip still exports', buildOfflineHtml({ ...payload, days: [], places: [], bookings: [],
-        notes: [], todos: [], documents: [], journeys: [] }).includes('Emergency'));
+        notes: [], todos: [], documents: [], journeys: [] }).includes('Notfall'));
     check('the filename is the trip and the date',
         offlineExportFilename(payload, new Date('2026-10-05T12:00:00Z')) === 'bali-singapore-offline-2026-10-05.html');
     check('escaping covers quotes too', escapeHtml(`"a'&`) === '&quot;a&#39;&amp;');
@@ -2558,7 +2558,7 @@ console.log('\nPlace sheet');
     check('words that are not a price stay words',
         JSON.stringify(pricePatch(bare, 'ask at the desk', 'USD')) === JSON.stringify({ cost: '', price_note: 'ask at the desk' }));
     check('a priced stay reads with what it is per',
-        priceText({ ...bare, cost: 250, cost_per: 'night', cost_currency: 'USD' }, 'USD') === '$250 per night');
+        priceText({ ...bare, cost: 250, cost_per: 'night', cost_currency: 'USD' }, 'USD') === '$250 pro Nacht');
     check('an unpriced place reads its note', priceText({ ...bare, price_note: 'free' }, 'USD') === 'free');
 }
 
@@ -2620,7 +2620,7 @@ console.log('\nTimeline with travel');
     check('check-out and check-in show on the day of the move',
         marks.map((m) => `${m.kind}@${m.minutes}`).join() === 'check-out@660,check-in@900',
         marks.map((m) => `${m.kind}@${m.minutes}`).join());
-    check('and are named for the place', marks[0].label === 'Check out · Villa');
+    check('and are named for the place', marks[0].label === 'Check-out · Villa');
     check('a booking with no time gives no marker',
         dayMarkers('2026-09-14', [{ ...BOOKING_FIXTURE, kind: 'stay', check_out: '2026-09-14' }], () => '').length === 0);
     check('no date, no markers', dayMarkers(null, [{ ...BOOKING_FIXTURE, kind: 'stay', check_out: '2026-09-14', check_out_time: '11:00' }], () => '').length === 0);
@@ -2679,9 +2679,9 @@ console.log('\nTravel documents');
         folders.kinds.map((f) => `${f.key}:${f.count}`).join() === 'kind:passport:2,kind:insurance:1,kind:ticket:1',
         folders.kinds.map((f) => `${f.key}:${f.count}`).join());
     check('people get folders, and unassigned files are Shared',
-        folders.people.map((f) => `${f.label}:${f.count}`).join() === 'Austin:2,Heaven:1,Shared:1',
+        folders.people.map((f) => `${f.label}:${f.count}`).join() === 'Austin:2,Heaven:1,Gemeinsam:1',
         folders.people.map((f) => `${f.label}:${f.count}`).join());
-    check('folders are named in the plural', folders.kinds[0].label === 'Passports');
+    check('folders are named in the plural', folders.kinds[0].label === 'Reisepässe');
     check('warnings read as sentences', mid[0].message.startsWith('Austin'), mid[0].message);
     check('a kind folder filters', filterDocuments(docs, 'kind:passport', '').length === 2);
     check('a person folder filters', filterDocuments(docs, 'person:Austin', '').length === 2);

@@ -94,23 +94,23 @@ console.log('\nOne place panel, from every entry point');
     let formOpened = false;
     if (await clickFirst(p, '[data-place-row] button')) {
         await p.waitForTimeout(400);
-        if (await clickFirst(p, '[data-sheet-panel] button[aria-label="More actions"]')) {
+        if (await clickFirst(p, '[data-sheet-panel] button[aria-label="Weitere Aktionen"]')) {
             await p.waitForTimeout(300);
-            await p.getByRole('button', { name: 'Edit everything' }).last().click({ timeout: 5000 }).catch(() => undefined);
+            await p.getByRole('button', { name: 'Alles bearbeiten' }).last().click({ timeout: 5000 }).catch(() => undefined);
             await p.waitForTimeout(500);
             formOpened = (await p.locator('[data-place-sheet="form"]').count()) === 1;
         }
         await p.keyboard.press('Escape');
         await p.waitForTimeout(300);
     }
-    check("the panel's ⋯ → Edit everything opens the form in the same panel", formOpened);
+    check("the panel's ⋯ → Alles bearbeiten opens the form in the same panel", formOpened);
 
     await go(p, '/stays');
-    const fromStays = (await clickFirst(p, '[data-place-card] button[aria-label^="Open"]')) ? await openedPanel(p) : null;
+    const fromStays = (await clickFirst(p, '[data-place-card] button[aria-label$="öffnen"]')) ? await openedPanel(p) : null;
     check('a stay card opens the panel, with the stay section', sectionsOf(fromStays).includes('stay'), String(fromStays));
 
     await go(p, '/excursions');
-    const fromExcursions = (await clickFirst(p, '[data-place-card] button[aria-label^="Open"]')) ? await openedPanel(p) : null;
+    const fromExcursions = (await clickFirst(p, '[data-place-card] button[aria-label$="öffnen"]')) ? await openedPanel(p) : null;
     check('an excursion card opens the same panel as any place',
         fromExcursions != null && sectionsOf(fromExcursions) === sectionsOf(fromPlaces),
         `${fromExcursions} vs ${fromPlaces}`);
@@ -125,7 +125,7 @@ console.log('\nOne place panel, from every entry point');
     check('an itinerary stop opens the panel — not an edit form', fromStop != null, stopLabel);
 
     await go(p, '');
-    const shortlist = p.locator('text=Shortlist').locator('xpath=ancestor::*[@data-card][1]//button').first();
+    const shortlist = p.locator('text=Auswahl').locator('xpath=ancestor::*[@data-card][1]//button').first();
     if (await shortlist.count()) {
         await shortlist.click();
         check('an overview shortlist entry opens the panel', (await openedPanel(p)) != null);
@@ -140,14 +140,14 @@ console.log('\nOne place panel, from every entry point');
 
     console.log('\nItinerary toolbar and timeline');
     await go(p, '/itinerary');
-    await p.getByRole('button', { name: /Timeline/ }).first().click().catch(() => undefined);
+    await p.getByRole('button', { name: /Zeitplan/ }).first().click().catch(() => undefined);
     await p.waitForTimeout(500);
-    const shape = await p.locator('[data-segmented="Timeline shape"]').boundingBox({ timeout: 3000 }).catch(() => null);
-    const view = await p.locator('[data-segmented="Itinerary view"]').boundingBox({ timeout: 3000 }).catch(() => null);
+    const shape = await p.locator('[data-segmented="Zeitplan-Form"]').boundingBox({ timeout: 3000 }).catch(() => null);
+    const view = await p.locator('[data-segmented="Reiseplan-Ansicht"]').boundingBox({ timeout: 3000 }).catch(() => null);
     check('Stacked / Clock sits to the left of Days / Timeline / Calendar',
         shape != null && view != null && shape.x < view.x);
     check('the stacked bar draws travel', (await p.locator('[data-leg-slice]').count()) > 0);
-    await p.getByRole('button', { name: /Clock/ }).first().click().catch(() => undefined);
+    await p.getByRole('button', { name: /Uhr/ }).first().click().catch(() => undefined);
     await p.waitForTimeout(500);
     check('the clock draws travel', (await p.locator('[data-leg-slice]').count()) > 0);
     await p.evaluate(() => {
@@ -176,9 +176,9 @@ console.log('\nOne place panel, from every entry point');
     check('no two overview cards overlap', boxes.length > 0 && overlaps === 0, `${overlaps} of ${boxes.length}`);
 
     console.log('\nFiles');
-    check('Files is a tab', (await p.locator('a:has-text("Files")').count()) > 0);
+    check('Files is a tab', (await p.locator('a:has-text("Dokumente")').count()) > 0);
     await go(p, '/settings');
-    check('Settings no longer has a Documents section', (await p.locator('h3:has-text("Documents")').count()) === 0);
+    check('Settings no longer has a Documents section', (await p.locator('h3:has-text("Dokumente")').count()) === 0);
     await go(p, '/files');
     if (await p.locator('[data-file]').count()) {
         await p.locator('[data-file]').first().click();
@@ -187,7 +187,7 @@ console.log('\nOne place panel, from every entry point');
         check('a file opens in the viewer', !!viewer);
         await p.keyboard.press('Escape');
     } else {
-        check('with no files, the tab says what goes there', (await p.locator('text=The papers you would hate to lose').count()) === 1);
+        check('with no files, the tab says what goes there', (await p.locator('text=Die Papiere, die ihr ungern verlieren würdet').count()) === 1);
     }
     await p.context().close();
 }
@@ -227,7 +227,7 @@ console.log('\nPhone (390×844)');
     await go(p, '/itinerary');
     check('the phone itinerary shows one day, with a day strip',
         (await p.locator('[data-strip-day]').count()) > 1 && (await p.locator('[data-day-id]').count()) === 1);
-    await p.getByRole('button', { name: /Timeline/ }).first().click().catch(() => undefined);
+    await p.getByRole('button', { name: /Zeitplan/ }).first().click().catch(() => undefined);
     await p.waitForTimeout(400);
     check('the phone timeline is a vertical agenda', (await p.locator('[data-day-agenda]').count()) === 1);
     check('the bottom tab bar is there', await p.locator('[data-mobile-tabbar]').isVisible().catch(() => false));
@@ -251,23 +251,23 @@ console.log('\nPhone (390×844)');
     }
 
     await go(p, '/today');
-    await p.getByRole('button', { name: /More/ }).last().click().catch(() => undefined);
+    await p.getByRole('button', { name: /Mehr/ }).last().click().catch(() => undefined);
     await p.waitForTimeout(400);
-    check('More includes Files', (await p.locator('[data-sheet-panel] a:has-text("Files")').count()) === 1);
+    check('More includes Files', (await p.locator('[data-sheet-panel] a:has-text("Dokumente")').count()) === 1);
     await p.keyboard.press('Escape');
 
     await go(p, '/settings');
     const range = p.locator('[data-date-range]').first();
     check('on a touch screen the trip dates start locked', (await range.getAttribute('data-date-range')) === 'locked');
-    await range.getByRole('button', { name: 'Change dates', exact: true }).click().catch(() => undefined);
+    await range.getByRole('button', { name: 'Daten ändern', exact: true }).click().catch(() => undefined);
     await p.waitForTimeout(200);
-    check('Change dates unlocks them', (await range.getAttribute('data-date-range')) === 'editing');
-    await range.getByRole('button', { name: 'Done', exact: true }).click().catch(() => undefined);
+    check('Daten ändern unlocks them', (await range.getAttribute('data-date-range')) === 'editing');
+    await range.getByRole('button', { name: 'Fertig', exact: true }).click().catch(() => undefined);
     await p.waitForTimeout(200);
     check('and Done locks them again', (await range.getAttribute('data-date-range')) === 'locked');
 
     await go(p, '/itinerary');
-    await p.getByRole('button', { name: /Calendar/ }).first().click().catch(() => undefined);
+    await p.getByRole('button', { name: /Kalender/ }).first().click().catch(() => undefined);
     await p.waitForTimeout(500);
     const cells = await p.locator('[data-calendar-day]').evaluateAll((els) => els.map((el) => el.getBoundingClientRect().right <= innerWidth));
     check('the phone calendar fits the screen', cells.length > 0 && cells.every(Boolean), `${cells.length} days`);

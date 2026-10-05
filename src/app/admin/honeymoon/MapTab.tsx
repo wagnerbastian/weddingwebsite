@@ -326,7 +326,7 @@ export default function MapTab({ api }: { api: HoneymoonApi }) {
         const forDay = (day: Day) => ({
             points: pointsForDay(day),
             color: dayColor(day.day_number),
-            label: `Day ${day.day_number}${day.title ? ` — ${day.title}` : ''}`,
+            label: `Tag ${day.day_number}${day.title ? ` – ${day.title}` : ''}`,
         });
         if (selectedDay) return [forDay(selectedDay)].filter((r) => r.points.length > 0);
         if (!showItinerary) return [];
@@ -389,7 +389,7 @@ export default function MapTab({ api }: { api: HoneymoonApi }) {
                 label: [
                     meta.label,
                     route,
-                    `Day ${day.day_number}`,
+                    `Tag ${day.day_number}`,
                     leg.depart_time ?? '',
                     leg.arrive_day_offset > 0
                         ? `lands +${leg.arrive_day_offset} day${leg.arrive_day_offset === 1 ? '' : 's'}`
@@ -444,11 +444,11 @@ export default function MapTab({ api }: { api: HoneymoonApi }) {
         const thinned = step > 1 ? loop.filter((_, i) => i % step === 0) : loop;
         if (thinned.length < 3) return;
         const ok = await api.update('regions', { id: regionId, boundary: thinned });
-        if (!ok) { setBoundaryNote('Could not save that boundary.'); return; }
+        if (!ok) { setBoundaryNote('Die Grenze konnte nicht gespeichert werden.'); return; }
         setBoundaryNote(
-            `Saved as the boundary of ${api.regionById.get(regionId) ?? 'that area'}. `
-            + '“Assign regions by location” on the Places tab now files pins into it '
-            + 'exactly, instead of guessing by nearest centre.',
+            `Als Grenze von ${api.regionById.get(regionId) ?? 'diesem Gebiet'} gespeichert. `
+            + '„Regionen nach Standort zuweisen“ im Tab „Orte“ ordnet Pins jetzt '
+            + 'genau hier ein, statt nach dem nächsten Mittelpunkt zu raten.',
         );
         setLassoLoop(null);
     };
@@ -538,7 +538,7 @@ export default function MapTab({ api }: { api: HoneymoonApi }) {
     const bulkFields = useMemo(() => [
         {
             key: 'category',
-            label: 'Type',
+            label: 'Typ',
             options: (data?.categories ?? []).map((c) => ({
                 value: c.key, label: `${c.icon} ${c.label}`,
             })),
@@ -547,7 +547,7 @@ export default function MapTab({ api }: { api: HoneymoonApi }) {
             key: 'region_id',
             label: 'Region',
             options: [
-                { value: null, label: '— no region —' },
+                { value: null, label: '– keine Region –' },
                 ...regions.map((r) => ({
                     value: r.id, label: r.country ? `${r.name} · ${r.country}` : r.name,
                 })),
@@ -555,9 +555,9 @@ export default function MapTab({ api }: { api: HoneymoonApi }) {
         },
         {
             key: 'country',
-            label: 'Country',
+            label: 'Land',
             options: [
-                { value: '', label: '— from region —' },
+                { value: '', label: '– aus der Region –' },
                 ...countries.map((c) => ({ value: c, label: c })),
             ],
         },
@@ -568,33 +568,33 @@ export default function MapTab({ api }: { api: HoneymoonApi }) {
         },
         {
             key: 'source',
-            label: 'Source',
+            label: 'Quelle',
             options: sourcesOf(places).map((s) => ({ value: s, label: s })),
         },
         {
             key: 'needs_review',
-            label: 'Review flag',
+            label: 'Prüfmarkierung',
             options: [
-                { value: false, label: 'Reviewed — pin is right' },
-                { value: true, label: 'Needs review' },
+                { value: false, label: 'Geprüft – Pin stimmt' },
+                { value: true, label: 'Muss geprüft werden' },
             ],
         },
         {
             key: 'is_excursion',
-            label: 'Excursion',
+            label: 'Ausflug',
             options: [
-                { value: true, label: 'Is an excursion' },
-                { value: false, label: 'Not an excursion' },
+                { value: true, label: 'Ist ein Ausflug' },
+                { value: false, label: 'Kein Ausflug' },
             ],
         },
         {
             key: 'rating',
-            label: 'Rating',
+            label: 'Bewertung',
             options: [
-                { value: 'yes', label: '👍 Interested' },
-                { value: 'mid', label: '😐 Mid tier' },
-                { value: 'no', label: '👎 Not interested' },
-                { value: '', label: '— unrated —' },
+                { value: 'yes', label: '👍 Interessiert' },
+                { value: 'mid', label: '😐 Mittelmäßig' },
+                { value: 'no', label: '👎 Kein Interesse' },
+                { value: '', label: '– unbewertet –' },
             ],
         },
     ], [data?.categories, regions, countries, places]);
@@ -659,14 +659,14 @@ export default function MapTab({ api }: { api: HoneymoonApi }) {
         if (!ids.length) return;
         // The confirm stays for a lasso: "116 places" is worth reading twice,
         // even with an undo behind it.
-        if (!confirm(`Delete ${ids.length} place(s)? You can undo it.`)) return;
+        if (!confirm(`${ids.length} ${ids.length === 1 ? 'Ort' : 'Orte'} löschen? Das lässt sich rückgängig machen.`)) return;
         const rows = ids.map((id) => api.placeById.get(id)).filter((p) => p != null);
         await api.removePlaces(rows);
         setLassoed(new Set());
     };
 
     const activeFilters: ActiveFilter[] = [
-        ...(dayFilter ? [{ key: 'day', label: `Day ${days.find((d) => String(d.id) === dayFilter)?.day_number ?? ''}`, clear: () => setDayFilter('') }] : []),
+        ...(dayFilter ? [{ key: 'day', label: `Tag ${days.find((d) => String(d.id) === dayFilter)?.day_number ?? ''}`, clear: () => setDayFilter('') }] : []),
         ...(sourceFilter ? [{ key: 'source', label: sourceFilter, clear: () => setSourceFilter('') }] : []),
         ...(regionFilter ? [{ key: 'region', label: (data?.regions ?? []).find((r) => String(r.id) === regionFilter)?.name ?? 'Region', clear: () => setRegionFilter('') }] : []),
         ...(categoryFilter ? [{ key: 'type', label: categoryMeta(categoryFilter).label, clear: () => setCategoryFilter('') }] : []),
@@ -683,43 +683,43 @@ export default function MapTab({ api }: { api: HoneymoonApi }) {
             <div className="shrink-0 flex flex-wrap items-center gap-2">
                 <MiniSelect
                     value={country}
-                    aria-label="Country"
-                    title="Saved with the trip — it stays set across refreshes and logins"
+                    aria-label="Land"
+                    title="Wird mit der Reise gespeichert – bleibt auch nach Neuladen und Anmelden erhalten"
                     onChange={(e) => api.update('trip', { focus_country: e.target.value })}
                 >
-                    <option value="">All countries</option>
+                    <option value="">Alle Länder</option>
                     {countries.map((c) => <option key={c} value={c}>{c}</option>)}
                 </MiniSelect>
                 <FilterButton active={activeFilters} onReset={resetFilters}>
-                    <FilterField label="Day">
+                    <FilterField label="Tag">
                         <SelectField value={dayFilter} onChange={(e) => setDayFilter(e.target.value)}>
-                            <option value="">All places</option>
+                            <option value="">Alle Orte</option>
                             {days.map((d) => (
-                                <option key={d.id} value={d.id}>Day {d.day_number}{d.title ? ` — ${d.title}` : ''}</option>
+                                <option key={d.id} value={d.id}>Tag {d.day_number}{d.title ? ` – ${d.title}` : ''}</option>
                             ))}
                         </SelectField>
                     </FilterField>
-                    <FilterField label="Source">
+                    <FilterField label="Quelle">
                         <SelectField value={sourceFilter} onChange={(e) => setSourceFilter(e.target.value)} disabled={!!selectedDay}>
-                            <option value="">All sources</option>
+                            <option value="">Alle Quellen</option>
                             {sourcesOf(places).map((src) => <option key={src} value={src}>{src}</option>)}
                         </SelectField>
                     </FilterField>
                     <FilterField label="Region">
                         <SelectField value={regionFilter} onChange={(e) => setRegionFilter(e.target.value)} disabled={!!selectedDay}>
-                            <option value="">All regions</option>
+                            <option value="">Alle Regionen</option>
                             {(data?.regions ?? []).map((r) => <option key={r.id} value={r.id}>{r.name}</option>)}
                         </SelectField>
                     </FilterField>
-                    <FilterField label="Type">
+                    <FilterField label="Typ">
                         <SelectField value={categoryFilter} onChange={(e) => setCategoryFilter(e.target.value)} disabled={!!selectedDay}>
-                            <option value="">All types ({typeOptions.length})</option>
+                            <option value="">Alle Typen ({typeOptions.length})</option>
                             {typeOptions.map((c) => <option key={c.key} value={c.key}>{c.icon} {c.label}</option>)}
                         </SelectField>
                     </FilterField>
                     <FilterField label="Status">
                         <SelectField value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} disabled={!!selectedDay}>
-                            <option value="">Any status</option>
+                            <option value="">Beliebiger Status</option>
                             {STATUSES.map((st) => <option key={st.key} value={st.key}>{st.label}</option>)}
                         </SelectField>
                     </FilterField>
@@ -729,51 +729,51 @@ export default function MapTab({ api }: { api: HoneymoonApi }) {
                     onClick={() => setShowUnconfirmed((v) => !v)}
                     disabled={!!selectedDay}
                     aria-pressed={showUnconfirmed}
-                    title="Unconfirmed pins are hidden from the map. Turn this on to work through them."
+                    title="Unbestätigte Pins sind auf der Karte ausgeblendet. Einschalten, um sie durchzugehen."
                     className={`min-h-11 md:min-h-0 shrink-0 rounded-full border px-3.5 py-1.5 text-sm font-medium transition
                         disabled:opacity-40 ${showUnconfirmed
                         ? 'border-amber-500 bg-amber-500 text-white'
                         : 'border-gray-200 bg-white text-gray-600 hover:bg-gray-50'}`}
                 >
-                    ⚠ Unconfirmed{hiddenUnconfirmed > 0 && !showUnconfirmed ? ` ${hiddenUnconfirmed}` : ''}
+                    ⚠ Unbestätigt{hiddenUnconfirmed > 0 && !showUnconfirmed ? ` ${hiddenUnconfirmed}` : ''}
                 </button>
                 <button
                     type="button"
                     onClick={() => { setShowItinerary((v) => !v); setRouteListOpen(false); }}
                     disabled={!!selectedDay || days.length === 0}
                     aria-pressed={showItinerary}
-                    title="Overlay each day's stops, in order"
+                    title="Die Stopps jedes Tages der Reihe nach einblenden"
                     className={`min-h-11 md:min-h-0 shrink-0 rounded-full border px-3.5 py-1.5 text-sm font-medium transition
                         disabled:opacity-40 ${showItinerary
                         ? 'border-slate-900 bg-slate-900 text-white'
                         : 'border-gray-200 bg-white text-gray-600 hover:bg-gray-50'}`}
                 >
-                    🗓 Itinerary
+                    🗓 Reiseplan
                 </button>
                 <div className="flex-1" />
                 <OverflowMenu items={[
                     {
-                        label: `Base map: ${MAP_LAYERS.find((entry) => entry.key === layer)?.label ?? layer}`,
+                        label: `Grundkarte: ${MAP_LAYERS.find((entry) => entry.key === layer)?.label ?? layer}`,
                         submenu: MAP_LAYERS.map((entry) => ({
                             label: `${entry.key === layer ? '✓ ' : ''}${entry.label}`,
                             onClick: () => setLayer(entry.key),
                         })),
                     },
                     {
-                        label: colourBy === 'category' ? 'Colour pins by area' : 'Colour pins by type',
+                        label: colourBy === 'category' ? 'Pins nach Gebiet einfärben' : 'Pins nach Typ einfärben',
                         onClick: () => setColourBy(colourBy === 'category' ? 'region' : 'category'),
                     },
-                    { label: 'Reset filters', onClick: resetFilters },
+                    { label: 'Filter zurücksetzen', onClick: resetFilters },
                 ]} />
                 <div className="basis-full flex flex-wrap items-center gap-2">
                     <FilterChips active={activeFilters} />
                     <p className="text-xs text-gray-400">
-                        {pinnedCount} pinned
+                        {pinnedCount} gepinnt
                         {unpinnedCount > 0 && (
-                            <span className="text-amber-600"> · {unpinnedCount} without coordinates</span>
+                            <span className="text-amber-600"> · {unpinnedCount} ohne Koordinaten</span>
                         )}
                         {selectedDay && (
-                            <span> · Day {selectedDay.day_number}
+                            <span> · Tag {selectedDay.day_number}
                                 {formatDayDate(data?.trip.start_date ?? null, selectedDay.day_number)
                                     ? ` (${formatDayDate(data?.trip.start_date ?? null, selectedDay.day_number)})`
                                     : ''}
@@ -781,27 +781,27 @@ export default function MapTab({ api }: { api: HoneymoonApi }) {
                         )}
                         {unclassified > 0 && (
                             <span className="text-sky-700">
-                                {' '}· {unclassified} with no country set
+                                {' '}· {unclassified} ohne Land
                             </span>
                         )}
                         {hiddenUnconfirmed > 0 && (
                             <span className="text-amber-600">
-                                {' '}· {hiddenUnconfirmed} unconfirmed hidden
+                                {' '}· {hiddenUnconfirmed} unbestätigte ausgeblendet
                             </span>
                         )}
                         {showUnconfirmed && unconfirmedShown > 0 && (
                             <span className="text-amber-700">
-                                {' '}· including {unconfirmedShown} unconfirmed — lasso them and Mark reviewed
+                                {' '}· davon {unconfirmedShown} unbestätigt – mit dem Lasso auswählen und als geprüft markieren
                             </span>
                         )}
                         {showItinerary && routes.length > 0 && (
                             <span className="text-slate-700">
-                                {' '}· {routes.length} day{routes.length === 1 ? '' : 's'} overlaid
+                                {' '}· {routes.length} {routes.length === 1 ? 'Tag' : 'Tage'} eingeblendet
                             </span>
                         )}
                         {legs.length > 0 && (
                             <span className="text-sky-700">
-                                {' '}· {legs.length} travel leg{legs.length === 1 ? '' : 's'}
+                                {' '}· {legs.length} {legs.length === 1 ? 'Teilstrecke' : 'Teilstrecken'}
                             </span>
                         )}
                     </p>
@@ -813,7 +813,7 @@ export default function MapTab({ api }: { api: HoneymoonApi }) {
                 {showPanels && (
                     <>
                         <SidePanel
-                            title="Itinerary"
+                            title="Reiseplan"
                             href="/admin/honeymoon/itinerary"
                             width={widths.left}
                         >
@@ -825,7 +825,7 @@ export default function MapTab({ api }: { api: HoneymoonApi }) {
                             />
                         </SidePanel>
                         <ColumnDivider
-                            label="Resize the itinerary column"
+                            label="Spaltenbreite des Reiseplans ändern"
                             onDrag={(dx) => resize('left', dx)}
                         />
                     </>
@@ -838,15 +838,15 @@ export default function MapTab({ api }: { api: HoneymoonApi }) {
                         flex items-center justify-center">
                         <EmptyState
                             title={hiddenUnconfirmed > 0
-                                ? 'No confirmed pins to show'
-                                : 'Nothing to show on the map yet'}
+                                ? 'Keine bestätigten Pins zum Anzeigen'
+                                : 'Auf der Karte gibt es noch nichts zu sehen'}
                             hint={hiddenUnconfirmed > 0
-                                ? `${hiddenUnconfirmed} pin(s) are hidden because they haven't been `
-                                    + 'confirmed yet. Hit ⚠ Show unconfirmed, lasso the ones that look '
-                                    + 'right, and Mark reviewed.'
+                                ? `${hiddenUnconfirmed} ${hiddenUnconfirmed === 1 ? 'Pin ist' : 'Pins sind'} ausgeblendet, weil ${hiddenUnconfirmed === 1 ? 'er' : 'sie'} noch nicht `
+                                    + `bestätigt ${hiddenUnconfirmed === 1 ? 'wurde' : 'wurden'}. Tippe auf ⚠ Unbestätigt, markiere die passenden `
+                                    + 'mit dem Lasso und setze sie auf geprüft.'
                                 : places.length
-                                    ? 'These places have no coordinates yet. Open one and use Find to pin it.'
-                                    : 'Add places in the Places tab, or run the seed script to load the Bali guide.'}
+                                    ? 'Diese Orte haben noch keine Koordinaten. Öffne einen und nutze „Suchen“, um ihn zu pinnen.'
+                                    : 'Füge Orte im Tab „Orte“ hinzu oder führe das Seed-Skript aus, um den Bali-Reiseführer zu laden.'}
                         />
                     </div>
                 ) : (
@@ -892,35 +892,35 @@ export default function MapTab({ api }: { api: HoneymoonApi }) {
                         flex flex-wrap items-center justify-end gap-1.5">
                         <button
                             onClick={() => { setFitPoints(null); setFitSignal((n) => n + 1); }}
-                            title="Frame everything currently shown"
+                            title="Alles Angezeigte einpassen"
                             className="shrink-0 min-h-11 md:min-h-0 rounded-full px-2.5 py-1 text-xs font-medium
                                 border border-gray-200 bg-gray-50 text-gray-600
                                 hover:bg-gray-100 transition"
                         >
-                            ⤢ Fit
+                            ⤢ Einpassen
                         </button>
                         {/* Desktop only: three columns in 900px would leave nothing
                             worth calling a map. */}
                         {wide && (
                             <button
                                 onClick={toggleSplit}
-                                title="Itinerary on the left, places on the right, map in the middle — drag the dividers to resize"
+                                title="Reiseplan links, Orte rechts, Karte in der Mitte – Trenner ziehen, um die Größe zu ändern"
                                 className={`shrink-0 min-h-11 md:min-h-0 rounded-full px-2.5 py-1 text-xs font-medium
                                     border transition ${split
                                     ? 'bg-slate-900 border-slate-900 text-white'
                                     : 'bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100'}`}
                             >
-                                {split ? '⊞ Split on' : '⊞ Split'}
+                                {split ? '⊞ Geteilt an' : '⊞ Geteilt'}
                             </button>
                         )}
                         <button
                             onClick={() => sheet.newPlace()}
-                            title="Add a place"
+                            title="Ort hinzufügen"
                             className="shrink-0 min-h-11 md:min-h-0 rounded-full px-2.5 py-1 text-xs font-medium
                                 border border-transparent bg-accent text-white
                                 hover:opacity-90 transition"
                         >
-                            + Add
+                            + Neu
                         </button>
                         {/* Measuring and lassoing both own the map's pointer, so
                             arming either disarms the other rather than leaving two
@@ -930,13 +930,13 @@ export default function MapTab({ api }: { api: HoneymoonApi }) {
                                 setTool(tool === 'measure' ? 'none' : 'measure');
                                 setSelectMode(false);
                             }}
-                            title="Click two points for the distance and bearing between them"
+                            title="Zwei Punkte anklicken für Entfernung und Richtung"
                             className={`shrink-0 min-h-11 md:min-h-0 rounded-full px-2.5 py-1 text-xs font-medium
                                 border transition ${tool === 'measure'
                                 ? 'bg-slate-900 border-slate-900 text-white'
                                 : 'bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100'}`}
                         >
-                            📏 Measure
+                            📏 Messen
                         </button>
                         <button
                             onClick={() => {
@@ -945,13 +945,13 @@ export default function MapTab({ api }: { api: HoneymoonApi }) {
                                 setTool('none');
                                 setBoundaryNote('');
                             }}
-                            title="Drag a loop round the pins you want — then act on them, or save the loop as an area"
+                            title="Eine Schleife um die gewünschten Pins ziehen – dann bearbeiten oder die Schleife als Gebiet speichern"
                             className={`shrink-0 min-h-11 md:min-h-0 rounded-full px-2.5 py-1 text-xs font-medium
                                 border transition ${selectMode
                                 ? 'bg-slate-900 border-slate-900 text-white'
                                 : 'bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100'}`}
                         >
-                            {selectMode ? '◯ Lasso on' : '◯ Lasso'}
+                            {selectMode ? '◯ Lasso an' : '◯ Lasso'}
                         </button>
                     </div>
 
@@ -968,16 +968,16 @@ export default function MapTab({ api }: { api: HoneymoonApi }) {
                     {tool === 'measure' && (
                         <p className="w-[min(16rem,100%)] rounded-2xl bg-slate-900/95 backdrop-blur
                             px-3 py-2 text-[11px] text-white shadow-lg">
-                            Click two points on the map for the distance and bearing. A third
-                            click starts again.
+                            Klicke zwei Punkte auf der Karte an, um Entfernung und Richtung zu sehen.
+                            Ein dritter Klick beginnt von vorn.
                         </p>
                     )}
 
                     {selectMode && !lassoed.size && !lassoLoop && (
                         <p className="w-[min(16rem,100%)] rounded-2xl bg-slate-900/95 backdrop-blur
                             px-3 py-2 text-[11px] text-white shadow-lg">
-                            Drag a loop round the pins you want — hold Shift to add to what is
-                            already picked. The loop can also be saved as an area.
+                            Ziehe eine Schleife um die gewünschten Pins – mit gedrückter Umschalttaste
+                            fügst du zur Auswahl hinzu. Die Schleife lässt sich auch als Gebiet speichern.
                         </p>
                     )}
 
@@ -991,8 +991,8 @@ export default function MapTab({ api }: { api: HoneymoonApi }) {
                             flex flex-wrap items-center gap-2">
                             <span className="text-sm font-medium text-gray-700 pl-1">
                                 {lassoed.size
-                                    ? `${lassoed.size} selected`
-                                    : 'Loop drawn — no pins inside it'}
+                                    ? `${lassoed.size} ausgewählt`
+                                    : 'Schleife gezogen – keine Pins darin'}
                             </span>
 
                             {/* A loop round empty water is still a boundary worth
@@ -1012,9 +1012,9 @@ export default function MapTab({ api }: { api: HoneymoonApi }) {
                                             these are abbreviated — the full words live in
                                             the Places tab. */}
                                         <option value="">Status</option>
-                                        <option value="idea">Idea</option>
-                                        <option value="shortlisted">Short</option>
-                                        <option value="booked">Booked</option>
+                                        <option value="idea">Idee</option>
+                                        <option value="shortlisted">Engere Wahl</option>
+                                        <option value="booked">Gebucht</option>
                                     </MiniSelect>
                                     {days.length > 0 && (
                                         <MiniSelect
@@ -1023,10 +1023,10 @@ export default function MapTab({ api }: { api: HoneymoonApi }) {
                                                 if (e.target.value) addToDay(Number(e.target.value));
                                             }}
                                         >
-                                            <option value="">Add to day…</option>
+                                            <option value="">Zu Tag hinzufügen …</option>
                                             {days.map((d) => (
                                                 <option key={d.id} value={d.id}>
-                                                    Day {d.day_number}{d.title ? ` — ${d.title}` : ''}
+                                                    Tag {d.day_number}{d.title ? ` – ${d.title}` : ''}
                                                 </option>
                                             ))}
                                         </MiniSelect>
@@ -1034,20 +1034,19 @@ export default function MapTab({ api }: { api: HoneymoonApi }) {
                                     <BulkFieldMenu
                                         fields={bulkFields}
                                         onApply={(key, value) => bulk({ [key]: value })}
-                                        label="Change a field on all selected"
+                                        label="Feld für alle Ausgewählten ändern"
                                     />
                                     <Button
                                         className="!px-3"
                                         onClick={toggleReview}
                                         title={review.needsReview
-                                            ? `Put all ${review.confirmed} back to unconfirmed`
-                                            : `Confirm ${review.unconfirmed} unconfirmed pin`
-                                                + `${review.unconfirmed === 1 ? '' : 's'}`}
+                                            ? `Alle ${review.confirmed} wieder auf unbestätigt setzen`
+                                            : `${review.unconfirmed} unbestätigte${review.unconfirmed === 1 ? 'n Pin' : ' Pins'} bestätigen`}
                                     >
                                         {review.label}
                                     </Button>
                                     <Button className="!px-3" tone="danger" onClick={bulkDelete}>
-                                        Delete
+                                        Löschen
                                     </Button>
                                 </>
                             )}
@@ -1057,7 +1056,7 @@ export default function MapTab({ api }: { api: HoneymoonApi }) {
                                 tone="ghost"
                                 onClick={() => { setLassoed(new Set()); setLassoLoop(null); }}
                             >
-                                Clear
+                                Leeren
                             </Button>
 
                             {/* ---- The loop itself, as an area ---- */}
@@ -1069,19 +1068,19 @@ export default function MapTab({ api }: { api: HoneymoonApi }) {
                                 <div className="w-full border-t border-gray-100 pt-2
                                     flex flex-wrap items-center gap-2">
                                     <span className="text-[11px] text-gray-500">
-                                        Or make this loop an area:
+                                        Oder die Schleife zum Gebiet machen:
                                     </span>
                                     <MiniSelect
                                         value=""
                                         onChange={(e) => {
                                             if (e.target.value) saveBoundary(Number(e.target.value));
                                         }}
-                                        aria-label="Save this loop as an area's boundary"
+                                        aria-label="Diese Schleife als Gebietsgrenze speichern"
                                     >
-                                        <option value="">Save as area…</option>
+                                        <option value="">Als Gebiet speichern …</option>
                                         {regions.map((region) => (
                                             <option key={region.id} value={region.id}>
-                                                {region.name}{region.boundary ? ' (replace)' : ''}
+                                                {region.name}{region.boundary ? ' (ersetzen)' : ''}
                                             </option>
                                         ))}
                                     </MiniSelect>
@@ -1102,16 +1101,16 @@ export default function MapTab({ api }: { api: HoneymoonApi }) {
                 {showItinerary && routes.length > 0 && !routeListOpen && (
                     <button
                         onClick={() => setRouteListOpen(true)}
-                        title="Show the stops of each day, in order"
+                        title="Die Stopps jedes Tages der Reihe nach anzeigen"
                         className="absolute top-3 left-14 z-[500] inline-flex items-center gap-1.5
                             bg-white/95 backdrop-blur rounded-2xl shadow-lg border border-gray-200
                             px-2.5 py-1.5 text-xs font-medium text-gray-600 hover:text-gray-900
                             hover:bg-white transition"
                     >
                         <span aria-hidden>🗓</span>
-                        Itinerary
+                        Reiseplan
                         <span className="text-gray-400 tabular-nums">
-                            {routes.length} day{routes.length === 1 ? '' : 's'}
+                            {routes.length} {routes.length === 1 ? 'Tag' : 'Tage'}
                         </span>
                         <span className="text-gray-300" aria-hidden>▸</span>
                     </button>
@@ -1122,12 +1121,12 @@ export default function MapTab({ api }: { api: HoneymoonApi }) {
                         shadow-lg border border-gray-200 p-3">
                         <div className="flex items-center justify-between gap-2 mb-2">
                             <p className="text-[11px] uppercase tracking-wide text-gray-400 font-semibold">
-                                Itinerary
+                                Reiseplan
                             </p>
                             <button
                                 onClick={() => setRouteListOpen(false)}
-                                title="Minimise back to the corner"
-                                aria-label="Minimise the itinerary list"
+                                title="In die Ecke einklappen"
+                                aria-label="Reiseplan-Liste einklappen"
                                 className="text-gray-300 hover:text-gray-700 leading-none px-1 -mr-1"
                             >
                                 &minus;
@@ -1170,7 +1169,7 @@ export default function MapTab({ api }: { api: HoneymoonApi }) {
                         className="absolute bottom-3 left-3 z-[500] min-h-11 md:min-h-0 rounded-full border border-gray-200
                             bg-white/95 px-3 py-1.5 text-xs font-medium text-gray-600 shadow backdrop-blur hover:text-gray-900"
                     >
-                        ● Legend
+                        ● Legende
                     </button>
                 )}
                 {pinnedCount > 0 && legendOpen && (
@@ -1179,7 +1178,7 @@ export default function MapTab({ api }: { api: HoneymoonApi }) {
                         <button
                             type="button"
                             onClick={() => setLegendOpen(false)}
-                            aria-label="Hide the legend"
+                            aria-label="Legende ausblenden"
                             className="float-right -mr-1 -mt-1 ml-2 size-8 rounded-full text-gray-400 hover:text-gray-700"
                         >
                             ×
@@ -1198,7 +1197,7 @@ export default function MapTab({ api }: { api: HoneymoonApi }) {
                             {visible.some((p) => p.needs_review && hasCoords(p)) && (
                                 <span className="inline-flex items-center gap-1 text-[11px] text-amber-700">
                                     <span className="inline-block w-2.5 h-2.5 rounded-full border-2 border-dashed border-amber-500" />
-                                    Unconfirmed
+                                    Unbestätigt
                                 </span>
                             )}
                         </div>
@@ -1210,11 +1209,11 @@ export default function MapTab({ api }: { api: HoneymoonApi }) {
                 {showPanels && (
                     <>
                         <ColumnDivider
-                            label="Resize the places column"
+                            label="Spaltenbreite der Orte ändern"
                             onDrag={(dx) => resize('right', dx)}
                         />
                         <SidePanel
-                            title="Places"
+                            title="Orte"
                             href="/admin/honeymoon/places"
                             width={widths.right}
                         >
@@ -1255,9 +1254,9 @@ function SidePanel({ title, href, width, children }: {
                 <Link
                     href={href}
                     className="text-[11px] text-gray-400 hover:text-gray-700 shrink-0"
-                    title={`Open the full ${title.toLowerCase()} tab`}
+                    title={`Den ganzen Tab „${title}“ öffnen`}
                 >
-                    Full tab ↗
+                    Ganzer Tab ↗
                 </Link>
             </header>
             <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden px-0.5 pb-1">

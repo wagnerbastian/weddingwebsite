@@ -23,7 +23,7 @@ function storePhoto(file: File, slot: 1 | 2): Promise<{ filename: string } | { e
     const problem = rejectUpload(file);
     if (problem) return Promise.resolve({ error: problem });
     const filename = safeImageFilename(file.name, `${Date.now()}-${slot}-`);
-    if (!filename) return Promise.resolve({ error: 'Unsupported image type' });
+    if (!filename) return Promise.resolve({ error: 'Nicht unterstütztes Bildformat' });
     if (!fs.existsSync(PHOTOS_DIR)) fs.mkdirSync(PHOTOS_DIR, { recursive: true });
     return file.arrayBuffer().then((buf) => {
         fs.writeFileSync(path.join(PHOTOS_DIR, filename), Buffer.from(buf));
@@ -76,7 +76,7 @@ export async function POST(request: Request) {
         const photo2Align = formData.get('photo2Align') as string || 'center';
 
         if (!title || !date || !description) {
-            return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+            return NextResponse.json({ error: 'Pflichtfelder fehlen' }, { status: 400 });
         }
 
         const photos: string[] = [];
@@ -107,7 +107,7 @@ export async function POST(request: Request) {
         return NextResponse.json({ success: true, milestone: newMilestone });
     } catch (error) {
         console.error('Timeline create error:', error);
-        return NextResponse.json({ error: 'Create failed' }, { status: 500 });
+        return NextResponse.json({ error: 'Erstellen fehlgeschlagen' }, { status: 500 });
     }
 }
 
@@ -130,7 +130,7 @@ export async function PATCH(request: Request) {
         const milestoneIndex = milestones.findIndex((m: Milestone) => m.id === id);
 
         if (milestoneIndex === -1) {
-            return NextResponse.json({ error: 'Milestone not found' }, { status: 404 });
+            return NextResponse.json({ error: 'Meilenstein nicht gefunden' }, { status: 404 });
         }
 
         // Update text fields. formData.get() returns null (not undefined) for
@@ -175,7 +175,7 @@ export async function PATCH(request: Request) {
         return NextResponse.json({ success: true, milestone: milestones[milestoneIndex] });
     } catch (error) {
         console.error('Timeline update error:', error);
-        return NextResponse.json({ error: 'Update failed' }, { status: 500 });
+        return NextResponse.json({ error: 'Aktualisieren fehlgeschlagen' }, { status: 500 });
     }
 }
 
@@ -186,7 +186,7 @@ export async function DELETE(request: Request) {
         const milestoneIndex = milestones.findIndex((m: Milestone) => m.id === id);
 
         if (milestoneIndex === -1) {
-            return NextResponse.json({ error: 'Milestone not found' }, { status: 404 });
+            return NextResponse.json({ error: 'Meilenstein nicht gefunden' }, { status: 404 });
         }
 
         const milestone = milestones[milestoneIndex];
@@ -204,6 +204,6 @@ export async function DELETE(request: Request) {
         return NextResponse.json({ success: true });
     } catch (error) {
         console.error('Timeline delete error:', error);
-        return NextResponse.json({ error: 'Delete failed' }, { status: 500 });
+        return NextResponse.json({ error: 'Löschen fehlgeschlagen' }, { status: 500 });
     }
 }

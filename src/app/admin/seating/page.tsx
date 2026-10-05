@@ -348,14 +348,14 @@ function SeatingCanvas({
                 ? 'bg-gray-100 text-gray-700 border-gray-300'
                 : 'text-gray-600 border-gray-200 hover:bg-gray-50'
             }`}
-            title={showGuests ? 'Hide the guest list' : 'Show the guest list'}
+            title={showGuests ? 'Gästeliste ausblenden' : 'Gästeliste einblenden'}
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
               <circle cx="9" cy="7" r="4" />
               <path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" />
             </svg>
-            {showGuests ? 'Hide guests' : 'Guests'}
+            {showGuests ? 'Gäste ausblenden' : 'Gäste'}
           </button>
 
           {/* Second in the row, beside the other view control: the toolbar
@@ -369,7 +369,7 @@ function SeatingCanvas({
                 ? 'bg-gray-100 text-gray-700 border-gray-300'
                 : 'text-gray-600 border-gray-200 hover:bg-gray-50'
             }`}
-            title={fullscreen ? 'Exit full screen (Esc)' : 'Give the diagram the whole screen'}
+            title={fullscreen ? 'Vollbild beenden (Esc)' : 'Plan im Vollbild anzeigen'}
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               {fullscreen ? (
@@ -378,7 +378,7 @@ function SeatingCanvas({
                 <path d="M8 3H5a2 2 0 0 0-2 2v3M16 3h3a2 2 0 0 1 2 2v3M8 21H5a2 2 0 0 1-2-2v-3M16 21h3a2 2 0 0 0 2-2v-3" />
               )}
             </svg>
-            {fullscreen ? 'Exit full screen' : 'Full screen'}
+            {fullscreen ? 'Vollbild beenden' : 'Vollbild'}
           </button>
 
           <button
@@ -390,7 +390,7 @@ function SeatingCanvas({
               <line x1="12" y1="5" x2="12" y2="19" />
               <line x1="5" y1="12" x2="19" y2="12" />
             </svg>
-            Add Table
+            Tisch hinzufügen
           </button>
           <button
             onClick={() => setShowRoomSettings(true)}
@@ -399,7 +399,7 @@ function SeatingCanvas({
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <rect x="3" y="3" width="18" height="18" rx="2" />
             </svg>
-            Room Settings
+            Raumgröße
           </button>
 
           {!localRoom ? (
@@ -430,7 +430,7 @@ function SeatingCanvas({
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <rect x="3" y="3" width="18" height="18" rx="2" />
               </svg>
-              Draw Room
+              Raum zeichnen
             </button>
           ) : (
             <>
@@ -445,18 +445,18 @@ function SeatingCanvas({
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <rect x="3" y="3" width="18" height="18" rx="2" />
                 </svg>
-                {roomEditMode ? 'Done Editing Room' : 'Edit Room'}
+                {roomEditMode ? 'Fertig' : 'Raum bearbeiten'}
               </button>
               <button
                 onClick={async () => {
-                  if (!confirm('Delete the room outline?')) return;
+                  if (!confirm('Raumumriss löschen?')) return;
                   await fetch('/api/admin/seating/room', { method: 'DELETE' });
                   onRoomChange(null);
                   setRoomEditMode(false);
                 }}
                 className="flex items-center gap-1.5 text-red-500 text-sm font-medium px-3 py-1.5 rounded-md border border-red-200 hover:bg-red-50 transition-colors"
               >
-                Delete Room
+                Raum löschen
               </button>
             </>
           )}
@@ -470,7 +470,7 @@ function SeatingCanvas({
                   colorMode === 'party' ? 'bg-white text-gray-800 shadow-sm' : 'text-gray-500 hover:text-gray-700'
                 }`}
               >
-                Party view
+                Gruppenansicht
               </button>
               <button
                 onClick={() => setColorMode('rsvp')}
@@ -478,7 +478,7 @@ function SeatingCanvas({
                   colorMode === 'rsvp' ? 'bg-white text-gray-800 shadow-sm' : 'text-gray-500 hover:text-gray-700'
                 }`}
               >
-                RSVP view
+                Rückmeldungen
               </button>
             </div>
 
@@ -488,30 +488,30 @@ function SeatingCanvas({
                 <>
                   <span className="flex items-center gap-1">
                     <span className="w-3 h-3 rounded-full bg-green-200 border border-green-400 inline-block" />
-                    Party together
+                    Gruppe zusammen
                   </span>
                   <span className="flex items-center gap-1">
                     <span className="w-3 h-3 rounded-full bg-yellow-200 border border-yellow-400 inline-block" />
-                    Party split
+                    Gruppe getrennt
                   </span>
                 </>
               ) : (
                 <>
                   <span className="flex items-center gap-1">
                     <span className="w-3 h-3 rounded-full bg-green-200 border border-green-400 inline-block" />
-                    Coming
+                    Kommt
                   </span>
                   <span className="flex items-center gap-1">
                     <span className="w-3 h-3 rounded-full bg-red-200 border border-red-400 inline-block" />
-                    Declined
+                    Absage
                   </span>
                   <span className="flex items-center gap-1">
                     <span className="w-3 h-3 rounded-full bg-white border border-gray-300 inline-block" />
-                    No RSVP
+                    Keine Antwort
                   </span>
                   <span className="flex items-center gap-1">
                     <span className="w-3 h-3 rounded-full bg-orange-200 border border-orange-400 inline-block" />
-                    Likely not coming
+                    Kommt wohl nicht
                   </span>
                 </>
               )}
@@ -587,27 +587,27 @@ function SeatingCanvas({
       {showRoomSettings && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
           <div className="bg-white rounded-xl shadow-xl p-6 w-80">
-            <h3 className="text-base font-semibold text-gray-800 mb-4">Room Dimensions</h3>
+            <h3 className="text-base font-semibold text-gray-800 mb-4">Raumgröße</h3>
             <p className="text-sm text-gray-500 mb-4">
-              Optional. Sets the bounding box of the canvas to match your venue.
+              Optional. Passt die Zeichenfläche an deine Location an.
             </p>
             <div className="space-y-3">
               <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">Width (feet)</label>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Breite (Fuß)</label>
                 <input
                   type="number"
                   className="w-full border border-gray-200 rounded-md px-3 py-2 text-sm outline-none focus:border-blue-400"
-                  placeholder="e.g. 80"
+                  placeholder="z. B. 80"
                   value={roomWidth}
                   onChange={e => setRoomWidth(e.target.value)}
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">Height (feet)</label>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Höhe (Fuß)</label>
                 <input
                   type="number"
                   className="w-full border border-gray-200 rounded-md px-3 py-2 text-sm outline-none focus:border-blue-400"
-                  placeholder="e.g. 60"
+                  placeholder="z. B. 60"
                   value={roomHeight}
                   onChange={e => setRoomHeight(e.target.value)}
                 />
@@ -619,13 +619,13 @@ function SeatingCanvas({
                 className="flex-1 text-sm font-medium text-white py-2 rounded-md"
                 style={{ backgroundColor: 'var(--accent)' }}
               >
-                Save
+                Speichern
               </button>
               <button
                 onClick={() => setShowRoomSettings(false)}
                 className="flex-1 text-sm font-medium text-gray-600 py-2 rounded-md border border-gray-200 hover:bg-gray-50"
               >
-                Cancel
+                Abbrechen
               </button>
             </div>
           </div>
@@ -772,7 +772,7 @@ export default function SeatingPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-full">
-        <div className="text-gray-400 text-sm">Loading seating chart…</div>
+        <div className="text-gray-400 text-sm">Sitzplan wird geladen …</div>
       </div>
     );
   }
@@ -783,18 +783,18 @@ export default function SeatingPage() {
           back out, and the point of the button was the vertical space. */}
       <div className={`px-8 py-4 bg-white border-b border-gray-200 shrink-0 items-center gap-4 ${fullscreen ? 'hidden' : 'flex'}`}>
         <div>
-          <h1 className="text-2xl font-serif font-bold text-gray-800">Seating Chart</h1>
+          <h1 className="text-2xl font-serif font-bold text-gray-800">Sitzplan</h1>
           <p className="text-sm text-gray-500 mt-0.5">
-            {tables.length} table{tables.length !== 1 ? 's' : ''} · {counts.parties} part{counts.parties === 1 ? 'y' : 'ies'} ·{' '}
+            {tables.length} {tables.length === 1 ? 'Tisch' : 'Tische'} · {counts.parties} {counts.parties === 1 ? 'Gruppe' : 'Gruppen'} ·{' '}
             <span className={counts.seated === counts.expected ? undefined : 'text-amber-600 font-medium'}>
-              {counts.seated} of {counts.expected} guests seated
+              {counts.seated} von {counts.expected} Gästen platziert
             </span>
             {counts.offList > 0 && (
               <span
                 className="text-amber-600 font-medium"
-                title="They answered the RSVP form under a name the guest list does not have, so they cannot be seated until they are added. The list view names them."
+                title="Sie haben unter einem Namen zugesagt, den die Gästeliste nicht kennt, und können erst platziert werden, wenn sie hinzugefügt sind. Die Listenansicht nennt sie."
               >
-                {' '}· {counts.offList} not on the guest list
+                {' '}· {counts.offList} nicht auf der Gästeliste
               </span>
             )}
           </p>
@@ -803,9 +803,9 @@ export default function SeatingPage() {
         <button
           onClick={() => setShowExport(true)}
           className="ml-auto px-4 py-1.5 rounded-full bg-gray-50 text-xs font-medium text-gray-600 hover:bg-gray-100 hover:text-gray-800 transition-colors"
-          title="Print the chart, or download it as a spreadsheet"
+          title="Sitzplan drucken oder als Tabelle herunterladen"
         >
-          Export
+          Exportieren
         </button>
 
         <div className="flex bg-gray-100 rounded-full p-0.5 text-xs font-medium">
@@ -817,7 +817,7 @@ export default function SeatingPage() {
                 view === v ? 'bg-white text-gray-800 shadow-sm' : 'text-gray-500 hover:text-gray-700'
               }`}
             >
-              {v === 'canvas' ? 'Canvas' : 'List'}
+              {v === 'canvas' ? 'Plan' : 'Liste'}
             </button>
           ))}
         </div>
@@ -853,7 +853,7 @@ export default function SeatingPage() {
 
       {showAddModal && (
         <AddTableModal
-          defaultName={`Table ${tables.length + 1}`}
+          defaultName={`Tisch ${tables.length + 1}`}
           onAdd={handleAddTable}
           onClose={() => setShowAddModal(false)}
         />

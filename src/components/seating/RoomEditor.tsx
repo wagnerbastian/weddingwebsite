@@ -323,9 +323,9 @@ export default function RoomEditor({
       {active && (
         <g transform="translate(12, 12)" style={{ pointerEvents: 'none' }}>
           <rect width={220} height={46} rx={6} fill="white" stroke="#e5e7eb" strokeWidth={1} opacity={0.95} />
-          <text x={10} y={17} fontSize={11} fill="#374151" fontWeight="600">Edit Room Shape</text>
-          <text x={10} y={32} fontSize={10} fill="#6b7280">≡ drag to resize wall  ·  + add a joint</text>
-          <text x={10} y={44} fontSize={10} fill="#6b7280">Press Esc or click Done to exit</text>
+          <text x={10} y={17} fontSize={11} fill="#374151" fontWeight="600">Raumform bearbeiten</text>
+          <text x={10} y={32} fontSize={10} fill="#6b7280">≡ ziehen zum Anpassen der Wand  ·  + Eckpunkt hinzufügen</text>
+          <text x={10} y={44} fontSize={10} fill="#6b7280">Esc drücken oder auf Fertig klicken zum Beenden</text>
         </g>
       )}
     </svg>

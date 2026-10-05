@@ -11,6 +11,12 @@ export function todayLocal(): string {
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
 
+/** "2026-10-05" (or a full ISO timestamp) as "05.10.2026"; anything else comes back unchanged. */
+export function formatDate(iso: string | null | undefined): string {
+    const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(iso ?? '');
+    return m ? `${m[3]}.${m[2]}.${m[1]}` : (iso ?? '');
+}
+
 /** Cents-accurate display that dims true zeroes so real numbers stand out. */
 export function Money({ value, className = '' }: { value: number; className?: string }) {
     const negative = value < 0;
@@ -126,7 +132,16 @@ export function InlineText({ value, onCommit, placeholder, className = '', align
     );
 }
 
-/** Same commit-on-blur behaviour, but tolerant of "$1,200.50" style input. */
+/** Same commit-on-blur behaviour, but tolerant of "1.200,50 $" style input. */
+/** Reads "1.200,50", "1200,5", "1200.50" or "1.200 $"; an empty field is 0, junk is NaN. */
+function parseAmount(raw: string): number {
+    let cleaned = raw.replace(/[$€\s\u00a0]/g, '');
+    if (cleaned === '') return 0;
+    if (cleaned.includes(',')) cleaned = cleaned.replace(/\./g, '').replace(',', '.');
+    else if (/^-?\d{1,3}(\.\d{3})+$/.test(cleaned)) cleaned = cleaned.replace(/\./g, '');
+    return Number(cleaned);
+}
+
 export function InlineNumber({ value, onCommit, placeholder, prefix, className = '' }: {
     value: number;
     onCommit: (next: number) => void;
@@ -142,8 +157,7 @@ export function InlineNumber({ value, onCommit, placeholder, prefix, className =
     const abandon = useRef(false);
 
     const commit = () => {
-        const cleaned = draft.replace(/[$,\s]/g, '');
-        const parsed = cleaned === '' ? 0 : Number(cleaned);
+        const parsed = parseAmount(draft);
         const next = Number.isFinite(parsed) ? parsed : value;
         if (next !== value) onCommit(next);
         setDraft(String(next));
@@ -163,7 +177,7 @@ export function InlineNumber({ value, onCommit, placeholder, prefix, className =
             inputMode="decimal"
             onFocus={(e) => {
                 setEditing(true);
-                setDraft(value ? String(value) : '');
+                setDraft(value ? String(value).replace('.', ',') : '');
                 // Select on entry: the common edit is replacing the number, not
                 // appending a digit to it.
                 requestAnimationFrame(() => e.target.select?.());
@@ -272,7 +286,7 @@ export function DeleteButton({ onClick, label }: { onClick: () => void; label: s
                 md:text-lg md:leading-none md:text-gray-300 md:hover:bg-transparent
                 md:hover:text-rose-500"
         >
-            <span className="md:hidden">Delete</span>
+            <span className="md:hidden">Löschen</span>
             <span aria-hidden className="hidden md:inline">&times;</span>
         </button>
     );
@@ -342,7 +356,7 @@ export function Modal({ title, onClose, children }: {
             <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 z-10">
                 <div className="flex items-center justify-between mb-4">
                     <h3 className="font-semibold text-gray-900">{title}</h3>
-                    <button onClick={onClose} aria-label="Close"
+                    <button onClick={onClose} aria-label="Schließen"
                         className="text-gray-400 hover:text-gray-600 text-xl leading-none">&times;</button>
                 </div>
                 {children}

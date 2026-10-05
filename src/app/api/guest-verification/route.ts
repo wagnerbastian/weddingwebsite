@@ -7,7 +7,7 @@ export async function POST(request: Request) {
 
     if (typeof guest_name !== 'string' || !guest_name.trim()) {
       return NextResponse.json(
-        { verified: false, message: 'Guest name is required' },
+        { verified: false, message: 'Bitte gebt einen Namen ein' },
         { status: 400 }
       );
     }
@@ -93,12 +93,12 @@ export async function POST(request: Request) {
 
     return NextResponse.json({
       verified: false,
-      message: 'We could not find your name on our guest list. Please check the spelling or contact us if you believe this is an error.',
+      message: 'Wir konnten euren Namen nicht auf unserer Gästeliste finden. Bitte prüft die Schreibweise oder meldet euch bei uns, falls ihr einen Fehler vermutet.',
     });
   } catch (error) {
     console.error('Error verifying guest:', error);
     return NextResponse.json(
-      { verified: false, message: 'Error verifying guest' },
+      { verified: false, message: 'Beim Prüfen ist ein Fehler aufgetreten' },
       { status: 500 }
     );
   }

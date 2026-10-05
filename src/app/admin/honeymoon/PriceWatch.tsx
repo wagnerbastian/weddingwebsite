@@ -20,10 +20,10 @@ import { Button, Card, TextArea } from './ui';
 const BOOKMARKLET = `javascript:(function(){
 var sel=['[data-testid="price-and-discounted-price"]','[data-testid="price"]','.prco-valign-middle-helper','._1p7iugi','[data-section-id="BOOK_IT_SIDEBAR"] span','[class*="price"]'];
 var t='';for(var i=0;i<sel.length&&!t;i++){var e=document.querySelector(sel[i]);if(e&&e.textContent)t=e.textContent.trim();}
-if(!t){t=prompt('Could not find a price on this page. Type it in?','')||'';}
+if(!t){t=prompt('Auf dieser Seite wurde kein Preis gefunden. Preis eingeben?','')||'';}
 if(!t)return;
 var line=location.href+'\\t'+t.replace(/\\s+/g,' ');
-navigator.clipboard.writeText(line).then(function(){alert('Copied:\\n'+line+'\\n\\nPaste it into the honeymoon portal.');},function(){prompt('Copy this line:',line);});
+navigator.clipboard.writeText(line).then(function(){alert('Kopiert:\\n'+line+'\\n\\nFüge es im Flitterwochen-Portal ein.');},function(){prompt('Diese Zeile kopieren:',line);});
 })();`.replace(/\n/g, '');
 
 export default function PriceWatch({ api }: { api: HoneymoonApi }) {
@@ -48,20 +48,20 @@ export default function PriceWatch({ api }: { api: HoneymoonApi }) {
                 body: JSON.stringify({ entries }),
             });
             const body = await res.json().catch(() => ({}));
-            if (!res.ok) { setResult(body.error ?? 'Could not record those.'); return; }
+            if (!res.ok) { setResult(body.error ?? 'Die Preise konnten nicht gespeichert werden.'); return; }
             await api.refresh();
             const moved = (body.recorded ?? []).filter(
                 (row: { change: number | null }) => row.change != null && row.change !== 0,
             );
             setResult([
-                `Recorded ${body.recorded?.length ?? 0}.`,
+                `${body.recorded?.length ?? 0} erfasst.`,
                 moved.length
                     ? moved.map((row: { name: string; change: number }) => (
-                        `${row.name} ${row.change > 0 ? 'up' : 'down'} ${Math.abs(row.change)}`
+                        `${row.name} ${row.change > 0 ? 'gestiegen um' : 'gesunken um'} ${Math.abs(row.change)}`
                     )).join(', ')
-                    : 'No changes since last time.',
+                    : 'Keine Änderungen seit dem letzten Mal.',
                 body.unmatched?.length
-                    ? `${body.unmatched.length} link${body.unmatched.length === 1 ? '' : 's'} matched no stay.`
+                    ? `${body.unmatched.length} ${body.unmatched.length === 1 ? 'Link passt' : 'Links passen'} zu keiner Unterkunft.`
                     : '',
             ].filter(Boolean).join(' '));
             setText('');
@@ -78,19 +78,19 @@ export default function PriceWatch({ api }: { api: HoneymoonApi }) {
     return (
         <Card className="space-y-2 p-3">
             <div className="flex flex-wrap items-baseline justify-between gap-2">
-                <h3 className="text-sm font-semibold text-gray-900">Watch the prices</h3>
+                <h3 className="text-sm font-semibold text-gray-900">Preise beobachten</h3>
                 <button
                     onClick={() => setShowHow((v) => !v)}
                     className="text-[11px] text-gray-500 underline decoration-dotted"
                 >
-                    {showHow ? 'Hide' : 'How this works'}
+                    {showHow ? 'Ausblenden' : 'So funktioniert es'}
                 </button>
             </div>
 
             {showHow && (
                 <div className="space-y-2 rounded-2xl bg-gray-50 p-3">
                     <p className="text-xs text-gray-600">
-                        Drag this to your bookmarks bar (or right-click → bookmark the link):
+                        Zieh das in deine Lesezeichenleiste (oder Rechtsklick → Link als Lesezeichen speichern):
                     </p>
                     {/* A javascript: href is the whole point — this is a
                         bookmarklet, not navigation. */}
@@ -100,16 +100,16 @@ export default function PriceWatch({ api }: { api: HoneymoonApi }) {
                         className="inline-block cursor-grab rounded-full bg-gray-900 px-4 py-2
                             text-xs font-semibold text-white"
                     >
-                        💰 Grab this price
+                        💰 Diesen Preis holen
                     </a>
                     <ol className="list-inside list-decimal space-y-0.5 text-xs text-gray-600">
-                        <li>Open a stay&apos;s booking page with your dates and guests set</li>
-                        <li>Click the bookmark — it copies the URL and the price</li>
-                        <li>Paste it below (several lines at once is fine)</li>
+                        <li>Öffne die Buchungsseite einer Unterkunft, mit eingestelltem Zeitraum und Personenzahl</li>
+                        <li>Klick auf das Lesezeichen – es kopiert URL und Preis</li>
+                        <li>Füge es unten ein (mehrere Zeilen auf einmal sind in Ordnung)</li>
                     </ol>
                     <p className="text-[11px] text-gray-400">
-                        A shortlist sits for weeks and prices move; this is how you find out without
-                        opening six tabs and trying to remember what they said last time.
+                        Eine Auswahlliste liegt wochenlang herum und die Preise ändern sich. So erfährst du es, ohne
+                        sechs Tabs zu öffnen und dich zu erinnern, was dort beim letzten Mal stand.
                     </p>
                 </div>
             )}
@@ -123,7 +123,7 @@ export default function PriceWatch({ api }: { api: HoneymoonApi }) {
             />
             <div className="flex items-center gap-2">
                 <Button tone="primary" onClick={record} disabled={!text.trim() || busy}>
-                    {busy ? 'Recording…' : 'Record prices'}
+                    {busy ? 'Wird erfasst …' : 'Preise erfassen'}
                 </Button>
                 {result && <span className="text-[11px] text-gray-600">{result}</span>}
             </div>
@@ -144,7 +144,7 @@ export default function PriceWatch({ api }: { api: HoneymoonApi }) {
                                 className="flex items-baseline gap-2 text-xs"
                             >
                                 <span className="min-w-0 flex-1 truncate text-gray-700">
-                                    {place?.name ?? 'A stay'}
+                                    {place?.name ?? 'Eine Unterkunft'}
                                 </span>
                                 <span className="shrink-0 tabular-nums text-gray-500">
                                     {row.price_note ?? row.amount ?? '—'}

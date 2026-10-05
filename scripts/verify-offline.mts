@@ -89,7 +89,7 @@ for (const [label, record] of [['none', null], ['old build', { at: now - 60_000,
         isWarmStale(record, 'b1', now) === sw.isStale(record, 'b1', now));
 }
 check('the offline message says what happened and what to do',
-    /offline/i.test(sw.OFFLINE_WRITE_MESSAGE) && /wasn.t saved/i.test(sw.OFFLINE_WRITE_MESSAGE));
+    /offline/i.test(sw.OFFLINE_WRITE_MESSAGE) && /nicht gespeichert/i.test(sw.OFFLINE_WRITE_MESSAGE));
 
 console.log('\nEvery page is in the offline list');
 const pages: string[] = [];

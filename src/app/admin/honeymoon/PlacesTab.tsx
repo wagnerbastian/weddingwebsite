@@ -27,11 +27,11 @@ type SortKey = 'name' | 'recent' | 'region' | 'status' | 'rating' | 'distance';
 
 const SORTS: { key: SortKey; label: string }[] = [
     { key: 'name', label: 'Name' },
-    { key: 'recent', label: 'Recently added' },
+    { key: 'recent', label: 'Zuletzt hinzugefügt' },
     { key: 'region', label: 'Region' },
     { key: 'status', label: 'Status' },
-    { key: 'rating', label: 'Rating' },
-    { key: 'distance', label: 'Distance from base' },
+    { key: 'rating', label: 'Bewertung' },
+    { key: 'distance', label: 'Entfernung zur Basis' },
 ];
 
 /**
@@ -219,7 +219,7 @@ export default function PlacesTab({ api, panel = false, segmentSwitch }: {
     const bulkFields = useMemo(() => [
         {
             key: 'category',
-            label: 'Type',
+            label: 'Typ',
             options: (data?.categories ?? []).map((c) => ({
                 value: c.key, label: `${c.icon} ${c.label}`,
             })),
@@ -228,7 +228,7 @@ export default function PlacesTab({ api, panel = false, segmentSwitch }: {
             key: 'region_id',
             label: 'Region',
             options: [
-                { value: null, label: '— no region —' },
+                { value: null, label: '— keine Region —' },
                 ...(data?.regions ?? []).map((r) => ({
                     value: r.id, label: r.country ? `${r.name} · ${r.country}` : r.name,
                 })),
@@ -236,41 +236,41 @@ export default function PlacesTab({ api, panel = false, segmentSwitch }: {
         },
         {
             key: 'country',
-            label: 'Country',
+            label: 'Land',
             options: [
-                { value: '', label: '— from region —' },
+                { value: '', label: '— aus der Region —' },
                 ...countriesInUse(data?.regions ?? [], places).map((c) => ({ value: c, label: c })),
             ],
         },
         {
             key: 'source',
-            label: 'Source',
+            label: 'Quelle',
             options: sources.map((src) => ({ value: src, label: src })),
         },
         {
             key: 'needs_review',
-            label: 'Review flag',
+            label: 'Prüfmarkierung',
             options: [
-                { value: false, label: 'Reviewed — pin is right' },
-                { value: true, label: 'Needs review' },
+                { value: false, label: 'Geprüft – Pin stimmt' },
+                { value: true, label: 'Muss geprüft werden' },
             ],
         },
         {
             key: 'is_excursion',
-            label: 'Excursion',
+            label: 'Ausflug',
             options: [
-                { value: true, label: 'Is an excursion' },
-                { value: false, label: 'Not an excursion' },
+                { value: true, label: 'Ist ein Ausflug' },
+                { value: false, label: 'Kein Ausflug' },
             ],
         },
         {
             key: 'rating',
-            label: 'Rating',
+            label: 'Bewertung',
             options: [
-                { value: 'yes', label: '\u{1F44D} Interested' },
-                { value: 'mid', label: '\u{1F610} Mid tier' },
-                { value: 'no', label: '\u{1F44E} Not interested' },
-                { value: '', label: '— unrated —' },
+                { value: 'yes', label: '\u{1F44D} Interessiert' },
+                { value: 'mid', label: '\u{1F610} Mittelklasse' },
+                { value: 'no', label: '\u{1F44E} Nicht interessiert' },
+                { value: '', label: '— unbewertet —' },
             ],
         },
     ], [data?.categories, data?.regions, places, sources]);
@@ -288,12 +288,12 @@ export default function PlacesTab({ api, panel = false, segmentSwitch }: {
         try {
             const res = await fetch('/api/admin/honeymoon/seed', { method: 'POST' });
             const body = await res.json().catch(() => ({}));
-            if (!res.ok) { setSeedNote(body.error ?? 'Could not load the guide.'); return; }
+            if (!res.ok) { setSeedNote(body.error ?? 'Der Reiseführer konnte nicht geladen werden.'); return; }
             await api.refresh();
             setSeedNote(
-                `Added ${body.added.places} places, ${body.added.regions} regions and `
-                + `${body.added.notes} guide notes. The pins are geocoded guesses — they show with `
-                + 'a dashed ring until you confirm them.',
+                `${body.added.places} Orte, ${body.added.regions} Regionen und `
+                + `${body.added.notes} Reiseführer-Notizen hinzugefügt. Die Pins sind geocodierte Schätzungen – sie werden mit `
+                + 'gestricheltem Ring angezeigt, bis du sie bestätigst.',
             );
         } finally {
             setSeeding(false);
@@ -311,7 +311,7 @@ export default function PlacesTab({ api, panel = false, segmentSwitch }: {
     const fileByLocation = async () => {
         const matches = assignRegions(places, data?.regions ?? []);
         if (!matches.length) {
-            setFiling('Nothing to file: every pinned place already has a region.');
+            setFiling('Nichts zuzuordnen: Jeder Ort mit Pin hat bereits eine Region.');
             return;
         }
         const ok = await api.updateMany('places', matches.map((match) => ({
@@ -319,10 +319,10 @@ export default function PlacesTab({ api, panel = false, segmentSwitch }: {
         })));
         const drawn = matches.filter((match) => match.how === 'boundary').length;
         setFiling(ok
-            ? `Filed ${matches.length} place${matches.length === 1 ? '' : 's'}`
-                + `${drawn ? `, ${drawn} by a drawn boundary` : ''}`
-                + `${matches.length - drawn ? `, ${matches.length - drawn} by nearest region centre — worth a glance` : ''}.`
-            : 'Could not file those.');
+            ? `${matches.length} ${matches.length === 1 ? 'Ort' : 'Orte'} zugeordnet`
+                + `${drawn ? `, ${drawn} per gezeichneter Grenze` : ''}`
+                + `${matches.length - drawn ? `, ${matches.length - drawn} nach nächstem Regionszentrum – lohnt einen Blick` : ''}.`
+            : 'Die Orte konnten nicht zugeordnet werden.');
     };
 
     /** Schedule the whole selection onto a day, skipping anything already on it. */
@@ -344,8 +344,8 @@ export default function PlacesTab({ api, panel = false, segmentSwitch }: {
         ...(regionFilter ? [{ key: 'region', label: regionName(regionFilter), clear: () => setRegionFilter('') }] : []),
         ...(categoryFilter ? [{ key: 'category', label: categoryMeta(categoryFilter).label, clear: () => setCategoryFilter('') }] : []),
         ...(statusFilter ? [{ key: 'status', label: STATUSES.find((st) => st.key === statusFilter)?.label ?? statusFilter, clear: () => setStatusFilter('') }] : []),
-        ...(reviewState !== 'off' ? [{ key: 'review', label: reviewState === 'on' ? 'Needs review' : 'Already reviewed', clear: () => setReviewState('off') }] : []),
-        ...(pinState !== 'off' ? [{ key: 'pin', label: pinState === 'on' ? 'Not pinned' : 'Pinned', clear: () => setPinState('off') }] : []),
+        ...(reviewState !== 'off' ? [{ key: 'review', label: reviewState === 'on' ? 'Muss geprüft werden' : 'Bereits geprüft', clear: () => setReviewState('off') }] : []),
+        ...(pinState !== 'off' ? [{ key: 'pin', label: pinState === 'on' ? 'Ohne Pin' : 'Mit Pin', clear: () => setPinState('off') }] : []),
     ];
     const resetFilters = () => {
         setRegionFilter(''); setCategoryFilter(''); setStatusFilter('');
@@ -354,21 +354,21 @@ export default function PlacesTab({ api, panel = false, segmentSwitch }: {
 
     const filters = (
         <FilterButton active={active} onReset={resetFilters}>
-            <FilterField label="Source">
+            <FilterField label="Quelle">
                 <SelectField value={sourceFilter} onChange={(e) => setSourceFilter(e.target.value)}>
-                    <option value="">All sources</option>
+                    <option value="">Alle Quellen</option>
                     {sources.map((src) => <option key={src} value={src}>{src}</option>)}
                 </SelectField>
             </FilterField>
             <FilterField label="Region">
                 <SelectField value={regionFilter} onChange={(e) => setRegionFilter(e.target.value)}>
-                    <option value="">All regions</option>
+                    <option value="">Alle Regionen</option>
                     {(data?.regions ?? []).map((r) => <option key={r.id} value={r.id}>{r.name}</option>)}
                 </SelectField>
             </FilterField>
-            <FilterField label="Type">
+            <FilterField label="Typ">
                 <SelectField value={categoryFilter} onChange={(e) => setCategoryFilter(e.target.value)}>
-                    <option value="">All types</option>
+                    <option value="">Alle Typen</option>
                     {categoriesOf(places).map((c) => (
                         <option key={c.key} value={c.key}>{c.icon} {c.label}</option>
                     ))}
@@ -376,17 +376,17 @@ export default function PlacesTab({ api, panel = false, segmentSwitch }: {
             </FilterField>
             <FilterField label="Status">
                 <SelectField value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
-                    <option value="">Any status</option>
+                    <option value="">Beliebiger Status</option>
                     {STATUSES.map((st) => <option key={st.key} value={st.key}>{st.label}</option>)}
                 </SelectField>
             </FilterField>
             <div className="grid grid-cols-2 gap-2">
                 <TriToggle state={reviewState} onChange={setReviewState}
-                    offLabel="⚠ Review: any" onLabel="⚠ Needs review" invertedLabel="✓ Reviewed" />
+                    offLabel="⚠ Prüfung: egal" onLabel="⚠ Zu prüfen" invertedLabel="✓ Geprüft" />
                 <TriToggle state={pinState} onChange={setPinState} tone="sky"
-                    offLabel="Pin: any" onLabel="Not pinned" invertedLabel="Pinned" />
+                    offLabel="Pin: egal" onLabel="Ohne Pin" invertedLabel="Mit Pin" />
             </div>
-            <FilterField label="Saved views">
+            <FilterField label="Gespeicherte Ansichten">
                 <SavedViews
                     api={api}
                     current={{
@@ -412,53 +412,53 @@ export default function PlacesTab({ api, panel = false, segmentSwitch }: {
             type="search"
             value={search_}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search places…"
-            aria-label="Search places"
+            placeholder="Orte suchen …"
+            aria-label="Orte suchen"
             className={`min-h-11 md:min-h-0 rounded-full border border-gray-200 bg-white px-4 py-1.5 text-base md:text-sm
                 focus:outline-none focus:ring-2 focus:ring-accent/30 ${panel ? 'min-w-0 flex-1' : 'w-full sm:w-56'}`}
         />
     );
 
     const menu = [
-        { label: dense ? 'Comfortable rows' : 'Dense rows', onClick: () => setDense(!dense) },
-        { label: 'Import a list…', onClick: () => setImporting(true) },
+        { label: dense ? 'Großzügige Zeilen' : 'Kompakte Zeilen', onClick: () => setDense(!dense) },
+        { label: 'Liste importieren …', onClick: () => setImporting(true) },
         {
-            label: 'Export as CSV',
+            label: 'Als CSV exportieren',
             onClick: () => download(
                 placesToCsv(sorted, (id) => (id != null ? api.regionById.get(id) ?? '' : '')),
                 'places.csv', 'text/csv',
             ),
         },
         {
-            label: 'Export as GeoJSON',
+            label: 'Als GeoJSON exportieren',
             onClick: () => download(
                 placesToGeoJson(sorted, (id) => (id != null ? api.regionById.get(id) ?? '' : '')),
                 'places.geojson', 'application/geo+json',
             ),
         },
         {
-            label: 'Export as KML (Google My Maps)',
+            label: 'Als KML exportieren (Google My Maps)',
             onClick: () => download(
-                placesToKml(sorted, data?.trip.title ?? 'Honeymoon places'),
+                placesToKml(sorted, data?.trip.title ?? 'Flitterwochen-Orte'),
                 'places.kml', 'application/vnd.google-earth.kml+xml',
             ),
         },
-        { label: 'Assign regions by location', onClick: fileByLocation },
+        { label: 'Regionen nach Standort zuordnen', onClick: fileByLocation },
     ];
 
     const summary = (
         <p className="text-xs text-gray-500">
-            {counts.total} places · {counts.pinned} pinned
+            {counts.total} Orte · {counts.pinned} mit Pin
             {counts.review > 0 && (
                 <>
                     {' · '}
                     <button type="button" className="min-h-11 md:min-h-0 text-amber-700 hover:underline" onClick={() => setReviewState('on')}>
-                        {counts.review} to review
+                        {counts.review} zu prüfen
                     </button>
                 </>
             )}
-            {' '}· {counts.shortlisted} shortlisted · {counts.booked} booked
-            {sorted.length !== places.length && <span className="text-gray-400"> · showing {sorted.length}</span>}
+            {' '}· {counts.shortlisted} in der Auswahl · {counts.booked} gebucht
+            {sorted.length !== places.length && <span className="text-gray-400"> · {sorted.length} angezeigt</span>}
         </p>
     );
 
@@ -476,19 +476,19 @@ export default function PlacesTab({ api, panel = false, segmentSwitch }: {
                             <MiniSelect
                                 value={sort}
                                 onChange={(e) => setSort(e.target.value as SortKey)}
-                                aria-label="Sort by"
+                                aria-label="Sortieren nach"
                                 className="max-w-[7.5rem] md:max-w-[10rem]"
                             >
                                 {SORTS.map((option) => (
                                     <option key={option.key} value={option.key}>
                                         {option.key === 'distance' && !distanceFrom
-                                            ? 'Distance (set a base first)'
+                                            ? 'Entfernung (zuerst eine Basis festlegen)'
                                             : option.label}
                                     </option>
                                 ))}
                             </MiniSelect>
-                            <Button tone="primary" onClick={() => newPlace()} aria-label="Add a place">
-                                +<span className="hidden sm:inline"> Add</span>
+                            <Button tone="primary" onClick={() => newPlace()} aria-label="Ort hinzufügen">
+                                +<span className="hidden sm:inline"> Hinzufügen</span>
                             </Button>
                             <OverflowMenu items={menu} />
                         </>
@@ -504,14 +504,14 @@ export default function PlacesTab({ api, panel = false, segmentSwitch }: {
             {/* ---- Bulk bar ---- */}
             {selected.size > 0 && (
                 <Card className="p-3 flex flex-wrap items-center gap-2 sticky top-2 z-10">
-                    <span className="text-sm font-medium text-gray-700">{selected.size} selected</span>
+                    <span className="text-sm font-medium text-gray-700">{selected.size} ausgewählt</span>
                     <div className="flex-1" />
                     <SelectField
                         className="max-w-[10rem]"
                         value=""
                         onChange={(e) => { if (e.target.value) bulk({ status: e.target.value }); }}
                     >
-                        <option value="">Set status…</option>
+                        <option value="">Status setzen …</option>
                         {STATUSES.map((s) => <option key={s.key} value={s.key}>{s.label}</option>)}
                     </SelectField>
                     {(data?.days ?? []).length > 0 && (
@@ -519,10 +519,10 @@ export default function PlacesTab({ api, panel = false, segmentSwitch }: {
                             value=""
                             onChange={(e) => { if (e.target.value) addToDay(Number(e.target.value)); }}
                         >
-                            <option value="">Add to day…</option>
+                            <option value="">Zu Tag hinzufügen …</option>
                             {(data?.days ?? []).map((d) => (
                                 <option key={d.id} value={d.id}>
-                                    Day {d.day_number}{d.title ? ` — ${d.title}` : ''}
+                                    Tag {d.day_number}{d.title ? ` — ${d.title}` : ''}
                                 </option>
                             ))}
                         </MiniSelect>
@@ -530,14 +530,13 @@ export default function PlacesTab({ api, panel = false, segmentSwitch }: {
                     <BulkFieldMenu
                         fields={bulkFields}
                         onApply={(key, value) => bulk({ [key]: value })}
-                        label="Change a field on all selected"
+                        label="Feld für alle Ausgewählten ändern"
                     />
                     <Button
                         onClick={() => bulk({ needs_review: review.needsReview })}
                         title={review.needsReview
-                            ? `Put all ${review.confirmed} back to unconfirmed`
-                            : `Confirm ${review.unconfirmed} unconfirmed place`
-                                + `${review.unconfirmed === 1 ? '' : 's'}`}
+                            ? `Alle ${review.confirmed} wieder auf unbestätigt setzen`
+                            : `${review.unconfirmed} unbestätigte${review.unconfirmed === 1 ? 'n Ort' : ' Orte'} bestätigen`}
                     >
                         {review.label}
                     </Button>
@@ -548,14 +547,14 @@ export default function PlacesTab({ api, panel = false, segmentSwitch }: {
                                 .map((id) => api.placeById.get(id))
                                 .filter((p) => p != null);
                             if (!rows.length) return;
-                            if (!confirm(`Delete ${rows.length} place(s)? You can undo it.`)) return;
+                            if (!confirm(`${rows.length} ${rows.length === 1 ? 'Ort' : 'Orte'} löschen? Das lässt sich rückgängig machen.`)) return;
                             await api.removePlaces(rows);
                             setSelected(new Set());
                         }}
                     >
-                        Delete
+                        Löschen
                     </Button>
-                    <Button tone="ghost" onClick={() => setSelected(new Set())}>Clear</Button>
+                    <Button tone="ghost" onClick={() => setSelected(new Set())}>Aufheben</Button>
                 </Card>
             )}
 
@@ -564,18 +563,18 @@ export default function PlacesTab({ api, panel = false, segmentSwitch }: {
                 {sorted.length === 0 ? (
                     <div className="p-6 text-center">
                         <EmptyState
-                            title={places.length ? 'No places match those filters' : 'No places yet'}
+                            title={places.length ? 'Keine Orte passen zu diesen Filtern' : 'Noch keine Orte'}
                             hint={places.length
-                                ? 'Try clearing the filters.'
-                                : 'Add one by hand, import a list, or load the bundled Bali and '
-                                    + 'Singapore guide — 231 places, 126 of them already pinned.'}
+                                ? 'Setze die Filter zurück.'
+                                : 'Füge einen von Hand hinzu, importiere eine Liste oder lade den mitgelieferten Bali- und '
+                                    + 'Singapur-Reiseführer – 231 Orte, 126 davon bereits mit Pin.'}
                         />
                         {places.length === 0 && (
                             <div className="mt-3 flex flex-wrap items-center justify-center gap-2">
                                 <Button tone="primary" onClick={loadGuide} disabled={seeding}>
-                                    {seeding ? 'Loading…' : 'Load the Bali guide'}
+                                    {seeding ? 'Wird geladen …' : 'Bali-Reiseführer laden'}
                                 </Button>
-                                <Button onClick={() => setImporting(true)}>Import a list…</Button>
+                                <Button onClick={() => setImporting(true)}>Liste importieren …</Button>
                             </div>
                         )}
                         {seedNote && (
@@ -600,20 +599,20 @@ export default function PlacesTab({ api, panel = false, segmentSwitch }: {
                                     </span>
                                 ) : undefined}
                                 menu={[
-                                    { label: 'Open', onClick: () => openPlace(place.id) },
+                                    { label: 'Öffnen', onClick: () => openPlace(place.id) },
                                     ...STATUSES
                                         .filter((st) => st.key !== place.status)
                                         .map((st) => ({
-                                            label: `Mark ${st.label.toLowerCase()}`,
+                                            label: `Markieren als: ${st.label}`,
                                             onClick: () => api.update('places', {
                                                 id: place.id, status: st.key as PlaceStatus,
                                             }),
                                         })),
                                     ...(place.needs_review ? [{
-                                        label: 'Pin looks right',
+                                        label: 'Pin stimmt',
                                         onClick: () => api.update('places', { id: place.id, needs_review: false }),
                                     }] : []),
-                                    { label: 'Delete', danger: true, onClick: () => api.removePlaces([place]) },
+                                    { label: 'Löschen', danger: true, onClick: () => api.removePlaces([place]) },
                                 ]}
                             />
                         ))}
@@ -623,7 +622,7 @@ export default function PlacesTab({ api, panel = false, segmentSwitch }: {
 
             {panel && sorted.length > 0 && (
                 <p className="px-1 text-[11px] text-gray-400">
-                    Showing {sorted.length} of {places.length}. Drag a row onto a day to schedule it.
+                    {sorted.length} von {places.length} angezeigt. Zieh eine Zeile auf einen Tag, um sie einzuplanen.
                 </p>
             )}
 

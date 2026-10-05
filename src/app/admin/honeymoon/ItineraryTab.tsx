@@ -228,11 +228,11 @@ export default function ItineraryTab({ api, panel = false, onFocusDay, revealDay
         return (
             <Card>
                 <EmptyState
-                    title="No days yet"
-                    hint="Add your first day to start building the itinerary. Days are numbered, and turn into real dates once you set a start date in Settings."
+                    title="Noch keine Tage"
+                    hint="Füge deinen ersten Tag hinzu, um den Reiseplan aufzubauen. Die Tage sind nummeriert und werden zu echten Daten, sobald du in den Einstellungen ein Startdatum festlegst."
                 />
                 <div className="flex justify-center pb-6">
-                    <Button tone="primary" onClick={() => api.create('days', {})}>+ Add day 1</Button>
+                    <Button tone="primary" onClick={() => api.create('days', {})}>+ Tag 1 hinzufügen</Button>
                 </div>
             </Card>
         );
@@ -253,31 +253,31 @@ export default function ItineraryTab({ api, panel = false, onFocusDay, revealDay
                                 control that does nothing. */}
                             {view === 'timeline' && !phone && (
                                 <Segmented<DayShape>
-                                    ariaLabel="Timeline shape"
+                                    ariaLabel="Zeitplan-Form"
                                     tone="dark"
                                     value={shape}
                                     onChange={chooseShape}
                                     options={[
-                                        { key: 'bars', label: '▤ Stacked' },
-                                        { key: 'clock', label: '⏱ Clock' },
+                                        { key: 'bars', label: '▤ Gestapelt' },
+                                        { key: 'clock', label: '⏱ Uhr' },
                                     ]}
                                 />
                             )}
                             <Segmented<View>
-                                ariaLabel="Itinerary view"
+                                ariaLabel="Reiseplan-Ansicht"
                                 value={view}
                                 onChange={chooseView}
                                 options={[
-                                    { key: 'list', label: '☰ Days' },
-                                    { key: 'timeline', label: '▤ Timeline' },
-                                    { key: 'calendar', label: '🗓 Calendar' },
+                                    { key: 'list', label: '☰ Tage' },
+                                    { key: 'timeline', label: '▤ Zeitplan' },
+                                    { key: 'calendar', label: '🗓 Kalender' },
                                 ]}
                             />
                             <span className="hidden md:contents">
-                            <Hint label="How the itinerary works">
-                                Drag a day by its ⠿ handle to reorder the trip — the days renumber and
-                                their dates follow. Timeline draws each day against the clock, travel
-                                included; Calendar puts the trip on real dates.
+                            <Hint label="So funktioniert der Reiseplan">
+                                Zieh einen Tag am ⠿-Griff, um die Reise umzusortieren – die Tage werden
+                                neu nummeriert und die Daten folgen. Der Zeitplan zeichnet jeden Tag gegen
+                                die Uhr, Fahrten inbegriffen; der Kalender legt die Reise auf echte Daten.
                             </Hint>
                             </span>
                         </>
@@ -292,18 +292,18 @@ export default function ItineraryTab({ api, panel = false, onFocusDay, revealDay
                     ) : undefined}
                     right={(
                         <OverflowMenu items={[
-                            { label: '🖨 Print…', onClick: () => setPrinting(true) },
+                            { label: '🖨 Drucken …', onClick: () => setPrinting(true) },
                             // A real navigation to a download endpoint: a client-side
                             // route change would download nothing.
                             {
-                                label: '🗓 Export to a calendar',
+                                label: '🗓 In Kalender exportieren',
                                 onClick: () => {
                                     const link = document.createElement('a');
                                     link.href = '/api/admin/honeymoon/ics';
                                     link.click();
                                 },
                             },
-                            ...(data ? [{ label: '⬇ Download offline copy', onClick: () => downloadOfflineCopy(data) }] : []),
+                            ...(data ? [{ label: '⬇ Offline-Kopie herunterladen', onClick: () => downloadOfflineCopy(data) }] : []),
                         ]} />
                     )}
                 />
@@ -313,12 +313,12 @@ export default function ItineraryTab({ api, panel = false, onFocusDay, revealDay
                 <div className="rounded-2xl border border-rose-200 bg-rose-50 px-3 py-2.5">
                     <p className="text-xs text-rose-800">
                         <strong className="font-semibold">
-                            {beyond.size} day{beyond.size === 1 ? '' : 's'} past the end of the trip.
+                            {beyond.size} {beyond.size === 1 ? 'Tag liegt' : 'Tage liegen'} nach dem Ende der Reise.
                         </strong>{' '}
-                        The dates now stop at {formatDate(data?.trip.end_date)}, and the days below
-                        marked in red fall after it. Nothing was deleted — move their stops onto
-                        earlier days, delete the days you don&apos;t need, or set the dates back in
-                        Settings.
+                        Die Daten enden jetzt am {formatDate(data?.trip.end_date)}, und die unten
+                        rot markierten Tage liegen danach. Es wurde nichts gelöscht – verschiebe die
+                        Stopps auf frühere Tage, lösche die Tage, die du nicht brauchst, oder stelle
+                        die Daten in den Einstellungen wieder zurück.
                     </p>
                 </div>
             )}
@@ -335,11 +335,11 @@ export default function ItineraryTab({ api, panel = false, onFocusDay, revealDay
                         px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50"
                 >
                     {warnCount > 0
-                        ? <span className="text-amber-700">⚠ {warnCount} thing{warnCount === 1 ? '' : 's'} to check</span>
-                        : <span className="text-emerald-700">✓ Nothing to fix</span>}
+                        ? <span className="text-amber-700">⚠ {warnCount} {warnCount === 1 ? 'Punkt' : 'Punkte'} zu prüfen</span>
+                        : <span className="text-emerald-700">✓ Nichts zu beheben</span>}
                     <span className="text-gray-300">·</span>
-                    <span>{stretches.filter((st) => st.place).length} stay{stretches.length === 1 ? '' : 's'} across the trip</span>
-                    <span className="ml-auto text-xs text-gray-400">{checksOpen ? 'Hide ▴' : 'Show ▾'}</span>
+                    <span>{stretches.filter((st) => st.place).length} {stretches.length === 1 ? 'Unterkunft' : 'Unterkünfte'} auf der Reise</span>
+                    <span className="ml-auto text-xs text-gray-400">{checksOpen ? 'Ausblenden ▴' : 'Anzeigen ▾'}</span>
                 </button>
             )}
             {!panel && checksOpen && (conflicts.length > 0 || stretches.length > 0) && (
@@ -348,11 +348,11 @@ export default function ItineraryTab({ api, panel = false, onFocusDay, revealDay
                         <div className="rounded-2xl border border-gray-200 bg-white p-3">
                             <div className="mb-1.5 flex items-baseline justify-between gap-2">
                                 <h3 className="text-sm font-semibold text-gray-900">
-                                    Worth a look
+                                    Einen Blick wert
                                 </h3>
                                 <span className="text-[11px] text-gray-400">
                                     {conflicts.filter((entry) => entry.severity === 'warn').length}
-                                    {' '}to fix
+                                    {' '}zu beheben
                                 </span>
                             </div>
                             <ul className="space-y-1">
@@ -375,8 +375,8 @@ export default function ItineraryTab({ api, panel = false, onFocusDay, revealDay
                                         decoration-dotted"
                                 >
                                     {showAllConflicts
-                                        ? 'Show fewer'
-                                        : `Show all ${conflicts.length}`}
+                                        ? 'Weniger anzeigen'
+                                        : `Alle ${conflicts.length} anzeigen`}
                                 </button>
                             )}
                         </div>
@@ -385,7 +385,7 @@ export default function ItineraryTab({ api, panel = false, onFocusDay, revealDay
                     {stretches.length > 0 && (
                         <div className="rounded-2xl border border-gray-200 bg-white p-3">
                             <h3 className="mb-1.5 text-sm font-semibold text-gray-900">
-                                Where you sleep
+                                Wo ihr schlaft
                             </h3>
                             <ul className="space-y-1">
                                 {stretches.map((stretch) => (
@@ -395,14 +395,14 @@ export default function ItineraryTab({ api, panel = false, onFocusDay, revealDay
                                     >
                                         <span className="tabular-nums text-gray-400">
                                             {stretch.firstDay === stretch.lastDay
-                                                ? `Day ${stretch.firstDay}`
-                                                : `Days ${stretch.firstDay}–${stretch.lastDay}`}
+                                                ? `Tag ${stretch.firstDay}`
+                                                : `Tage ${stretch.firstDay}–${stretch.lastDay}`}
                                         </span>
                                         <span className="font-medium text-gray-800">
-                                            {stretch.place?.name ?? 'nowhere set'}
+                                            {stretch.place?.name ?? 'nicht festgelegt'}
                                         </span>
                                         <span className="text-gray-400">
-                                            {stretch.nights} night{stretch.nights === 1 ? '' : 's'}
+                                            {stretch.nights} {stretch.nights === 1 ? 'Nacht' : 'Nächte'}
                                         </span>
                                         {stretch.booking?.confirmation && (
                                             <span className="text-emerald-700">
@@ -411,15 +411,15 @@ export default function ItineraryTab({ api, panel = false, onFocusDay, revealDay
                                         )}
                                         {stretch.mismatch && (
                                             <span className="text-rose-700">
-                                                booked dates do not match these nights
+                                                gebuchte Daten passen nicht zu diesen Nächten
                                             </span>
                                         )}
                                     </li>
                                 ))}
                             </ul>
                             <p className="mt-1.5 text-[11px] text-gray-400">
-                                A base is set per day; a stay is a stretch. This is the sentence a
-                                confirmation email gets checked against.
+                                Ein Standort wird pro Tag festgelegt, eine Unterkunft ist ein Abschnitt.
+                                Gegen diesen Satz wird eine Buchungsbestätigung geprüft.
                             </p>
                         </div>
                     )}
@@ -434,10 +434,10 @@ export default function ItineraryTab({ api, panel = false, onFocusDay, revealDay
                 column of A4. These are the four choices that actually change what
                 you carry. */}
             {printing && (
-                <Modal open onClose={() => setPrinting(false)} title="Print the trip">
+                <Modal open onClose={() => setPrinting(false)} title="Reise drucken">
                     <div className="space-y-3">
                         <div>
-                            <p className="text-xs font-semibold text-gray-500">Days</p>
+                            <p className="text-xs font-semibold text-gray-500">Tage</p>
                             <div className="mt-1 flex flex-wrap gap-1">
                                 <button
                                     onClick={() => setPrintOptions({ ...printOptions, days: [] })}
@@ -446,7 +446,7 @@ export default function ItineraryTab({ api, panel = false, onFocusDay, revealDay
                                             ? 'border-transparent bg-accent text-white'
                                             : 'border-gray-200 text-gray-600'}`}
                                 >
-                                    All
+                                    Alle
                                 </button>
                                 {days.map((day) => {
                                     const on = printOptions.days.includes(day.day_number);
@@ -474,10 +474,10 @@ export default function ItineraryTab({ api, panel = false, onFocusDay, revealDay
                         </div>
 
                         {([
-                            ['bookings', 'Confirmation numbers and contacts'],
-                            ['info', 'Emergency and practical details'],
-                            ['notes', 'The guide notes'],
-                            ['a5', 'A5 booklet (smaller type, folds into a passport)'],
+                            ['bookings', 'Bestätigungsnummern und Kontakte'],
+                            ['info', 'Notfall- und Praxisinfos'],
+                            ['notes', 'Notizen aus dem Reiseführer'],
+                            ['a5', 'A5-Heft (kleinere Schrift, passt in den Reisepass)'],
                         ] as const).map(([key, label]) => (
                             <label key={key} className="flex items-center gap-2 text-sm text-gray-700">
                                 <input
@@ -493,7 +493,7 @@ export default function ItineraryTab({ api, panel = false, onFocusDay, revealDay
                         ))}
 
                         <div className="flex justify-end gap-2 border-t border-gray-100 pt-3">
-                            <Button onClick={() => setPrinting(false)}>Cancel</Button>
+                            <Button onClick={() => setPrinting(false)}>Abbrechen</Button>
                             <Button
                                 tone="primary"
                                 onClick={() => {
@@ -503,7 +503,7 @@ export default function ItineraryTab({ api, panel = false, onFocusDay, revealDay
                                     setTimeout(() => window.print(), 50);
                                 }}
                             >
-                                Print
+                                Drucken
                             </Button>
                         </div>
                     </div>
@@ -568,7 +568,7 @@ export default function ItineraryTab({ api, panel = false, onFocusDay, revealDay
 
             <div className="flex justify-center pt-1">
                 <Button tone="primary" onClick={() => api.create('days', {})}>
-                    + Add day {Math.max(0, ...days.map((d) => d.day_number)) + 1}
+                    + Tag {Math.max(0, ...days.map((d) => d.day_number)) + 1}
                 </Button>
             </div>
 
@@ -577,7 +577,7 @@ export default function ItineraryTab({ api, panel = false, onFocusDay, revealDay
 }
 
 
-const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+const WEEKDAYS = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 
 /**
  * The trip on a real calendar.
@@ -623,8 +623,8 @@ function CalendarView({ api, days, onEditPlace, onViewPlace, onFocusDay, beyond,
         return (
             <Card>
                 <EmptyState
-                    title="No start date yet"
-                    hint="A calendar needs to know when day 1 is. Set the trip's start date in Settings and every day lands on a real date."
+                    title="Noch kein Startdatum"
+                    hint="Ein Kalender muss wissen, wann Tag 1 ist. Lege das Startdatum der Reise in den Einstellungen fest, dann landet jeder Tag auf einem echten Datum."
                 />
             </Card>
         );
@@ -673,7 +673,7 @@ function CalendarView({ api, days, onEditPlace, onViewPlace, onFocusDay, beyond,
                 open={openDay != null}
                 onClose={() => setOpenDayId(null)}
                 title={openDay
-                    ? `Day ${openDay.day_number}${openDay.title ? ` — ${openDay.title}` : ''}`
+                    ? `Tag ${openDay.day_number}${openDay.title ? ` – ${openDay.title}` : ''}`
                     : ''}
                 wide
             >
@@ -727,7 +727,7 @@ function CalendarCellBox({ cell, day, api, beyondRange, arrivals, onOpen }: {
     return (
         <button
             onClick={onOpen}
-            title={beyondRange ? 'This day falls past the end of the trip' : undefined}
+            title={beyondRange ? 'Dieser Tag liegt nach dem Ende der Reise' : undefined}
             data-calendar-day={day.day_number}
             className={`min-h-[3.25rem] md:min-h-[5.5rem] rounded-xl border p-1.5 text-left transition
                 focus:outline-none focus:ring-2 overflow-hidden ${beyondRange
@@ -739,10 +739,10 @@ function CalendarCellBox({ cell, day, api, beyondRange, arrivals, onOpen }: {
             <div className="flex h-full flex-col items-center justify-between gap-0.5 md:hidden">
                 <span className="text-sm font-semibold tabular-nums text-gray-800">{cell.dayOfMonth}</span>
                 <span className={`text-[9px] font-semibold ${beyondRange ? 'text-rose-700' : 'text-accent'}`}>
-                    D{day.day_number}
+                    T{day.day_number}
                 </span>
-                <span className="flex items-center gap-0.5" aria-label={`${day.stops.length} stops${
-                    day.travel.length + arrivals.length ? ', travel' : ''}`}>
+                <span className="flex items-center gap-0.5" aria-label={`${day.stops.length} ${day.stops.length === 1 ? 'Stopp' : 'Stopps'}${
+                    day.travel.length + arrivals.length ? ', Reise' : ''}`}>
                     {(day.travel.length > 0 || arrivals.length > 0) && <span className="text-[9px]" aria-hidden>✈</span>}
                     {day.stops.slice(0, 3).map((stop) => (
                         <span key={stop.id} className="size-1.5 rounded-full bg-accent/70" aria-hidden />
@@ -754,7 +754,7 @@ function CalendarCellBox({ cell, day, api, beyondRange, arrivals, onOpen }: {
                 <span className="text-[11px] tabular-nums text-gray-500">{cell.dayOfMonth}</span>
                 <span className={`text-[10px] font-semibold shrink-0
                     ${beyondRange ? 'text-rose-700' : 'text-accent'}`}>
-                    Day {day.day_number}
+                    Tag {day.day_number}
                 </span>
             </div>
             {day.title && (
@@ -773,7 +773,7 @@ function CalendarCellBox({ cell, day, api, beyondRange, arrivals, onOpen }: {
                     {travelModeMeta(leg.mode).icon}{' '}
                     {leg.depart_time ? fmt(leg.depart_time) : ''} {leg.to_text ?? ''}
                     {legIsOvernight(leg) && (
-                        <span className="font-semibold"> +{leg.arrive_day_offset}d</span>
+                        <span className="font-semibold"> +{leg.arrive_day_offset} T</span>
                     )}
                 </p>
             ))}
@@ -784,11 +784,11 @@ function CalendarCellBox({ cell, day, api, beyondRange, arrivals, onOpen }: {
                     {stop.start_time ? `${fmt(stop.start_time)} ` : '• '}
                     {stop.custom_label
                         || (stop.place_id != null ? api.placeById.get(stop.place_id)?.name : '')
-                        || 'Untitled stop'}
+                        || 'Stopp ohne Titel'}
                 </p>
             ))}
             {day.stops.length > 3 && (
-                <p className="text-[10px] text-gray-400">+{day.stops.length - 3} more</p>
+                <p className="text-[10px] text-gray-400">+{day.stops.length - 3} weitere</p>
             )}
             {!day.stops.length && !day.title && base && (
                 <p className="text-[10px] text-gray-500 truncate">🛏 {base.name}</p>
@@ -860,7 +860,7 @@ function DayCard({
         const total = daysBetween(booking.check_in, booking.check_out);
         const night = daysBetween(booking.check_in, iso);
         if (total == null || night == null || total < 1) return null;
-        return `night ${night + 1} of ${total}`;
+        return `Nacht ${night + 1} von ${total}`;
     }, [startDate, day.day_number, api.data?.bookings]);
     /**
      * Whether there is anything on this day the map could actually fly to.
@@ -967,7 +967,7 @@ function DayCard({
      */
     const suggest = async () => {
         if (!base) {
-            setSuggestion({ names: [], why: 'Set a stay for this day first — the suggestions are places near it.' });
+            setSuggestion({ names: [], why: 'Lege zuerst eine Unterkunft für diesen Tag fest – die Vorschläge sind Orte in ihrer Nähe.' });
             return;
         }
         const proposal = suggestDay(
@@ -976,7 +976,7 @@ function DayCard({
             scheduledPlaceIds(api.data?.days ?? []),
         );
         if (!proposal) {
-            setSuggestion({ names: [], why: 'Nothing nearby that is unscheduled and not already ruled out.' });
+            setSuggestion({ names: [], why: 'In der Nähe gibt es nichts, das noch nicht eingeplant und nicht schon ausgeschlossen ist.' });
             return;
         }
         const ok = await api.createMany('stops', proposal.places.map((place, index) => ({
@@ -988,7 +988,7 @@ function DayCard({
         if (ok) {
             setSuggestion({
                 names: proposal.places.map((place) => place.name),
-                why: `${proposal.why} · about ${formatDistance(proposal.km)} of driving in total`,
+                why: `${proposal.why} · insgesamt etwa ${formatDistance(proposal.km)} Fahrt`,
             });
         }
     };
@@ -1052,7 +1052,7 @@ function DayCard({
         const next = Math.max(0, ...(api.data?.days ?? []).map((d) => d.day_number)) + 1;
         const created = await api.createRow('days', {
             day_number: next,
-            title: day.title ? `${day.title} (copy)` : '',
+            title: day.title ? `${day.title} (Kopie)` : '',
             base_place_id: day.base_place_id,
             notes: day.notes ?? '',
         });
@@ -1161,9 +1161,9 @@ function DayCard({
             {beyondRange && (
                 <p className="mb-2 rounded-xl bg-rose-50 border border-rose-200 px-2.5 py-1.5
                     text-[11px] text-rose-700">
-                    Past the end of the trip{formatDate(api.data?.trip.end_date)
-                        ? ` (${formatDate(api.data?.trip.end_date)})` : ''}. Move these stops onto an
-                    earlier day, or extend the dates in Settings.
+                    Nach dem Ende der Reise{formatDate(api.data?.trip.end_date)
+                        ? ` (${formatDate(api.data?.trip.end_date)})` : ''}. Verschiebe diese Stopps auf
+                    einen früheren Tag oder verlängere die Daten in den Einstellungen.
                 </p>
             )}
             {/* ---- Day header ---- */}
@@ -1177,21 +1177,21 @@ function DayCard({
                             {...dayListeners}
                             className="[@media(pointer:coarse)]:hidden cursor-grab active:cursor-grabbing text-gray-300
                                 hover:text-gray-500 touch-none -ml-1 px-1 shrink-0"
-                            aria-label={`Drag day ${day.day_number} to reorder`}
+                            aria-label={`Tag ${day.day_number} zum Umsortieren ziehen`}
                         >
                             ⠿
                         </button>
                         <span className="text-sm font-semibold text-gray-900 shrink-0">
-                            Day {day.day_number}
+                            Tag {day.day_number}
                             {totalDays > 1 && (
-                                <span className="font-normal text-gray-400"> of {totalDays}</span>
+                                <span className="font-normal text-gray-400"> von {totalDays}</span>
                             )}
                         </span>
                         {realDate && <span className="text-xs text-gray-400">{realDate}</span>}
                     </div>
                     <InlineText
                         value={day.title ?? ''}
-                        placeholder="What's this day about?"
+                        placeholder="Worum geht es an diesem Tag?"
                         className="font-medium text-gray-800 -ml-2 mt-0.5"
                         onCommit={(title) => api.update('days', { id: day.id, title })}
                     />
@@ -1201,42 +1201,42 @@ function DayCard({
                         onClick={() => onFocusDay(day)}
                         disabled={!pinnedStops}
                         title={pinnedStops
-                            ? `Move the map to day ${day.day_number}'s stops, and show the route`
-                            : 'Nothing on this day is pinned yet'}
+                            ? `Karte zu den Stopps von Tag ${day.day_number} bewegen und die Route zeigen`
+                            : 'An diesem Tag ist noch nichts gepinnt'}
                         className="shrink-0 rounded-full border border-gray-200 bg-gray-50 px-2 py-1
                             text-[11px] font-medium text-gray-600 hover:bg-gray-100 hover:text-gray-900
                             disabled:opacity-40 disabled:hover:bg-gray-50 transition"
                     >
-                        ◎ Map
+                        ◎ Karte
                     </button>
                 )}
                 <OverflowMenu
                     items={[
                         {
-                            label: `Add a day before day ${day.day_number}`,
+                            label: `Tag vor Tag ${day.day_number} einfügen`,
                             onClick: () => insertDay('before'),
                         },
                         {
-                            label: `Add a day after day ${day.day_number}`,
+                            label: `Tag nach Tag ${day.day_number} einfügen`,
                             onClick: () => insertDay('after'),
                         },
                         {
-                            label: 'Add travel leg',
+                            label: 'Teilstrecke hinzufügen',
                             onClick: () => api.create('travel', { day_id: day.id, mode: 'flight' }),
                         },
-                        { label: 'Duplicate day (at the end)', onClick: () => duplicate('end') },
+                        { label: 'Tag duplizieren (am Ende)', onClick: () => duplicate('end') },
                         // The common case: "the same again tomorrow". Appending
                         // and then dragging it back seven positions was the only
                         // way to say that.
-                        { label: 'Duplicate right after this one', onClick: () => duplicate('after') },
+                        { label: 'Direkt danach duplizieren', onClick: () => duplicate('after') },
                         {
-                            label: showNotes ? 'Hide notes' : 'Add a note',
+                            label: showNotes ? 'Notizen ausblenden' : 'Notiz hinzufügen',
                             onClick: () => setShowNotes((v) => !v),
                         },
                         {
                             // No confirm: this is undoable, stops and travel legs
                             // included, and one speed bump is enough for one hazard.
-                            label: 'Delete day',
+                            label: 'Tag löschen',
                             danger: true,
                             onClick: () => api.removeDay(day),
                         },
@@ -1254,7 +1254,7 @@ function DayCard({
                     <InlineText
                         multiline
                         value={day.notes ?? ''}
-                        placeholder="Anything about this day — pack the good camera, book ahead…"
+                        placeholder="Alles zu diesem Tag – die gute Kamera einpacken, rechtzeitig buchen …"
                         className="text-sm text-gray-700"
                         onCommit={(notes) => api.update('days', { id: day.id, notes })}
                     />
@@ -1271,12 +1271,12 @@ function DayCard({
                     className="mt-2 rounded-2xl bg-slate-100 border border-slate-200 px-2.5 py-1.5
                         text-[11px] text-slate-700"
                 >
-                    {travelModeMeta(leg.mode).icon} Arrives
+                    {travelModeMeta(leg.mode).icon} Ankunft
                     {leg.arrive_time ? ` ${fmt(leg.arrive_time)}` : ''}
-                    {leg.to_text ? ` at ${leg.to_text}` : ''} — the{' '}
-                    {travelModeMeta(leg.mode).label.toLowerCase()} that left on day{' '}
+                    {leg.to_text ? ` in ${leg.to_text}` : ''} – {travelModeMeta(leg.mode).label},
+                    Abfahrt an Tag{' '}
                     {fromDay.day_number}
-                    {leg.depart_time ? ` at ${fmt(leg.depart_time)}` : ''}.
+                    {leg.depart_time ? ` um ${fmt(leg.depart_time)}` : ''}.
                 </p>
             ))}
 
@@ -1288,13 +1288,13 @@ function DayCard({
                 trip knows about the place, the confirmation included. */}
             <div className="mt-2 flex items-center gap-2 min-w-0">
                 <span className="text-[11px] uppercase tracking-wide text-gray-400 font-semibold shrink-0">
-                    Sleep
+                    Schlafen
                 </span>
                 {base ? (
                     <button
                         data-sleep-place
                         onClick={() => onViewPlace(base)}
-                        title={`${base.name} — open the booking and everything else about it`}
+                        title={`${base.name} – Buchung und alles andere dazu öffnen`}
                         className="min-w-0 min-h-11 md:min-h-0 flex items-baseline gap-1.5 text-left rounded-xl px-1.5 py-0.5
                             hover:bg-gray-50 group/base"
                     >
@@ -1311,7 +1311,7 @@ function DayCard({
                     </button>
                 ) : (
                     <span className="text-xs text-gray-400">
-                        No stay booked for this night — add the dates on Stays.
+                        Für diese Nacht ist keine Unterkunft gebucht – trag die Daten unter Unterkünfte ein.
                     </span>
                 )}
             </div>
@@ -1329,7 +1329,7 @@ function DayCard({
                         className="mt-2"
                     >
                         <summary className="min-h-11 md:min-h-0 cursor-pointer py-1 text-xs text-gray-500 hover:text-gray-800">
-                            Travel details ({day.travel.length})
+                            Reisedetails ({day.travel.length})
                         </summary>
                         <div className="mt-1 grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
                             {day.travel.map((leg) => (
@@ -1393,7 +1393,7 @@ function DayCard({
                         />
                     )
                 ) : day.stops.length === 0 ? (
-                    <p className="text-xs text-gray-400 py-2">Nothing planned yet.</p>
+                    <p className="text-xs text-gray-400 py-2">Noch nichts geplant.</p>
                 ) : (
                     <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
                         <SortableContext
@@ -1450,7 +1450,7 @@ function DayCard({
             {regionNotes.length > 0 && (
                 <details className="mt-2 rounded-xl bg-amber-50/60 px-2.5 py-1.5">
                     <summary className="cursor-pointer text-[11px] font-medium text-amber-900">
-                        {regionName ? `About ${regionName}` : 'Guide notes'}
+                        {regionName ? `Über ${regionName}` : 'Notizen aus dem Reiseführer'}
                         {' '}({regionNotes.length})
                     </summary>
                     <div className="mt-1.5 space-y-2">
@@ -1476,19 +1476,19 @@ function DayCard({
                     text-gray-500">
                     {dayIntel.weather && (
                         <span title={dayIntel.weather.kind === 'forecast'
-                            ? 'Forecast from Open-Meteo'
-                            : 'The month’s average over the last decade — too far out to forecast'}>
+                            ? 'Vorhersage von Open-Meteo'
+                            : 'Monatsdurchschnitt der letzten zehn Jahre – zu weit entfernt für eine Vorhersage'}>
                             {dayIntel.weather.kind === 'climate' && '≈ '}
                             {dayIntel.weather.high != null && `${Math.round(dayIntel.weather.high)}°`}
                             {dayIntel.weather.low != null && ` / ${Math.round(dayIntel.weather.low)}°`}
                             {dayIntel.weather.label && ` · ${dayIntel.weather.label}`}
                             {dayIntel.weather.rain_chance != null
                                 && ` · ${Math.round(dayIntel.weather.rain_chance)}%${
-                                    dayIntel.weather.kind === 'climate' ? ' of days wet' : ' rain'}`}
+                                    dayIntel.weather.kind === 'climate' ? ' der Tage nass' : ' Regen'}`}
                         </span>
                     )}
                     {dayIntel.sunrise && dayIntel.sunset && (
-                        <span className="tabular-nums" title="Sunrise and sunset at the day’s base">
+                        <span className="tabular-nums" title="Sonnenaufgang und -untergang am Standort des Tages">
                             ☀ {dayIntel.sunrise} – {dayIntel.sunset}
                         </span>
                     )}
@@ -1496,11 +1496,11 @@ function DayCard({
                         <span
                             className={timeline.longDrive ? 'text-amber-700 font-medium' : ''}
                             title={timeline.estimated
-                                ? 'Partly estimated from straight-line distance'
-                                : 'Driving time from OSRM'}
+                                ? 'Teilweise aus der Luftlinie geschätzt'
+                                : 'Fahrzeit von OSRM'}
                         >
                             🚗 {formatDuration(timeline.driveMinutes * 60)}
-                            {timeline.estimated && ' (est.)'}
+                            {timeline.estimated && ' (geschätzt)'}
                         </span>
                     )}
                 </div>
@@ -1508,27 +1508,27 @@ function DayCard({
 
             {timeline.lateCount > 0 && (
                 <p className="text-[11px] text-rose-700 bg-rose-50 rounded-xl px-2.5 py-1.5 mt-2">
-                    ⚠ {timeline.lateCount === 1 ? 'One stop' : `${timeline.lateCount} stops`} cannot be
-                    reached at the time set — the drive from the stop before puts you there later.
-                    The arrival times below are the honest ones.
+                    ⚠ {timeline.lateCount === 1 ? 'Ein Stopp ist' : `${timeline.lateCount} Stopps sind`} zur
+                    eingestellten Zeit nicht zu erreichen – die Fahrt vom vorherigen Stopp bringt euch später hin.
+                    Die Ankunftszeiten unten sind die realistischen.
                 </p>
             )}
             {timeline.overlapCount > 0 && (
                 <p className="text-[11px] text-amber-700 bg-amber-50 rounded-xl px-2.5 py-1.5 mt-2">
-                    ⚠ Two stops overlap: one is still going when the next is due to start.
+                    ⚠ Zwei Stopps überschneiden sich: Einer läuft noch, wenn der nächste beginnen soll.
                 </p>
             )}
             {timeline.longDrive && (
                 <p className="text-[11px] text-amber-700 bg-amber-50 rounded-xl px-2.5 py-1.5 mt-2">
-                    ⚠ {formatDuration(timeline.driveMinutes * 60)} of driving on this day. That is
-                    most of it spent in a car.
+                    ⚠ {formatDuration(timeline.driveMinutes * 60)} Fahrt an diesem Tag. Das heißt,
+                    ihr verbringt den Großteil davon im Auto.
                 </p>
             )}
 
             {longest >= SPREAD_WARNING_KM && !timeline.longDrive && (
                 <p className="text-[11px] text-amber-700 bg-amber-50 rounded-xl px-2.5 py-1.5 mt-2">
-                    ⚠ This day covers {formatDistance(longest)} in one hop. On Bali&apos;s roads that is a
-                    long way — consider splitting it or moving the far stop to another day.
+                    ⚠ Dieser Tag enthält {formatDistance(longest)} in einem Sprung. Auf Balis Straßen ist das
+                    weit – teilt den Tag auf oder verschiebt den entfernten Stopp auf einen anderen Tag.
                 </p>
             )}
 
@@ -1537,31 +1537,31 @@ function DayCard({
                 <div className="mt-3 rounded-2xl border border-gray-200 p-3 space-y-2">
                     {insertAt != null && (
                         <p className="text-[11px] text-accent">
-                            Inserting at position {insertAt + 1} of {day.stops.length + 1}.
+                            Wird an Position {insertAt + 1} von {day.stops.length + 1} eingefügt.
                         </p>
                     )}
                     <SelectField value={pickPlace} onChange={(e) => setPickPlace(e.target.value)}>
-                        <option value="">— pick a place from your library —</option>
+                        <option value="">– Ort aus deiner Bibliothek wählen –</option>
                         {(api.data?.places ?? []).map((p) => (
                             <option key={p.id} value={p.id}>{p.name}</option>
                         ))}
                     </SelectField>
-                    <div className="text-[11px] text-gray-400 text-center">or</div>
+                    <div className="text-[11px] text-gray-400 text-center">oder</div>
                     <TextField
                         value={customLabel}
                         onChange={(e) => setCustomLabel(e.target.value)}
-                        placeholder="Something not in the library — lunch near the rice terraces"
+                        placeholder="Etwas, das nicht in der Bibliothek ist – Mittagessen bei den Reisterrassen"
                     />
                     <div className="flex justify-end gap-2">
                         <Button onClick={() => { setAdding(false); setInsertAt(null); }}>
-                            Cancel
+                            Abbrechen
                         </Button>
                         <Button
                             tone="primary"
                             onClick={addStop}
                             disabled={!pickPlace && !customLabel.trim()}
                         >
-                            Add stop
+                            Stopp hinzufügen
                         </Button>
                     </div>
                 </div>
@@ -1571,14 +1571,14 @@ function DayCard({
                         onClick={() => setAdding(true)}
                         className="min-h-11 md:min-h-0 text-sm text-gray-400 hover:text-gray-700"
                     >
-                        + Add stop
+                        + Stopp hinzufügen
                     </button>
                     <button
                         onClick={suggest}
-                        title="Three places near the stay that you have not scheduled or ruled out"
+                        title="Drei Orte in der Nähe der Unterkunft, die ihr weder eingeplant noch ausgeschlossen habt"
                         className="min-h-11 md:min-h-0 text-sm text-gray-400 hover:text-accent"
                     >
-                        ✨ Suggest a day
+                        ✨ Tag vorschlagen
                     </button>
                 </div>
             )}
@@ -1586,13 +1586,13 @@ function DayCard({
             {suggestion && (
                 <p className="mt-2 rounded-xl bg-sky-50 px-2.5 py-1.5 text-[11px] text-sky-900">
                     {suggestion.names.length > 0
-                        ? `Added ${suggestion.names.join(', ')} — ${suggestion.why}`
+                        ? `Hinzugefügt: ${suggestion.names.join(', ')} – ${suggestion.why}`
                         : suggestion.why}
                     <button
                         onClick={() => setSuggestion(null)}
                         className="ml-2 underline decoration-dotted"
                     >
-                        dismiss
+                        schließen
                     </button>
                 </p>
             )}
@@ -1660,7 +1660,7 @@ function StopRow({
      */
     const [timeFocused, setTimeFocused] = useState(false);
     const reservation = (api.data?.bookings ?? []).find((booking) => booking.stop_id === stop.id);
-    const label = stop.custom_label || place?.name || 'this stop';
+    const label = stop.custom_label || place?.name || 'diesen Stopp';
 
     /**
      * Move a stop to another day.
@@ -1692,7 +1692,7 @@ function StopRow({
             {...listeners}
             className={`[@media(pointer:coarse)]:hidden cursor-grab active:cursor-grabbing text-gray-300 hover:text-gray-500
                 touch-none ${compact ? 'px-0.5 text-sm leading-5' : 'px-1'}`}
-            aria-label="Drag to reorder"
+            aria-label="Zum Umsortieren ziehen"
         >
             ⠿
         </button>
@@ -1744,7 +1744,7 @@ function StopRow({
                 className={`text-gray-500 bg-transparent w-[6.75rem] shrink-0 rounded-lg px-1
                     hover:bg-gray-50 focus:bg-white focus:outline-none focus:ring-2
                     focus:ring-accent/30 ${phone ? 'min-h-11 text-base py-1' : compact ? 'text-[11px] py-0' : 'text-xs py-1'}`}
-                aria-label="Start time"
+                aria-label="Startzeit"
             />
             {showPresets && (
                 <span className="flex shrink-0 gap-0.5">
@@ -1762,7 +1762,7 @@ function StopRow({
                             }}
                             className="rounded-md px-1 py-0.5 text-[10px] text-gray-400
                                 hover:bg-gray-100 hover:text-gray-700 tabular-nums"
-                            title={`Start at ${time}`}
+                            title={`Start um ${time}`}
                         >
                             {time}
                         </button>
@@ -1777,7 +1777,7 @@ function StopRow({
                             }}
                             className="rounded-md px-1 py-0.5 text-[10px] text-accent
                                 hover:bg-accent/10 tabular-nums"
-                            title={`Straight after the stop before (${previousEnd})`}
+                            title={`Direkt nach dem vorherigen Stopp (${previousEnd})`}
                         >
                             +{previousEnd}
                         </button>
@@ -1797,7 +1797,7 @@ function StopRow({
             step="15"
             key={`d-${stop.duration_minutes ?? ''}`}
             defaultValue={stop.duration_minutes ?? ''}
-            placeholder="min"
+            placeholder="Min."
             onBlur={(e) => {
                 const next = e.target.value.trim();
                 if (next !== String(stop.duration_minutes ?? '')) {
@@ -1808,7 +1808,7 @@ function StopRow({
                 hover:bg-gray-50 focus:bg-white focus:outline-none focus:ring-2
                 focus:ring-accent/30 tabular-nums
                 ${phone ? 'min-h-11 w-16 text-base py-1' : compact ? 'text-[11px] py-0' : 'text-xs py-1'}`}
-            aria-label="Minutes here"
+            aria-label="Minuten vor Ort"
         />
     );
 
@@ -1819,7 +1819,7 @@ function StopRow({
         // and fix it.
         <button
             onClick={() => onEditPlace(place)}
-            title={`Edit ${place.name}`}
+            title={`${place.name} bearbeiten`}
             className={`flex min-h-11 md:min-h-0 items-center gap-2 text-left group/place w-full min-w-0
                 ${compact ? '' : 'flex-wrap'}`}
         >
@@ -1833,7 +1833,7 @@ function StopRow({
     ) : (
         <InlineText
             value={stop.custom_label ?? ''}
-            placeholder="Untitled stop"
+            placeholder="Stopp ohne Titel"
             className="text-sm -ml-2"
             onCommit={(custom_label) => api.update('stops', { id: stop.id, custom_label })}
         />
@@ -1842,22 +1842,22 @@ function StopRow({
     const menu = (
         <OverflowMenu items={[
             ...(place ? [{
-                label: `Open ${place.name}`,
+                label: `${place.name} öffnen`,
                 onClick: () => onEditPlace(place),
             }] : []),
             {
-                label: showNotes || stop.notes ? 'Hide note' : 'Add a note',
+                label: showNotes || stop.notes ? 'Notiz ausblenden' : 'Notiz hinzufügen',
                 onClick: () => setShowNotes((v) => !v),
             },
-            ...(onMove && !isFirst ? [{ label: 'Move up', onClick: () => onMove(-1) }] : []),
-            ...(onMove && !isLast ? [{ label: 'Move down', onClick: () => onMove(1) }] : []),
+            ...(onMove && !isFirst ? [{ label: 'Nach oben', onClick: () => onMove(-1) }] : []),
+            ...(onMove && !isLast ? [{ label: 'Nach unten', onClick: () => onMove(1) }] : []),
             // One entry each, not one per day: a fortnight's trip put thirty
             // "move to day N" lines above the actions worth reading. The days
             // live one level in, in a list that scrolls.
             {
-                label: 'Move to day',
+                label: 'Auf Tag verschieben',
                 submenu: otherDays.map((d) => ({
-                    label: `Day ${d.day_number}${d.title ? ` — ${d.title}` : ''}`,
+                    label: `Tag ${d.day_number}${d.title ? ` – ${d.title}` : ''}`,
                     onClick: () => moveTo(d.id),
                 })),
             },
@@ -1865,9 +1865,9 @@ function StopRow({
             // plan, not a mistake, and rebuilding the stop by hand to
             // say so is busywork.
             {
-                label: 'Copy to day',
+                label: 'Auf Tag kopieren',
                 submenu: otherDays.map((d) => ({
-                    label: `Day ${d.day_number}${d.title ? ` — ${d.title}` : ''}`,
+                    label: `Tag ${d.day_number}${d.title ? ` – ${d.title}` : ''}`,
                     onClick: () => api.create('stops', {
                         day_id: d.id,
                         place_id: stop.place_id,
@@ -1882,13 +1882,13 @@ function StopRow({
                 // A dinner reservation is a booking on a stop: time,
                 // party size, confirmation, dress code, and the date
                 // after which cancelling costs you.
-                label: reservation ? 'Edit the reservation' : 'Add a reservation',
+                label: reservation ? 'Reservierung bearbeiten' : 'Reservierung hinzufügen',
                 onClick: () => setShowBooking((v) => !v),
             },
             {
-                label: 'Remove stop',
+                label: 'Stopp entfernen',
                 danger: true,
-                onClick: () => api.removeRow('stops', stop, `Removed ${label}`),
+                onClick: () => api.removeRow('stops', stop, `${label} entfernt`),
             },
         ]} />
     );
@@ -1914,7 +1914,7 @@ function StopRow({
                     <button
                         type="button"
                         onClick={onInsertBefore}
-                        aria-label="Add a stop here"
+                        aria-label="Hier einen Stopp hinzufügen"
                         className="absolute inset-x-8 top-1/2 flex h-4 -translate-y-1/2
                             items-center justify-center opacity-0 transition
                             group-hover/insert:opacity-100"
@@ -1922,7 +1922,7 @@ function StopRow({
                         <span className="h-px flex-1 bg-accent/40" />
                         <span className="mx-1 rounded-full bg-accent px-1.5 text-[10px]
                             font-semibold leading-4 text-white">
-                            + here
+                            + hier
                         </span>
                         <span className="h-px flex-1 bg-accent/40" />
                     </button>
@@ -1969,7 +1969,7 @@ function StopRow({
                     <InlineText
                         multiline
                         value={stop.notes ?? ''}
-                        placeholder="Booking ref, what to bring, who to ask for…"
+                        placeholder="Buchungsnummer, was mitzubringen ist, wen man fragen kann …"
                         className="text-[11px] text-gray-600"
                         onCommit={(notes) => api.update('stops', { id: stop.id, notes })}
                     />
@@ -1983,7 +1983,7 @@ function StopRow({
             {phase === 'after' && (
                 <div className={`flex flex-wrap items-center gap-1.5 pr-2 pb-1
                     ${compact ? 'pl-7' : 'pl-10'}`}>
-                    {([['did', '✓ Did it'], ['skipped', '– Skipped']] as const).map(([key, label]) => (
+                    {([['did', '✓ Dabei gewesen'], ['skipped', '– Übersprungen']] as const).map(([key, label]) => (
                         <button
                             key={key}
                             type="button"
@@ -2005,14 +2005,14 @@ function StopRow({
                             ${stop.favourite
                             ? 'border-transparent bg-amber-400 text-white'
                             : 'border-gray-200 text-gray-500 hover:bg-gray-50'}`}
-                        title="One of the good ones"
+                        title="Eines der Highlights"
                     >
                         ★
                     </button>
                     <InlineText
                         multiline
                         value={stop.journal ?? ''}
-                        placeholder="What was it actually like?"
+                        placeholder="Wie war es wirklich?"
                         className="text-[11px] text-gray-600 flex-1 min-w-[8rem]"
                         onCommit={(journal) => api.update('stops', { id: stop.id, journal })}
                     />
@@ -2027,7 +2027,7 @@ function StopRow({
                     text-[11px] ${compact ? 'pl-7' : 'pl-10'}`}>
                     {row.late ? (
                         <span className="text-rose-700 font-medium tabular-nums">
-                            arrive {row.arrive} · {row.lateBy} min late
+                            Ankunft {row.arrive} · {row.lateBy} Min. zu spät
                         </span>
                     ) : row.arrive && row.leave ? (
                         <span className="text-gray-400 tabular-nums">
@@ -2037,21 +2037,21 @@ function StopRow({
                         <span className="text-gray-400 tabular-nums">≈ {row.arrive}</span>
                     ) : null}
                     {row.overlaps && (
-                        <span className="text-amber-700">overlaps the stop before</span>
+                        <span className="text-amber-700">überschneidet sich mit dem vorherigen Stopp</span>
                     )}
                     {row.walkable && (
-                        <span className="text-emerald-700" title="Within 800 m of the day’s base">
-                            🚶 walkable
+                        <span className="text-emerald-700" title="Höchstens 800 m vom Standort des Tages">
+                            🚶 zu Fuß erreichbar
                         </span>
                     )}
                     {outsideHours && (
                         <span className="text-rose-700" title={hoursLabel ?? undefined}>
-                            ⚠ closed at this time
+                            ⚠ zu dieser Zeit geschlossen
                         </span>
                     )}
                     {afterDark && (
-                        <span className="text-indigo-700" title={`Sunset is ${sunset}`}>
-                            🌙 after dark
+                        <span className="text-indigo-700" title={`Sonnenuntergang um ${sunset}`}>
+                            🌙 nach Einbruch der Dunkelheit
                         </span>
                     )}
                 </div>
@@ -2059,14 +2059,14 @@ function StopRow({
             {hopKm != null && (
                 <div className={`py-0.5 text-[11px] text-gray-400 ${compact ? 'pl-7' : 'pl-10'}`}>
                     {row?.hopIn && row.hopIn.source === 'road' ? (
-                        <span title="Driving time from OSRM">
-                            ↓ {formatDuration(row.hopIn.seconds)} drive
-                            {' · '}{formatDistance(row.hopIn.meters / 1000)} by road
+                        <span title="Fahrzeit von OSRM">
+                            ↓ {formatDuration(row.hopIn.seconds)} Fahrt
+                            {' · '}{formatDistance(row.hopIn.meters / 1000)} auf der Straße
                         </span>
                     ) : (
-                        <span title="No road time yet — this is a straight line at 32 km/h">
-                            ↓ {formatDistance(hopKm)} straight line
-                            {row?.hopIn && ` · ~${formatDuration(row.hopIn.seconds)} (est.)`}
+                        <span title="Noch keine Fahrzeit – das ist Luftlinie bei 32 km/h">
+                            ↓ {formatDistance(hopKm)} Luftlinie
+                            {row?.hopIn && ` · ~${formatDuration(row.hopIn.seconds)} (geschätzt)`}
                         </span>
                     )}
                 </div>
@@ -2095,7 +2095,7 @@ function PhoneDayStrip({ days, current, startDate, onPick }: {
                 type="button"
                 onClick={() => step(-1)}
                 disabled={at <= 0}
-                aria-label="Previous day"
+                aria-label="Vorheriger Tag"
                 className="flex size-11 shrink-0 items-center justify-center rounded-full text-xl text-gray-600 disabled:opacity-30"
             >
                 ‹
@@ -2114,7 +2114,7 @@ function PhoneDayStrip({ days, current, startDate, onPick }: {
                             className={`flex min-h-11 shrink-0 snap-center flex-col items-center justify-center rounded-2xl px-3
                                 text-xs leading-tight ${on ? 'bg-accent text-white' : 'bg-white text-gray-600 border border-gray-200'}`}
                         >
-                            <span className="font-semibold">Day {day.day_number}</span>
+                            <span className="font-semibold">Tag {day.day_number}</span>
                             {date && <span className={on ? 'text-white/80' : 'text-gray-400'}>{date}</span>}
                         </button>
                     );
@@ -2124,7 +2124,7 @@ function PhoneDayStrip({ days, current, startDate, onPick }: {
                 type="button"
                 onClick={() => step(1)}
                 disabled={at >= days.length - 1}
-                aria-label="Next day"
+                aria-label="Nächster Tag"
                 className="flex size-11 shrink-0 items-center justify-center rounded-full text-xl text-gray-600 disabled:opacity-30"
             >
                 ›

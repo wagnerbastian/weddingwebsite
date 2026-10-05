@@ -79,7 +79,7 @@ export default function TodaySheet({
                                     {weather.low != null && ` / ${Math.round(weather.low)}°`}
                                     {weather.label && ` · ${weather.label}`}
                                     {weather.rain_chance != null
-                                        && ` · ${Math.round(weather.rain_chance)}% rain`}
+                                        && ` · ${Math.round(weather.rain_chance)} % Regen`}
                                 </span>
                             )}
                             {sun?.sunrise && sun.sunset && (
@@ -93,38 +93,38 @@ export default function TodaySheet({
                     {plan.standing === 'before' && plan.daysUntil != null && (
                         <Banner>
                             {plan.daysUntil === 0
-                                ? 'You leave today.'
-                                : `${plan.daysUntil} ${plan.daysUntil === 1 ? 'day' : 'days'} until you leave — this is day one.`}
+                                ? 'Ihr reist heute ab.'
+                                : `Noch ${plan.daysUntil} ${plan.daysUntil === 1 ? 'Tag' : 'Tage'} bis zur Abreise – das ist Tag 1.`}
                         </Banner>
                     )}
                     {plan.standing === 'after' && (
-                        <Banner>Welcome home. This is the last day of the trip.</Banner>
+                        <Banner>Willkommen zu Hause. Das ist der letzte Tag der Reise.</Banner>
                     )}
                     {plan.standing === 'undated' && (
                         <Banner>
-                            The trip has no start date yet, so there is no &ldquo;today&rdquo; —
-                            showing day one.
+                            Die Reise hat noch kein Startdatum, daher gibt es kein „Heute“ –
+                            gezeigt wird Tag 1.
                         </Banner>
                     )}
 
                     {!plan.day ? (
                         <Card>
                             <p className="text-gray-600 night:text-gray-300">
-                                No days have been planned yet.
+                                Es wurden noch keine Tage geplant.
                             </p>
                         </Card>
                     ) : (
                         <div className="space-y-3">
                             {plan.arrivals.length > 0 && (
                                 <Card>
-                                    <SectionLabel>Landing today</SectionLabel>
+                                    <SectionLabel>Heute Ankunft</SectionLabel>
                                     <div className="mt-2 space-y-3">
                                         {plan.arrivals.map(({ leg, fromDayNumber }) => (
                                             <LegRow
                                                 key={leg.id}
                                                 leg={leg}
                                                 format={format}
-                                                note={`left on day ${fromDayNumber}`}
+                                                note={`abgereist an Tag ${fromDayNumber}`}
                                             />
                                         ))}
                                     </div>
@@ -135,7 +135,7 @@ export default function TodaySheet({
 
                             {plan.departures.length > 0 && (
                                 <Card>
-                                    <SectionLabel>Travel today</SectionLabel>
+                                    <SectionLabel>Heute unterwegs</SectionLabel>
                                     <div className="mt-2 space-y-3">
                                         {plan.departures.map((leg) => (
                                             <LegRow key={leg.id} leg={leg} format={format} />
@@ -146,12 +146,12 @@ export default function TodaySheet({
 
                             <Card>
                                 <SectionLabel>
-                                    {plan.stops.length ? 'The day' : 'Nothing planned'}
+                                    {plan.stops.length ? 'Der Tag' : 'Nichts geplant'}
                                 </SectionLabel>
                                 {plan.stops.length === 0 ? (
                                     <p className="mt-2 text-gray-600 night:text-gray-300">
-                                        A free day. {plan.base
-                                            ? `You are at ${plan.base.name}.`
+                                        Ein freier Tag. {plan.base
+                                            ? `Ihr seid in ${plan.base.name}.`
                                             : ''}
                                     </p>
                                 ) : (
@@ -170,7 +170,7 @@ export default function TodaySheet({
 
                             {plan.day.notes && (
                                 <Card>
-                                    <SectionLabel>Notes for the day</SectionLabel>
+                                    <SectionLabel>Notizen zum Tag</SectionLabel>
                                     <p className="mt-2 whitespace-pre-wrap text-gray-700 night:text-gray-200">
                                         {plan.day.notes}
                                     </p>
@@ -191,7 +191,7 @@ export default function TodaySheet({
                                 night:bg-rose-950/40 px-4 text-left"
                         >
                             <span className="font-medium text-rose-900 night:text-rose-200">
-                                Emergency &amp; documents
+                                Notfall &amp; Dokumente
                             </span>
                             <span className="text-rose-400 night:text-rose-500">
                                 {showEmergency ? '▲' : '▼'}
@@ -201,7 +201,7 @@ export default function TodaySheet({
                             <Card className="mt-2">
                                 <SectionLabel>
                                     {emergency.country}
-                                    {emergency.guessed && ' — no country set for today’s base'}
+                                    {emergency.guessed && ' – kein Land für die heutige Unterkunft festgelegt'}
                                 </SectionLabel>
                                 <div className="mt-2 grid grid-cols-2 gap-2">
                                     {emergency.numbers.map((entry) => (
@@ -238,8 +238,8 @@ export default function TodaySheet({
                                 )}
                                 {!infoFilled.length && (
                                     <p className="mt-3 text-sm text-gray-500 night:text-gray-400">
-                                        Insurance, embassy and contact details can be filled in on
-                                        the portal&apos;s Settings tab — they show up here.
+                                        Versicherung, Botschaft und Kontaktdaten kannst du im Tab
+                                        „Einstellungen“ des Portals eintragen – sie erscheinen dann hier.
                                     </p>
                                 )}
                             </Card>
@@ -302,16 +302,16 @@ function Header({ plan, trip, night, onNightChange, onSelectDay }: {
                     </p>
                     <h1 className="mt-0.5 text-2xl font-semibold">
                         {plan.dayNumber == null
-                            ? 'No days yet'
-                            : `Day ${plan.dayNumber}${plan.totalDays ? ` of ${plan.totalDays}` : ''}`}
+                            ? 'Noch keine Tage'
+                            : `Tag ${plan.dayNumber}${plan.totalDays ? ` von ${plan.totalDays}` : ''}`}
                     </h1>
                     <p className="text-gray-600 night:text-gray-300">
-                        {plan.date ? formatDate(plan.date) : 'No dates set'}
+                        {plan.date ? formatDate(plan.date) : 'Keine Daten festgelegt'}
                         {plan.day?.title ? ` · ${plan.day.title}` : ''}
                         {isToday && plan.dayNumber != null && (
                             <span className="ml-2 rounded-full bg-accent px-2 py-0.5 text-xs
                                 font-semibold text-white">
-                                Today
+                                Heute
                             </span>
                         )}
                     </p>
@@ -320,7 +320,7 @@ function Header({ plan, trip, night, onNightChange, onSelectDay }: {
                     <button
                         type="button"
                         onClick={() => onNightChange(!night)}
-                        aria-label={night ? 'Switch to daylight' : 'Switch to night'}
+                        aria-label={night ? 'Zum Tagmodus wechseln' : 'Zum Nachtmodus wechseln'}
                         className="flex size-11 shrink-0 items-center justify-center rounded-full
                             border border-gray-200 night:border-gray-700 text-lg"
                     >
@@ -332,14 +332,14 @@ function Header({ plan, trip, night, onNightChange, onSelectDay }: {
             {onSelectDay && plan.dayNumber != null && (
                 <div className="mt-3 flex items-center gap-2">
                     <DayArrow
-                        label="Previous day"
+                        label="Vorheriger Tag"
                         glyph="‹"
                         to={plan.dayNumber - 1}
                         disabled={plan.dayNumber <= 1}
                         onSelectDay={onSelectDay}
                     />
                     <DayArrow
-                        label="Next day"
+                        label="Nächster Tag"
                         glyph="›"
                         to={plan.dayNumber + 1}
                         disabled={plan.totalDays != null && plan.dayNumber >= plan.totalDays}
@@ -369,8 +369,8 @@ function DayArrow({ label, glyph, to, disabled, onSelectDay }: {
             {/* Says where it goes, so the row reads on day one too, when the
                 left arrow has nowhere to go and used to look like an empty box. */}
             {glyph === '‹'
-                ? <><span aria-hidden className="text-lg leading-none">‹</span>{disabled ? 'First day' : `Day ${to}`}</>
-                : <>{disabled ? 'Last day' : `Day ${to}`}<span aria-hidden className="text-lg leading-none">›</span></>}
+                ? <><span aria-hidden className="text-lg leading-none">‹</span>{disabled ? 'Erster Tag' : `Tag ${to}`}</>
+                : <>{disabled ? 'Letzter Tag' : `Tag ${to}`}<span aria-hidden className="text-lg leading-none">›</span></>}
         </button>
     );
 }
@@ -380,21 +380,21 @@ function BaseCard({ plan, format }: { plan: TodayPlan; format: '12h' | '24h' }) 
     if (!base) {
         return (
             <Card>
-                <SectionLabel>Tonight</SectionLabel>
+                <SectionLabel>Heute Nacht</SectionLabel>
                 <p className="mt-2 text-gray-600 night:text-gray-300">
-                    No stay set for this day.
+                    Für diesen Tag ist keine Unterkunft festgelegt.
                 </p>
             </Card>
         );
     }
     const nights = plan.baseNights && plan.baseNight
-        ? `Night ${plan.baseNight} of ${plan.baseNights}`
+        ? `Nacht ${plan.baseNight} von ${plan.baseNights}`
         : null;
     return (
         <Card>
             <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
-                    <SectionLabel>Tonight</SectionLabel>
+                    <SectionLabel>Heute Nacht</SectionLabel>
                     <p className="mt-1 truncate text-lg font-semibold">{base.name}</p>
                     {nights && (
                         <p className="text-sm text-gray-500 night:text-gray-400">{nights}</p>
@@ -420,9 +420,9 @@ function BookingLine({ plan, format }: { plan: TodayPlan; format: '12h' | '24h' 
     if (!use) return null;
     const at = (time: string | null) => (time ? (format === '12h' ? formatTime(time) : time) : null);
     const parts = [
-        use.confirmation ? `Ref ${use.confirmation}` : null,
-        at(use.check_in_time) ? `check in ${at(use.check_in_time)}` : null,
-        at(use.check_out_time) ? `out by ${at(use.check_out_time)}` : null,
+        use.confirmation ? `Ref. ${use.confirmation}` : null,
+        at(use.check_in_time) ? `Check-in ${at(use.check_in_time)}` : null,
+        at(use.check_out_time) ? `Check-out bis ${at(use.check_out_time)}` : null,
     ].filter(Boolean);
     if (!parts.length && !use.contact) return null;
     return (
@@ -435,7 +435,7 @@ function BookingLine({ plan, format }: { plan: TodayPlan; format: '12h' | '24h' 
                     className="ml-auto flex min-h-11 items-center rounded-full bg-gray-900
                         night:bg-gray-100 px-4 text-sm font-medium text-white night:text-gray-900"
                 >
-                    Call the hotel
+                    Hotel anrufen
                 </a>
             )}
         </div>
@@ -473,7 +473,7 @@ function LegRow({ leg, format, note }: {
                 </p>
                 <p className="text-sm text-gray-600 night:text-gray-300 tabular-nums">
                     {[at(leg.depart_time), at(leg.arrive_time)].filter(Boolean).join(' → ')}
-                    {legIsOvernight(leg) && ' (+1 day)'}
+                    {legIsOvernight(leg) && ' (+1 Tag)'}
                     {terminals && ` · ${terminals}`}
                     {leg.confirmation_ref && ` · ${leg.confirmation_ref}`}
                     {note && ` · ${note}`}
@@ -504,7 +504,7 @@ function StopRow({ stop, format, isNext }: {
                         {isNext && (
                             <span className="rounded-full bg-accent px-2 py-0.5 text-xs
                                 font-semibold text-white">
-                                Next
+                                Als Nächstes
                             </span>
                         )}
                     </div>
@@ -519,7 +519,7 @@ function StopRow({ stop, format, isNext }: {
                     )}
                     {stop.place?.best_time && (
                         <p className="mt-0.5 text-sm text-gray-500 night:text-gray-400">
-                            Best: {stop.place.best_time}
+                            Beste Zeit: {stop.place.best_time}
                         </p>
                     )}
                     {stop.stop.notes && (
@@ -530,8 +530,8 @@ function StopRow({ stop, format, isNext }: {
                     )}
                     {stop.booking?.confirmation && (
                         <p className="mt-1 text-sm text-gray-600 night:text-gray-300">
-                            Ref {stop.booking.confirmation}
-                            {stop.booking.party_size ? ` · table for ${stop.booking.party_size}` : ''}
+                            Ref. {stop.booking.confirmation}
+                            {stop.booking.party_size ? ` · Tisch für ${stop.booking.party_size}` : ''}
                             {stop.booking.dress_code ? ` · ${stop.booking.dress_code}` : ''}
                         </p>
                     )}
@@ -566,7 +566,7 @@ function NavButton({ target }: {
                 night:bg-gray-100 px-4 text-sm font-medium text-white night:text-gray-900
                 active:opacity-80"
         >
-            Navigate
+            Navigieren
         </a>
     );
 }

@@ -115,7 +115,7 @@ export function SaveStatus({ state, onRetry, className = '' }: {
                     hover:bg-red-100 px-3 py-1 rounded-full transition-colors ${className}`}
             >
                 <span className="h-1.5 w-1.5 rounded-full bg-red-500" />
-                Not saved — retry
+                Nicht gespeichert – erneut versuchen
             </button>
         );
     }
@@ -129,7 +129,7 @@ export function SaveStatus({ state, onRetry, className = '' }: {
             <span className={`h-1.5 w-1.5 rounded-full ${
                 state === 'saved' ? 'bg-green-500' : busy ? 'bg-amber-400 animate-pulse' : 'bg-gray-300'
             }`} />
-            {busy ? 'Saving…' : 'Saved'}
+            {busy ? 'Wird gespeichert …' : 'Gespeichert'}
         </span>
     );
 }

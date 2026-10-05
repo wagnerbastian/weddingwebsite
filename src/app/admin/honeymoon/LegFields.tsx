@@ -108,9 +108,9 @@ export default function LegFields({ api, leg, group }: {
                 + `&date=${leg.depart_date}`,
             );
             const body = await res.json();
-            if (!res.ok) { setLookupNote(body?.error ?? 'The lookup failed'); return; }
+            if (!res.ok) { setLookupNote(body?.error ?? 'Die Abfrage ist fehlgeschlagen'); return; }
             if (!body.configured) { setLookupState('unconfigured'); return; }
-            if (!body.flight) { setLookupNote(body.error ?? 'No schedule found'); return; }
+            if (!body.flight) { setLookupNote(body.error ?? 'Kein Flugplan gefunden'); return; }
 
             const flight = body.flight;
             // Only blanks are filled: a leg corrected by hand is never
@@ -141,12 +141,12 @@ export default function LegFields({ api, leg, group }: {
             }
             await save(patch);
             setLookupNote(flight.other_date && flight.from_date
-                ? `${flight.flight_no} does not operate on that date — filled in from its `
-                    + `${flight.from_date} schedule. Worth checking closer to the trip.`
-                : `Filled in from ${flight.flight_no}’s schedule.`);
+                ? `${flight.flight_no} fliegt an diesem Datum nicht – ausgefüllt aus dem `
+                    + `Flugplan vom ${flight.from_date}. Kurz vor der Reise lieber noch einmal prüfen.`
+                : `Aus dem Flugplan von ${flight.flight_no} ausgefüllt.`);
             setLookupState('idle');
         } catch {
-            setLookupNote('Could not reach the lookup service');
+            setLookupNote('Der Abfragedienst ist nicht erreichbar');
             setLookupState('idle');
         }
     };
@@ -155,7 +155,7 @@ export default function LegFields({ api, leg, group }: {
         <div className="space-y-2">
             <div className="flex flex-wrap items-end gap-2">
                 <div className="w-32">
-                    <Label>How</Label>
+                    <Label>Wie</Label>
                     <MiniSelect
                         value={leg.mode}
                         onChange={(e) => save({ mode: e.target.value as TravelMode })}
@@ -170,7 +170,7 @@ export default function LegFields({ api, leg, group }: {
                 {leg.mode === 'flight' && (
                     <>
                         <div className="w-28">
-                            <Label>Flight</Label>
+                            <Label>Flug</Label>
                             <TextField
                                 key={`f${leg.flight_no ?? ''}`}
                                 defaultValue={leg.flight_no ?? ''}
@@ -186,30 +186,30 @@ export default function LegFields({ api, leg, group }: {
                             onClick={lookupFlight}
                             disabled={!leg.flight_no || !leg.depart_date || lookupState === 'busy'}
                             title={leg.depart_date
-                                ? 'Fill in the times, terminals, aircraft and time zones'
-                                : 'Set the departure date first'}
+                                ? 'Zeiten, Terminals, Flugzeug und Zeitzonen ausfüllen'
+                                : 'Zuerst das Abflugdatum eintragen'}
                         >
-                            {lookupState === 'busy' ? 'Looking…' : 'Fill in from schedule'}
+                            {lookupState === 'busy' ? 'Wird abgefragt …' : 'Aus Flugplan ausfüllen'}
                         </Button>
                     </>
                 )}
                 <div className="flex-1" />
                 {realMinutes != null && (
                     <span className="pb-2 text-[11px] text-sky-700">
-                        {formatDuration(realMinutes * 60)} in the air
+                        {formatDuration(realMinutes * 60)} in der Luft
                     </span>
                 )}
             </div>
 
             {lookupState === 'unconfigured' && (
                 <p className="rounded-xl bg-amber-50 px-2.5 py-1.5 text-[11px] text-amber-800">
-                    Flight lookup needs an API key. Set <code>FLIGHT_API_KEY</code> on the stack
-                    (AeroDataBox via RapidAPI has a free tier).
+                    Für die Flugabfrage braucht es einen API-Schlüssel. Setze <code>FLIGHT_API_KEY</code> im Stack
+                    (AeroDataBox über RapidAPI hat einen kostenlosen Tarif).
                 </p>
             )}
             {lookupNote && (
                 <p className={`rounded-xl px-2.5 py-1.5 text-[11px] ${
-                    lookupNote.includes('filled in from') || lookupNote.includes('Filled in')
+                    lookupNote.includes('usgefüllt')
                         ? 'bg-sky-50 text-sky-800' : 'bg-rose-50 text-rose-700'}`}>
                     {lookupNote}
                 </p>
@@ -222,7 +222,7 @@ export default function LegFields({ api, leg, group }: {
             {/* ---- When. Dates, because that is what a ticket says. ---- */}
             <div className="grid grid-cols-2 gap-2">
                 <div>
-                    <Label>Leaves</Label>
+                    <Label>Abfahrt</Label>
                     <div className="flex flex-col gap-1.5 sm:flex-row">
                         <TextField
                             type="date"
@@ -248,7 +248,7 @@ export default function LegFields({ api, leg, group }: {
                     </div>
                 </div>
                 <div>
-                    <Label>Lands</Label>
+                    <Label>Ankunft</Label>
                     <div className="flex flex-col gap-1.5 sm:flex-row">
                         <TextField
                             type="date"
@@ -274,7 +274,7 @@ export default function LegFields({ api, leg, group }: {
                     </div>
                     {leg.depart_date && leg.arrive_date && leg.arrive_date !== leg.depart_date && (
                         <p className="mt-1 text-[10px] text-slate-600">
-                            Lands the next day{leg.arrive_date > leg.depart_date ? '' : ' — check that'}
+                            Ankunft am nächsten Tag{leg.arrive_date > leg.depart_date ? '' : ' – bitte prüfen'}
                         </p>
                     )}
                 </div>
@@ -283,7 +283,7 @@ export default function LegFields({ api, leg, group }: {
             {/* ---- Terminals and zones ---- */}
             <div className="grid grid-cols-2 gap-2">
                 <div>
-                    <Label>From terminal</Label>
+                    <Label>Abflug-Terminal</Label>
                     <TextField
                         key={`ft${leg.from_terminal ?? ''}`}
                         defaultValue={leg.from_terminal ?? ''}
@@ -296,7 +296,7 @@ export default function LegFields({ api, leg, group }: {
                     />
                 </div>
                 <div>
-                    <Label>To terminal</Label>
+                    <Label>Ankunfts-Terminal</Label>
                     <TextField
                         key={`tt${leg.to_terminal ?? ''}`}
                         defaultValue={leg.to_terminal ?? ''}
@@ -312,13 +312,13 @@ export default function LegFields({ api, leg, group }: {
 
             <div className="grid grid-cols-2 gap-2">
                 <ZoneField
-                    label="Local time at take-off"
+                    label="Ortszeit beim Start"
                     value={leg.depart_tz}
                     guess={leg.from_lng != null ? nominalZone(leg.from_lng) : null}
                     onChange={(depart_tz) => save({ depart_tz })}
                 />
                 <ZoneField
-                    label="Local time at landing"
+                    label="Ortszeit bei der Landung"
                     value={leg.arrive_tz}
                     guess={leg.to_lng != null ? nominalZone(leg.to_lng) : null}
                     onChange={(arrive_tz) => save({ arrive_tz })}
@@ -330,7 +330,7 @@ export default function LegFields({ api, leg, group }: {
 
             <div className="grid grid-cols-2 gap-2">
                 <div>
-                    <Label>Aircraft</Label>
+                    <Label>Flugzeug</Label>
                     <TextField
                         key={`ac${leg.aircraft ?? ''}`}
                         defaultValue={leg.aircraft ?? ''}
@@ -343,7 +343,7 @@ export default function LegFields({ api, leg, group }: {
                     />
                 </div>
                 <div>
-                    <Label>Seats / notes</Label>
+                    <Label>Plätze / Notizen</Label>
                     <TextField
                         key={`n${leg.notes ?? ''}`}
                         defaultValue={leg.notes ?? ''}
@@ -360,14 +360,14 @@ export default function LegFields({ api, leg, group }: {
             <div className="flex items-center justify-between gap-2 border-t border-gray-100 pt-2">
                 <span className="text-[10px] text-gray-400">
                     {group.journey
-                        ? 'The reference and the price live on the journey, above.'
-                        : 'Add a connection to turn this into a journey.'}
+                        ? 'Referenz und Preis gehören zur Verbindung, weiter oben.'
+                        : 'Füge einen Anschluss hinzu, um daraus eine Verbindung zu machen.'}
                 </span>
                 <Button
                     tone="danger"
-                    onClick={() => api.removeRow('travel', leg, 'Removed a leg')}
+                    onClick={() => api.removeRow('travel', leg, 'Teilstrecke entfernt')}
                 >
-                    Remove this leg
+                    Diese Teilstrecke entfernen
                 </Button>
             </div>
         </div>
@@ -406,7 +406,7 @@ function ZoneField({ label, value, guess, onChange }: {
                     onClick={() => onChange(guess)}
                     className="mt-1 text-[10px] text-sky-700 underline decoration-dotted"
                 >
-                    use {guess} (from the pin)
+                    {guess} verwenden (vom Pin)
                 </button>
             )}
         </div>

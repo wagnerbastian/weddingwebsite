@@ -65,8 +65,8 @@ export default function AdminHome() {
     return (
         <div className="max-w-4xl">
             <AutosaveHeader
-                title="Home Page Content"
-                subtitle="Customize the text content and hero image settings for your home page. Changes save themselves."
+                title="Inhalte der Startseite"
+                subtitle="Passt Texte und Titelbild eurer Startseite an. Änderungen werden automatisch gespeichert."
                 state={state}
                 onRetry={retry}
             />
@@ -75,16 +75,16 @@ export default function AdminHome() {
 
                 {/* Hero Section */}
                 <div className="space-y-6 bg-gradient-to-br from-accent/5 to-accent-light/10 rounded-xl p-6 border border-accent/10">
-                    <h2 className="text-xl font-semibold text-gray-900">Hero Section</h2>
+                    <h2 className="text-xl font-semibold text-gray-900">Titelbereich</h2>
 
                     <div>
-                        <label className="block text-sm font-medium text-gray-700">Small Headline (above names)</label>
+                        <label className="block text-sm font-medium text-gray-700">Kleine Überschrift (über den Namen)</label>
                         <input
                             type="text"
                             value={config.homeHeadline || ''}
                             onChange={(e) => setConfig({ ...config, homeHeadline: e.target.value })}
                             className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-accent focus:ring-accent sm:text-sm p-2 border text-gray-900"
-                            placeholder="e.g. We're getting married!"
+                            placeholder="z. B. Wir heiraten!"
                         />
                     </div>
                 </div>
@@ -92,9 +92,9 @@ export default function AdminHome() {
                 {/* Hero Slideshow */}
                 <div className="space-y-6 bg-gradient-to-br from-accent/5 to-accent-light/10 rounded-xl p-6 border border-accent/10">
                     <div className="flex items-center justify-between">
-                        <h2 className="text-xl font-semibold text-gray-900">Hero Slideshow</h2>
+                        <h2 className="text-xl font-semibold text-gray-900">Titelbild-Diashow</h2>
                         <label className="flex items-center gap-2 cursor-pointer">
-                            <span className="text-sm text-gray-600">{config.heroSlideshowEnabled ? 'Enabled' : 'Disabled'}</span>
+                            <span className="text-sm text-gray-600">{config.heroSlideshowEnabled ? 'Aktiviert' : 'Deaktiviert'}</span>
                             <div
                                 onClick={() => setConfig({ ...config, heroSlideshowEnabled: !config.heroSlideshowEnabled })}
                                 className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${config.heroSlideshowEnabled ? 'bg-accent' : 'bg-gray-300'}`}
@@ -105,15 +105,15 @@ export default function AdminHome() {
                     </div>
 
                     <p className="text-sm text-gray-500">
-                        When enabled, the hero will cycle through the selected photos instead of showing a single image.
-                        The single hero image (set in Photos admin) is used as a fallback when disabled.
+                        Wenn aktiviert, wechselt das Titelbild zwischen den ausgewählten Fotos, statt nur ein Bild zu zeigen.
+                        Ist die Diashow deaktiviert, wird das einzelne Titelbild (in den Foto-Einstellungen festgelegt) verwendet.
                     </p>
 
                     {config.heroSlideshowEnabled && (
                         <>
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    Slide Interval (seconds)
+                                    Dauer pro Bild (Sekunden)
                                 </label>
                                 <input
                                     type="number"
@@ -131,30 +131,30 @@ export default function AdminHome() {
 
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-3">
-                                    Slideshow Photos
+                                    Fotos der Diashow
                                     <span className="ml-2 text-xs text-gray-400 font-normal">
-                                        ({(config.heroSlideshowImages || []).length} selected — click to toggle, use arrows to reorder)
+                                        ({(config.heroSlideshowImages || []).length} ausgewählt – zum Wählen anklicken, mit den Pfeilen sortieren)
                                     </span>
                                 </label>
 
                                 {/* Selected images order */}
                                 {(config.heroSlideshowImages || []).length > 0 && (
                                     <div className="mb-4 space-y-2">
-                                        <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Order</p>
+                                        <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Reihenfolge</p>
                                         {(config.heroSlideshowImages as string[]).map((filename: string, i: number) => (
                                             <div key={filename} className="flex items-center gap-3 bg-white rounded-lg p-2 border border-accent/30 shadow-sm">
                                                 <img src={`/api/photos/${filename}/thumb`} alt={filename} className="h-10 w-16 object-cover rounded" loading="lazy" />
                                                 <span className="flex-1 text-sm text-gray-700 truncate">{filename}</span>
                                                 <button type="button" onClick={() => moveSlideshowImage(i, -1)} disabled={i === 0} className="p-1 text-gray-400 hover:text-gray-600 disabled:opacity-30">↑</button>
                                                 <button type="button" onClick={() => moveSlideshowImage(i, 1)} disabled={i === (config.heroSlideshowImages || []).length - 1} className="p-1 text-gray-400 hover:text-gray-600 disabled:opacity-30">↓</button>
-                                                <button type="button" onClick={() => toggleSlideshowImage(filename)} className="p-1 text-red-400 hover:text-red-600" title="Remove">✕</button>
+                                                <button type="button" onClick={() => toggleSlideshowImage(filename)} className="p-1 text-red-400 hover:text-red-600" title="Entfernen">✕</button>
                                             </div>
                                         ))}
                                     </div>
                                 )}
 
                                 {/* Photo picker */}
-                                <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">All Photos — click to add/remove</p>
+                                <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">Alle Fotos – zum Hinzufügen oder Entfernen anklicken</p>
                                 <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2">
                                     {allPhotos.map((photo) => {
                                         const selected = (config.heroSlideshowImages || []).includes(photo.filename);
@@ -176,7 +176,7 @@ export default function AdminHome() {
                                         );
                                     })}
                                     {allPhotos.length === 0 && (
-                                        <p className="col-span-full text-sm text-gray-400 italic">No photos uploaded yet. Add photos in the Photos admin.</p>
+                                        <p className="col-span-full text-sm text-gray-400 italic">Noch keine Fotos hochgeladen. Fotos können im Bereich „Fotos“ hinzugefügt werden.</p>
                                     )}
                                 </div>
                             </div>
@@ -186,27 +186,27 @@ export default function AdminHome() {
 
                 {/* Intro Section */}
                 <div className="space-y-6 bg-gradient-to-br from-accent/5 to-accent-light/10 rounded-xl p-6 border border-accent/10">
-                    <h2 className="text-xl font-semibold text-gray-900">Welcome Message</h2>
+                    <h2 className="text-xl font-semibold text-gray-900">Willkommenstext</h2>
 
                     <div>
-                        <label className="block text-sm font-medium text-gray-700">Section Title</label>
+                        <label className="block text-sm font-medium text-gray-700">Titel des Abschnitts</label>
                         <input
                             type="text"
                             value={config.homeIntroTitle || ''}
                             onChange={(e) => setConfig({ ...config, homeIntroTitle: e.target.value })}
                             className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-accent focus:ring-accent sm:text-sm p-2 border text-gray-900"
-                            placeholder="e.g. Join us to celebrate"
+                            placeholder="z. B. Feiert mit uns"
                         />
                     </div>
 
                     <div>
-                        <label className="block text-sm font-medium text-gray-700">Welcome Text</label>
+                        <label className="block text-sm font-medium text-gray-700">Text</label>
                         <textarea
                             rows={5}
                             value={config.homeIntroBody || ''}
                             onChange={(e) => setConfig({ ...config, homeIntroBody: e.target.value })}
                             className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-accent focus:ring-accent sm:text-sm p-2 border text-gray-900"
-                            placeholder="Welcome message paragraph..."
+                            placeholder="Willkommenstext …"
                         />
                     </div>
                 </div>

@@ -157,7 +157,7 @@ export function buildTimeline(
         rows.push({
             stop,
             place,
-            label: place?.name ?? stop.custom_label ?? 'Something',
+            label: place?.name ?? stop.custom_label ?? 'Etwas',
             planned: stop.start_time,
             arrive: arriveMinutes != null ? clockOf(arriveMinutes) : null,
             leave: leaveMinutes != null && stop.duration_minutes ? clockOf(leaveMinutes) : null,
@@ -190,13 +190,13 @@ export function isWalkable(base: Place, place: Place): boolean {
     return km * 1000 <= WALKABLE_METRES;
 }
 
-/** "1 h 40 m" from seconds — the shape a drive is quoted in. */
+/** "1 h 40 min" from seconds — the shape a drive is quoted in. */
 export function formatDuration(seconds: number): string {
     const total = Math.max(0, Math.round(seconds / 60));
     if (total < 60) return `${total} min`;
     const hours = Math.floor(total / 60);
     const minutes = total % 60;
-    return minutes ? `${hours} h ${minutes} m` : `${hours} h`;
+    return minutes ? `${hours} h ${minutes} min` : `${hours} h`;
 }
 
 /* ------------------------------------------------------------------ */
@@ -626,9 +626,9 @@ export function dayMarkers(
         if (booking.kind !== 'stay') continue;
         const name = placeName(booking.place_id);
         const out = booking.check_out === dateIso ? minutesOf(booking.check_out_time) : null;
-        if (out != null) marks.push({ kind: 'check-out', label: `Check out${name ? ` · ${name}` : ''}`, minutes: out });
+        if (out != null) marks.push({ kind: 'check-out', label: `Check-out${name ? ` · ${name}` : ''}`, minutes: out });
         const into = booking.check_in === dateIso ? minutesOf(booking.check_in_time) : null;
-        if (into != null) marks.push({ kind: 'check-in', label: `Check in${name ? ` · ${name}` : ''}`, minutes: into });
+        if (into != null) marks.push({ kind: 'check-in', label: `Check-in${name ? ` · ${name}` : ''}`, minutes: into });
     }
     return marks.sort((a, b) => a.minutes - b.minutes);
 }

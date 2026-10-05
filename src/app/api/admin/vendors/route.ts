@@ -50,7 +50,7 @@ export async function GET() {
         return NextResponse.json(result.rows);
     } catch (error) {
         console.error('Error fetching vendors:', error);
-        return NextResponse.json({ error: 'Failed to fetch vendors' }, { status: 500 });
+        return NextResponse.json({ error: 'Dienstleister konnten nicht geladen werden' }, { status: 500 });
     }
 }
 
@@ -59,7 +59,7 @@ export async function POST(request: Request) {
         const body = await request.json();
         const name = text(body.name);
         if (!name) {
-            return NextResponse.json({ error: 'name is required' }, { status: 400 });
+            return NextResponse.json({ error: 'Name ist erforderlich' }, { status: 400 });
         }
 
         const result = await pool.query(
@@ -80,7 +80,7 @@ export async function POST(request: Request) {
         return NextResponse.json(result.rows[0]);
     } catch (error) {
         console.error('Error adding vendor:', error);
-        return NextResponse.json({ error: 'Failed to add vendor' }, { status: 500 });
+        return NextResponse.json({ error: 'Dienstleister konnte nicht hinzugefügt werden' }, { status: 500 });
     }
 }
 
@@ -90,10 +90,10 @@ export async function PUT(request: Request) {
         const id = Number(body.id);
         const name = text(body.name);
         if (!Number.isFinite(id)) {
-            return NextResponse.json({ error: 'id is required' }, { status: 400 });
+            return NextResponse.json({ error: 'ID ist erforderlich' }, { status: 400 });
         }
         if (!name) {
-            return NextResponse.json({ error: 'name is required' }, { status: 400 });
+            return NextResponse.json({ error: 'Name ist erforderlich' }, { status: 400 });
         }
 
         const result = await pool.query(
@@ -115,12 +115,12 @@ export async function PUT(request: Request) {
             ],
         );
         if (result.rows.length === 0) {
-            return NextResponse.json({ error: 'No such vendor' }, { status: 404 });
+            return NextResponse.json({ error: 'Dienstleister nicht gefunden' }, { status: 404 });
         }
         return NextResponse.json(result.rows[0]);
     } catch (error) {
         console.error('Error updating vendor:', error);
-        return NextResponse.json({ error: 'Failed to update vendor' }, { status: 500 });
+        return NextResponse.json({ error: 'Dienstleister konnte nicht aktualisiert werden' }, { status: 500 });
     }
 }
 
@@ -128,12 +128,12 @@ export async function DELETE(request: Request) {
     try {
         const id = Number(new URL(request.url).searchParams.get('id'));
         if (!Number.isFinite(id)) {
-            return NextResponse.json({ error: 'id is required' }, { status: 400 });
+            return NextResponse.json({ error: 'ID ist erforderlich' }, { status: 400 });
         }
         await pool.query('DELETE FROM vendors WHERE id = $1', [id]);
         return NextResponse.json({ success: true });
     } catch (error) {
         console.error('Error deleting vendor:', error);
-        return NextResponse.json({ error: 'Failed to delete vendor' }, { status: 500 });
+        return NextResponse.json({ error: 'Dienstleister konnte nicht gelöscht werden' }, { status: 500 });
     }
 }

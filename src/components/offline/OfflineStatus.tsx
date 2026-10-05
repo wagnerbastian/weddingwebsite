@@ -4,7 +4,7 @@ import { saveForOffline } from './offlineStore';
 import { savedLabel, useOfflineState } from './OfflineManager';
 
 /**
- * "Saved for offline · today 14:02" and the button that does it, in the admin
+ * "Offline gespeichert · heute 14:02 Uhr" and the button that does it, in the admin
  * sidebar. The installed app saves on its own; this is for checking, and for
  * saving from an ordinary browser tab.
  */
@@ -17,12 +17,12 @@ export default function OfflineStatus() {
             <div className="flex items-center justify-between gap-2">
                 <span>
                     {saving
-                        ? `Saving for offline… ${pct}%`
+                        ? `Wird offline gespeichert … ${pct} %`
                         : state.phase === 'failed'
-                            ? 'Saving for offline stopped — try again'
+                            ? 'Offline-Speicherung abgebrochen – bitte erneut versuchen'
                             : state.record
-                                ? `Saved for offline · ${savedLabel(state.record.at)}`
-                                : 'Not saved for offline yet'}
+                                ? `Offline gespeichert · ${savedLabel(state.record.at)}`
+                                : 'Noch nicht offline gespeichert'}
                 </span>
                 <button
                     type="button"
@@ -31,7 +31,7 @@ export default function OfflineStatus() {
                     className="shrink-0 rounded-full border border-gray-200 bg-white px-2.5 py-1 font-medium text-gray-700
                         hover:bg-gray-100 disabled:opacity-50"
                 >
-                    {saving ? 'Saving…' : state.record ? 'Save again' : 'Save now'}
+                    {saving ? 'Wird gespeichert …' : state.record ? 'Erneut speichern' : 'Jetzt speichern'}
                 </button>
             </div>
             {saving && (

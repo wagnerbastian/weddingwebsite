@@ -80,7 +80,7 @@ export default function ChecklistTab({ api }: { api: HoneymoonApi }) {
     const grouped = useMemo(() => {
         const map = new Map<string, TodoItem[]>();
         for (const todo of visible) {
-            const key = todo.category?.trim() || 'General';
+            const key = todo.category?.trim() || 'Allgemein';
             const list = map.get(key);
             if (list) list.push(todo); else map.set(key, [todo]);
         }
@@ -103,7 +103,7 @@ export default function ChecklistTab({ api }: { api: HoneymoonApi }) {
         await api.create('todos', {
             text: clean,
             kind,
-            category: group.trim() || (kind === 'packing' ? 'Bag' : 'General'),
+            category: group.trim() || (kind === 'packing' ? 'Tasche' : 'Allgemein'),
             // New items land at the bottom of the list.
             sort_order: (todos.at(-1)?.sort_order ?? 0) + 1,
         });
@@ -137,7 +137,7 @@ export default function ChecklistTab({ api }: { api: HoneymoonApi }) {
             .map((entry, index) => ({
                 text: entry.text,
                 kind: 'packing',
-                category: 'Suggested',
+                category: 'Vorschläge',
                 result: null,
                 sort_order: (todos.at(-1)?.sort_order ?? 0) + 1 + index,
             }));
@@ -152,22 +152,22 @@ export default function ChecklistTab({ api }: { api: HoneymoonApi }) {
             <TabToolbar
                 left={(
                     <Segmented<'task' | 'packing'>
-                        ariaLabel="Which list"
+                        ariaLabel="Welche Liste"
                         value={kind}
                         onChange={setKind}
                         options={[
-                            { key: 'task', label: 'To do', count: todos.filter((t) => (t.kind ?? 'task') === 'task').length },
-                            { key: 'packing', label: 'Packing', count: todos.filter((t) => (t.kind ?? 'task') === 'packing').length },
+                            { key: 'task', label: 'Aufgaben', count: todos.filter((t) => (t.kind ?? 'task') === 'task').length },
+                            { key: 'packing', label: 'Packliste', count: todos.filter((t) => (t.kind ?? 'task') === 'packing').length },
                         ]}
                     />
                 )}
                 right={(
                     <>
                         <Button onClick={() => setByDue((v) => !v)}>
-                            {byDue ? 'Sort: my order' : 'Sort: by date'}
+                            {byDue ? 'Sortierung: eigene' : 'Sortierung: nach Datum'}
                         </Button>
                         {kind === 'packing' && (
-                            <Button onClick={() => setSuggesting(true)}>Suggest from the trip</Button>
+                            <Button onClick={() => setSuggesting(true)}>Vorschläge aus der Reise</Button>
                         )}
                     </>
                 )}
@@ -176,7 +176,7 @@ export default function ChecklistTab({ api }: { api: HoneymoonApi }) {
             {/* ---- Due soon ---- */}
             {soon.length > 0 && (
                 <Card className="p-3">
-                    <h3 className="mb-1.5 text-sm font-semibold text-gray-900">Next seven days</h3>
+                    <h3 className="mb-1.5 text-sm font-semibold text-gray-900">Nächste sieben Tage</h3>
                     <ul className="space-y-1">
                         {soon.slice(0, 6).map((entry) => (
                             <li
@@ -191,17 +191,17 @@ export default function ChecklistTab({ api }: { api: HoneymoonApi }) {
                                 <span className="min-w-0 truncate">{entry.todo.text}</span>
                                 <span className="shrink-0 text-[11px] tabular-nums">
                                     {entry.bucket === 'overdue'
-                                        ? `${Math.abs(entry.daysAway ?? 0)}d late`
+                                        ? `${Math.abs(entry.daysAway ?? 0)} T. überfällig`
                                         : entry.bucket === 'today'
-                                            ? 'today'
-                                            : `in ${entry.daysAway}d`}
+                                            ? 'heute'
+                                            : `in ${entry.daysAway} T.`}
                                 </span>
                             </li>
                         ))}
                     </ul>
                     <p className="mt-1.5 text-[11px] text-gray-400">
-                        From the due dates you have set. Anything due after you leave is flagged on
-                        the Itinerary.
+                        Aus den Fälligkeitsdaten, die du gesetzt hast. Was nach der Abreise fällig ist,
+                        wird im Reiseplan markiert.
                     </p>
                 </Card>
             )}
@@ -213,19 +213,19 @@ export default function ChecklistTab({ api }: { api: HoneymoonApi }) {
                         value={text}
                         onChange={(e) => setText(e.target.value)}
                         onKeyDown={(e) => { if (e.key === 'Enter') add(); }}
-                        placeholder="Renew passports, book airport transfer, tell the bank…"
+                        placeholder="Reisepässe verlängern, Flughafentransfer buchen, Bank informieren …"
                     />
                     <TextField
                         list="honeymoon-todo-groups"
                         value={group}
                         onChange={(e) => setGroup(e.target.value)}
                         onKeyDown={(e) => { if (e.key === 'Enter') add(); }}
-                        placeholder="Group (optional)"
+                        placeholder="Gruppe (optional)"
                     />
                     <datalist id="honeymoon-todo-groups">
                         {groups.map((g) => <option key={g} value={g} />)}
                     </datalist>
-                    <Button tone="primary" onClick={add} disabled={!text.trim()}>Add</Button>
+                    <Button tone="primary" onClick={add} disabled={!text.trim()}>Hinzufügen</Button>
                 </div>
             </Card>
 
@@ -234,12 +234,12 @@ export default function ChecklistTab({ api }: { api: HoneymoonApi }) {
                 <Card className="p-3">
                     <div className="flex items-center justify-between gap-3 mb-2">
                         <span className="text-sm font-medium text-gray-700">
-                            {done} of {todos.length} done
+                            {done} von {todos.length} erledigt
                         </span>
                         <div className="flex items-center gap-2">
                             <span className="text-sm text-gray-400 tabular-nums">{pct}%</span>
                             <Button onClick={() => setHideDone((v) => !v)}>
-                                {hideDone ? 'Show done' : 'Hide done'}
+                                {hideDone ? 'Erledigte zeigen' : 'Erledigte ausblenden'}
                             </Button>
                         </div>
                     </div>
@@ -253,11 +253,11 @@ export default function ChecklistTab({ api }: { api: HoneymoonApi }) {
             )}
 
             {suggesting && (
-                <Modal open onClose={() => setSuggesting(false)} title="Packing suggestions">
+                <Modal open onClose={() => setSuggesting(false)} title="Packvorschläge">
                     <p className="text-xs text-gray-500">
-                        Worked out from what you have planned — beach days want sunscreen, temples
-                        want covered shoulders, an overnight flight wants an eye mask. Each one
-                        becomes an ordinary checklist row you can edit or delete.
+                        Abgeleitet aus eurer Planung – Strandtage brauchen Sonnencreme, Tempel
+                        bedeckte Schultern, ein Nachtflug eine Schlafmaske. Jeder Vorschlag wird
+                        zu einer normalen Zeile der Checkliste, die du bearbeiten oder löschen kannst.
                     </p>
                     <ul className="mt-3 max-h-64 space-y-1 overflow-auto">
                         {(data ? packingSuggestions(data) : []).map((entry) => (
@@ -274,9 +274,9 @@ export default function ChecklistTab({ api }: { api: HoneymoonApi }) {
                         ))}
                     </ul>
                     <div className="mt-4 flex justify-end gap-2">
-                        <Button onClick={() => setSuggesting(false)}>Cancel</Button>
+                        <Button onClick={() => setSuggesting(false)}>Abbrechen</Button>
                         <Button tone="primary" onClick={addSuggestions}>
-                            Add the ones I don&apos;t have
+                            Fehlende hinzufügen
                         </Button>
                     </div>
                 </Modal>
@@ -286,10 +286,10 @@ export default function ChecklistTab({ api }: { api: HoneymoonApi }) {
             {visible.length === 0 ? (
                 <Card>
                     <EmptyState
-                        title={todos.length ? 'Everything here is done' : 'Nothing on the list yet'}
+                        title={todos.length ? 'Hier ist alles erledigt' : 'Noch nichts auf der Liste'}
                         hint={todos.length
-                            ? 'Hit Show done to see what you have ticked off.'
-                            : 'Add the first thing above — passports, insurance, jabs.'}
+                            ? 'Mit „Erledigte zeigen“ siehst du, was ihr abgehakt habt.'
+                            : 'Füge oben das Erste hinzu – Reisepässe, Versicherung, Impfungen.'}
                     />
                 </Card>
             ) : (
@@ -358,7 +358,7 @@ function ResultPrompt({ todo, onClose, onSave }: {
         <Modal open onClose={onClose} title={todo.text}>
             <div className="space-y-3">
                 <label className="block text-xs font-semibold text-gray-500">
-                    How did it go? Booking reference, outcome, anything worth remembering.
+                    Wie ist es gelaufen? Buchungsnummer, Ergebnis, alles, was sich zu merken lohnt.
                 </label>
                 <TextArea
                     autoFocus
@@ -369,11 +369,11 @@ function ResultPrompt({ todo, onClose, onSave }: {
                         // Enter alone would be a nuisance in a multi-line note.
                         if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) onSave(text.trim());
                     }}
-                    placeholder="Booked with Garuda, ref XY12AB — paid in full"
+                    placeholder="Bei Garuda gebucht, Ref. XY12AB – vollständig bezahlt"
                 />
                 <div className="flex justify-end gap-2">
-                    <Button onClick={onClose}>Skip</Button>
-                    <Button tone="primary" onClick={() => onSave(text.trim())}>Save</Button>
+                    <Button onClick={onClose}>Überspringen</Button>
+                    <Button tone="primary" onClick={() => onSave(text.trim())}>Speichern</Button>
                 </div>
             </div>
         </Modal>
@@ -404,7 +404,7 @@ function TodoRow({ todo, api, onTicked, due, partners }: {
                     {...listeners}
                     className="cursor-grab active:cursor-grabbing text-gray-200 hover:text-gray-400
                         touch-none px-1 opacity-0 group-hover:opacity-100 transition"
-                    aria-label="Drag to reorder"
+                    aria-label="Zum Umsortieren ziehen"
                 >
                     ⠿
                 </button>
@@ -437,7 +437,7 @@ function TodoRow({ todo, api, onTicked, due, partners }: {
                             onClick={() => onTicked(todo)}
                             className="block min-h-11 md:min-h-0 text-left text-[11px] text-gray-500 px-2 -mt-0.5
                                 hover:text-gray-800 truncate max-w-full"
-                            title="Edit this note"
+                            title="Diese Notiz bearbeiten"
                         >
                             ↳ {todo.result}
                         </button>
@@ -453,13 +453,13 @@ function TodoRow({ todo, api, onTicked, due, partners }: {
                             : !todo.done && due?.bucket === 'today' ? 'border-amber-200 text-amber-700 font-medium'
                                 : todo.due_on ? 'border-gray-200 text-gray-600' : 'border-dashed border-gray-200 text-gray-400'}`}
                 >
-                    {todo.due_on ? `Due ${formatDate(todo.due_on)}` : 'Due ▸'}
+                    {todo.due_on ? `Fällig ${formatDate(todo.due_on)}` : 'Fällig ▸'}
                     <input
                         type="date"
                         value={todo.due_on ?? ''}
                         onChange={(e) => api.update('todos', { id: todo.id, due_on: e.target.value })}
                         onClick={(e) => { try { e.currentTarget.showPicker(); } catch { /* older browsers open it themselves */ } }}
-                        aria-label={`Due date for ${todo.text}`}
+                        aria-label={`Fälligkeitsdatum für ${todo.text}`}
                         className="absolute inset-0 cursor-pointer opacity-0"
                     />
                 </label>
@@ -470,8 +470,8 @@ function TodoRow({ todo, api, onTicked, due, partners }: {
                         : due.bucket === 'today' ? 'bg-amber-100 text-amber-800'
                             : 'bg-gray-100 text-gray-600'}`}>
                         {due.bucket === 'overdue'
-                            ? `${Math.abs(due.daysAway ?? 0)}d late`
-                            : due.bucket === 'today' ? 'today' : `${due.daysAway}d`}
+                            ? `${Math.abs(due.daysAway ?? 0)} T. überfällig`
+                            : due.bucket === 'today' ? 'heute' : `${due.daysAway} T.`}
                     </span>
                 )}
                 {/* Whose bag, on a packing row. Free text through a select of the
@@ -482,11 +482,11 @@ function TodoRow({ todo, api, onTicked, due, partners }: {
                         onChange={(e) => api.update('todos', {
                             id: todo.id, person: e.target.value,
                         })}
-                        aria-label={`Who packs ${todo.text}`}
+                        aria-label={`Wer packt ${todo.text}`}
                         className="shrink-0 rounded-lg bg-transparent px-1 py-1 text-xs
                             text-gray-500 hover:bg-gray-50 focus:bg-white focus:outline-none"
                     >
-                        <option value="">both</option>
+                        <option value="">beide</option>
                         {partners.map((person) => (
                             <option key={person} value={person}>{person}</option>
                         ))}
@@ -495,9 +495,9 @@ function TodoRow({ todo, api, onTicked, due, partners }: {
                 <OverflowMenu
                     items={[
                         {
-                            label: 'Delete',
+                            label: 'Löschen',
                             danger: true,
-                            onClick: () => api.removeRow('todos', todo, `Deleted "${todo.text}"`),
+                            onClick: () => api.removeRow('todos', todo, `„${todo.text}“ gelöscht`),
                         },
                     ]}
                 />

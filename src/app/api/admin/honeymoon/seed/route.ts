@@ -89,6 +89,6 @@ export async function POST() {
         return NextResponse.json({ success: true, added });
     } catch (error) {
         console.error('Error loading the honeymoon seed:', error);
-        return NextResponse.json({ error: 'Could not load the guide' }, { status: 500 });
+        return NextResponse.json({ error: 'Reiseführer konnte nicht geladen werden' }, { status: 500 });
     }
 }

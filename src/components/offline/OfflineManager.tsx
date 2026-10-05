@@ -3,14 +3,14 @@
 import { useEffect, useState, useSyncExternalStore } from 'react';
 import { getServerState, getState, inFrame, isStandalone, saveForOffline, subscribe } from './offlineStore';
 
-/** "today 14:02", "yesterday 09:15", "Mon 5 Oct". */
+/** "heute 14:02 Uhr", "gestern 09:15 Uhr", "Mo., 5. Okt.". */
 export function savedLabel(at: number, now = Date.now()): string {
     const date = new Date(at);
-    const time = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const time = date.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }) + ' Uhr';
     const startOfToday = new Date(now); startOfToday.setHours(0, 0, 0, 0);
-    if (at >= startOfToday.getTime()) return `today ${time}`;
-    if (at >= startOfToday.getTime() - 86_400_000) return `yesterday ${time}`;
-    return date.toLocaleDateString([], { weekday: 'short', day: 'numeric', month: 'short' });
+    if (at >= startOfToday.getTime()) return `heute ${time}`;
+    if (at >= startOfToday.getTime() - 86_400_000) return `gestern ${time}`;
+    return date.toLocaleDateString('de-DE', { weekday: 'short', day: 'numeric', month: 'short' });
 }
 
 export function useOfflineState() {
@@ -106,7 +106,7 @@ export default function OfflineManager() {
         >
             <p className="pointer-events-auto rounded-full bg-gray-900/90 px-4 py-1.5 text-xs font-medium text-white shadow-lg backdrop-blur">
                 Offline
-                {offline.record ? ` · showing the copy saved ${savedLabel(offline.record.at)}` : ' · showing what this device has saved'}
+                {offline.record ? ` · Es wird die Kopie von ${savedLabel(offline.record.at)} angezeigt` : ' · Es wird angezeigt, was auf diesem Gerät gespeichert ist'}
             </p>
         </div>
     );

@@ -492,7 +492,7 @@ export default function HeroCollapse({
     return (
       <div style={{ height: '100svh', background: '#1a1a1a' }}
            className="flex items-center justify-center text-gray-400">
-        [Add hero photos in admin]
+        [Titelbilder im Admin hinzufügen]
       </div>
     );
   }
@@ -888,7 +888,7 @@ export default function HeroCollapse({
           {srcs.map((src, i) => (
             <img key={src}
                  src={photoSrc(src, mobileHiRes ? 'xl' : 'large')}
-                 alt="Hero"
+                 alt="Titelbild"
                  fetchPriority={i === 0 ? 'high' : 'low'}
                  className="absolute inset-0 w-full h-full object-cover"
                  style={{
@@ -1032,7 +1032,7 @@ export default function HeroCollapse({
           <div className="absolute inset-0 bg-gray-800 z-30 transition-opacity duration-700"
                style={{ opacity: firstReady ? 0 : 1, pointerEvents: 'none' }} />
           {srcs.map((src, i) => (
-            <img key={src} src={photoSrc(src, 'xl')} alt="Hero"
+            <img key={src} src={photoSrc(src, 'xl')} alt="Titelbild"
                  fetchPriority={i === 0 ? 'high' : 'low'}
                  style={{
                    position: 'absolute', inset: 0,
@@ -1072,7 +1072,7 @@ export default function HeroCollapse({
                         setCurrentSlide(i);
                         setScatterIdxs(idxs => idxs.map(idx => idx === i ? prev : idx));
                       }}
-                      aria-label={`Slide ${i + 1}`}
+                      aria-label={`Bild ${i + 1}`}
                       style={{
                         width: i === currentSlide ? '24px' : '10px', height: '10px',
                         borderRadius: '9999px', border: 'none', cursor: 'pointer', padding: 0,

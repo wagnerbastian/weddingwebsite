@@ -155,21 +155,21 @@ export default function TravelTab({ api }: { api: HoneymoonApi }) {
 
         if (!entries.length) {
             setPasteNote(
-                'Nothing there looked like a flight number or a date. Try '
-                + '"SQ938 2026-09-14, SQ27 2026-09-12".',
+                'Das sieht weder nach einer Flugnummer noch nach einem Datum aus. Versuch es mit '
+                + '„SQ938 2026-09-14, SQ27 2026-09-12".',
             );
             return;
         }
 
         setPasting(true);
-        setPasteNote(`Looking up ${entries.length} flight${entries.length === 1 ? '' : 's'}…`);
+        setPasteNote(`${entries.length} ${entries.length === 1 ? 'Flug wird' : 'Flüge werden'} abgefragt …`);
         try {
             const journey = await api.createRow('journeys', {
                 kind: 'flight',
                 title: '',
                 sort_order: groups.length,
             });
-            if (journey?.id == null) { setPasteNote('Could not start the journey.'); return; }
+            if (journey?.id == null) { setPasteNote('Die Verbindung konnte nicht angelegt werden.'); return; }
 
             let previousDate = trip?.start_date ?? todayIso();
             const built: string[] = [];
@@ -191,9 +191,9 @@ export default function TravelTab({ api }: { api: HoneymoonApi }) {
                         flight = body?.flight ?? null;
                         if (!body?.configured) {
                             setPasteNote(
-                                'Flight lookup needs FLIGHT_API_KEY on the stack. The legs were '
-                                + 'created — fill in the times by hand, or add the key and use '
-                                + '"Fill in from schedule".',
+                                'Für die Flugabfrage fehlt FLIGHT_API_KEY im Stack. Die Teilstrecken wurden '
+                                + 'trotzdem angelegt – trag die Zeiten von Hand ein oder hinterlege den Schlüssel und nutze '
+                                + '„Aus Flugplan ausfüllen".',
                             );
                         }
                     } catch { /* handled below */ }
@@ -246,15 +246,15 @@ export default function TravelTab({ api }: { api: HoneymoonApi }) {
             await api.refresh();
             setPaste('');
             setPasteNote([
-                built.length ? `Filled in ${built.join(', ')}.` : '',
+                built.length ? `Ausgefüllt: ${built.join(', ')}.` : '',
                 failed.length
-                    ? `No schedule found for ${failed.join(', ')} — those legs are there but empty.`
+                    ? `Kein Flugplan gefunden für ${failed.join(', ')} – die Teilstrecken sind angelegt, aber leer.`
                     : '',
                 blank.length
-                    ? `${blank.length} line${blank.length === 1 ? '' : 's'} had no flight number `
-                        + '— those legs are on their date, waiting for the rest.'
+                    ? `${blank.length} ${blank.length === 1 ? 'Zeile hatte' : 'Zeilen hatten'} keine Flugnummer `
+                        + '– diese Teilstrecken liegen an ihrem Datum und warten auf den Rest.'
                     : '',
-            ].filter(Boolean).join(' ') || 'Created the legs.');
+            ].filter(Boolean).join(' ') || 'Teilstrecken angelegt.');
         } finally {
             setPasting(false);
         }
@@ -273,8 +273,8 @@ export default function TravelTab({ api }: { api: HoneymoonApi }) {
         return (
             <Card>
                 <EmptyState
-                    title="No days to travel between yet"
-                    hint="A journey lands on a day, so the trip needs at least one. Set the dates in Settings and the days are built for you."
+                    title="Noch keine Tage zum Reisen"
+                    hint="Eine Verbindung liegt auf einem Tag, deshalb braucht die Reise mindestens einen. Lege die Daten in den Einstellungen fest, dann werden die Tage für dich angelegt."
                 />
             </Card>
         );
@@ -285,11 +285,11 @@ export default function TravelTab({ api }: { api: HoneymoonApi }) {
             <TabToolbar
                 left={summary.journeys > 0 ? (
                     <p className="text-xs text-gray-500">
-                        {summary.journeys} journey{summary.journeys === 1 ? '' : 's'}
-                        {summary.moving > 0 && ` · ${formatMinutes(summary.moving)} in transit`}
+                        {summary.journeys} {summary.journeys === 1 ? 'Verbindung' : 'Verbindungen'}
+                        {summary.moving > 0 && ` · ${formatMinutes(summary.moving)} unterwegs`}
                         {summary.problems > 0 && (
                             <span className="text-amber-700">
-                                {' '}· {summary.problems} thing{summary.problems === 1 ? '' : 's'} to check
+                                {' '}· {summary.problems} {summary.problems === 1 ? 'Punkt' : 'Punkte'} zu prüfen
                             </span>
                         )}
                     </p>
@@ -298,7 +298,7 @@ export default function TravelTab({ api }: { api: HoneymoonApi }) {
                     <>
                         <MiniSelect
                             value={mode}
-                            aria-label="Kind of journey"
+                            aria-label="Art der Verbindung"
                             onChange={(e) => setMode(e.target.value as TravelMode)}
                         >
                             {TRAVEL_MODES.map((entry) => (
@@ -306,9 +306,9 @@ export default function TravelTab({ api }: { api: HoneymoonApi }) {
                             ))}
                         </MiniSelect>
                         <Button tone="primary" onClick={newJourney} disabled={busy}>
-                            {busy ? 'Working…' : '+ New journey'}
+                            {busy ? 'Einen Moment …' : '+ Neue Verbindung'}
                         </Button>
-                        <Button onClick={() => setPasteOpen(true)}>Paste flights…</Button>
+                        <Button onClick={() => setPasteOpen(true)}>Flüge einfügen …</Button>
                     </>
                 )}
                 below={note ? <p className="text-[11px] text-gray-600">{note}</p> : undefined}
@@ -318,11 +318,11 @@ export default function TravelTab({ api }: { api: HoneymoonApi }) {
                 open={pasteOpen}
                 onClose={() => setPasteOpen(false)}
                 side="center"
-                title={<h2 className="font-semibold text-gray-900">Paste the flight numbers off your confirmation</h2>}
+                title={<h2 className="font-semibold text-gray-900">Flugnummern aus der Bestätigung einfügen</h2>}
             >
                 <div className="space-y-2">
                     <label className="mb-1 block text-xs font-semibold text-gray-500">
-                        Or paste the flight numbers off your confirmation
+                        Oder die Flugnummern aus deiner Bestätigung einfügen
                     </label>
                     <TextArea
                         rows={2}
@@ -333,13 +333,14 @@ export default function TravelTab({ api }: { api: HoneymoonApi }) {
                     />
                     <div className="mt-2 flex flex-wrap items-center gap-2">
                         <Button onClick={buildFromPaste} disabled={!paste.trim() || pasting}>
-                            {pasting ? 'Building…' : 'Build the journey'}
+                            {pasting ? 'Wird angelegt …' : 'Verbindung anlegen'}
                         </Button>
-                        <Hint label="How pasting flights works">
-                            One per line — the rest of the line can stay, dates in any form.
-                            Each is looked up and filled in — times, terminals, aircraft, time
-                            zones — and placed on the right day. Anything that cannot be looked
-                            up still becomes a leg to fill in by hand.
+                        <Hint label="So funktioniert das Einfügen von Flügen">
+                            Einer pro Zeile – der Rest der Zeile darf stehen bleiben, Daten in
+                            beliebiger Schreibweise. Jeder Flug wird abgefragt und ausgefüllt –
+                            Zeiten, Terminals, Flugzeug, Zeitzonen – und auf den richtigen Tag
+                            gelegt. Was sich nicht abfragen lässt, wird trotzdem eine
+                            Teilstrecke zum Ausfüllen von Hand.
                         </Hint>
                     </div>
                     {pasteNote && (
@@ -352,8 +353,8 @@ export default function TravelTab({ api }: { api: HoneymoonApi }) {
             {groups.length === 0 ? (
                 <Card>
                     <EmptyState
-                        title="No travel entered yet"
-                        hint="Start with the flight that gets you there. Enter the whole ticket — every leg, both times, the layovers — and each leg lands on the right day by itself."
+                        title="Noch keine Verbindungen eingetragen"
+                        hint="Fang mit dem Flug an, der euch hinbringt. Trag das ganze Ticket ein – jede Teilstrecke, beide Zeiten, die Umstiege – und jede Teilstrecke landet von selbst auf dem richtigen Tag."
                     />
                 </Card>
             ) : (
@@ -370,12 +371,12 @@ export default function TravelTab({ api }: { api: HoneymoonApi }) {
                                             days, trip.start_date, group.departDate,
                                         );
                                         return placed.dayNumber != null
-                                            ? ` · day ${placed.dayNumber}${placed.beyond ? ' (not planned yet)' : ''}`
+                                            ? ` · Tag ${placed.dayNumber}${placed.beyond ? ' (noch nicht geplant)' : ''}`
                                             : '';
                                     })()}
                                     {group.legs.length > 1
-                                        && ` · ${group.legs.length} legs`}
-                                    {` · ${travelModeMeta(group.mode).label.toLowerCase()}`}
+                                        && ` · ${group.legs.length} Teilstrecken`}
+                                    {` · ${travelModeMeta(group.mode).label}`}
                                 </p>
                             )}
                             <JourneyCard api={api} group={group} onAddLeg={onAddLeg} />

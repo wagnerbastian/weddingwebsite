@@ -23,14 +23,14 @@ export async function GET(request: Request) {
     const share = await shareFor(token);
     // 404, not 401: an unknown, revoked and expired token are the same answer,
     // and a calendar client is not going to be shown a login page.
-    if (!share) return new NextResponse('Not found', { status: 404 });
+    if (!share) return new NextResponse('Nicht gefunden', { status: 404 });
 
     try {
         const data = await getHoneymoonPayload();
         const body = buildTripCalendar(data, {
             alarmMinutes: Math.max(0, Math.min(240, Number(params.get('alarm')) || 30)),
         });
-        if (!body) return new NextResponse('No dates set', { status: 404 });
+        if (!body) return new NextResponse('Keine Daten gesetzt', { status: 404 });
         await touchShare(share.id);
 
         return new NextResponse(body, {
@@ -44,6 +44,6 @@ export async function GET(request: Request) {
         });
     } catch (error) {
         console.error('Error building the honeymoon feed:', error);
-        return new NextResponse('Could not build the calendar', { status: 500 });
+        return new NextResponse('Kalender konnte nicht erstellt werden', { status: 500 });
     }
 }

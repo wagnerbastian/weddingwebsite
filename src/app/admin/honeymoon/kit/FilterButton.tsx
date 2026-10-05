@@ -18,7 +18,7 @@ export interface ActiveFilter {
  * chips you can knock off one at a time (`FilterChips`). A popover on a laptop,
  * a bottom sheet on a phone.
  */
-export function FilterButton({ active, onReset, children, title = 'Filters' }: {
+export function FilterButton({ active, onReset, children, title = 'Filter' }: {
     active: ActiveFilter[];
     onReset: () => void;
     children: React.ReactNode;
@@ -58,14 +58,14 @@ export function FilterButton({ active, onReset, children, title = 'Filters' }: {
                             className="min-h-11 md:min-h-0 rounded-full px-3 py-1.5 text-sm text-gray-500
                                 hover:text-gray-800 disabled:opacity-40"
                         >
-                            Reset
+                            Zurücksetzen
                         </button>
                         <button
                             type="button"
                             onClick={close}
                             className="min-h-11 md:min-h-0 rounded-full bg-accent px-4 py-1.5 text-sm font-medium text-white"
                         >
-                            Done
+                            Fertig
                         </button>
                     </div>
                 </div>
@@ -84,7 +84,7 @@ export function FilterChips({ active }: { active: ActiveFilter[] }) {
                     key={filter.key}
                     type="button"
                     onClick={filter.clear}
-                    title={`Remove: ${filter.label}`}
+                    title={`Entfernen: ${filter.label}`}
                     className="inline-flex min-h-9 md:min-h-0 items-center gap-1 rounded-full bg-white border
                         border-gray-200 px-2.5 py-0.5 text-xs text-gray-700 hover:bg-gray-50"
                 >

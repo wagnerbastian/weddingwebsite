@@ -105,7 +105,7 @@ function visit(path: string): Promise<void> {
         const frame = document.createElement('iframe');
         frame.setAttribute('aria-hidden', 'true');
         frame.tabIndex = -1;
-        frame.title = 'Saving for offline';
+        frame.title = 'Offline-Speicherung läuft';
         // Same size as this window, so the page loads what it would load here.
         Object.assign(frame.style, {
             position: 'fixed', left: '-20000px', top: '0', width: `${window.innerWidth}px`,

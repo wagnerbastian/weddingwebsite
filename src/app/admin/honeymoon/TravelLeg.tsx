@@ -60,7 +60,7 @@ export default function TravelLegCard({ leg, day, api }: {
                 <div className="min-w-0 flex-1">
                     <p className="truncate text-sm text-gray-900">
                         {[leg.from_text, leg.to_text].filter(Boolean).join(' → ')
-                            || `${meta.label} — where does it go?`}
+                            || `${meta.label} – wohin geht es?`}
                         {leg.flight_no && (
                             <span className="ml-1.5 rounded-full bg-white px-1.5 py-0.5 text-[10px]
                                 font-semibold text-gray-600">
@@ -72,8 +72,8 @@ export default function TravelLegCard({ leg, day, api }: {
                         {leg.depart_time ? fmt(leg.depart_time) : '—'}
                         {' → '}
                         {leg.arrive_time ? fmt(leg.arrive_time) : '—'}
-                        {legIsOvernight(leg) && ` · lands day ${legArrivalDay(leg, day.day_number)}`}
-                        {sibling > 0 && ` · ${sibling} more leg${sibling === 1 ? '' : 's'} on this ticket`}
+                        {legIsOvernight(leg) && ` · Landung an Tag ${legArrivalDay(leg, day.day_number)}`}
+                        {sibling > 0 && ` · ${sibling} weitere ${sibling === 1 ? 'Teilstrecke' : 'Teilstrecken'} auf diesem Ticket`}
                     </p>
                 </div>
                 {legIsOvernight(leg) && (
@@ -85,7 +85,7 @@ export default function TravelLegCard({ leg, day, api }: {
                 <OverflowMenu items={[
                     ...(day.travel.length > 1 ? [
                         {
-                            label: 'Move earlier in the day',
+                            label: 'Früher am Tag',
                             onClick: () => {
                                 const ids = day.travel.map((row) => row.id);
                                 const at = ids.indexOf(leg.id);
@@ -95,7 +95,7 @@ export default function TravelLegCard({ leg, day, api }: {
                             },
                         },
                         {
-                            label: 'Move later in the day',
+                            label: 'Später am Tag',
                             onClick: () => {
                                 const ids = day.travel.map((row) => row.id);
                                 const at = ids.indexOf(leg.id);
@@ -105,7 +105,7 @@ export default function TravelLegCard({ leg, day, api }: {
                             },
                         },
                         {
-                            label: 'Sort the day by departure time',
+                            label: 'Tag nach Abfahrtszeit sortieren',
                             onClick: () => api.reorder('travel', [...day.travel]
                                 .sort((a, b) => (a.depart_time ?? '~')
                                     .localeCompare(b.depart_time ?? '~'))
@@ -113,9 +113,9 @@ export default function TravelLegCard({ leg, day, api }: {
                         },
                     ] : []),
                     {
-                        label: 'Remove leg',
+                        label: 'Teilstrecke entfernen',
                         danger: true,
-                        onClick: () => api.removeRow('travel', leg, 'Removed a travel leg'),
+                        onClick: () => api.removeRow('travel', leg, 'Teilstrecke entfernt'),
                     },
                 ]} />
             </div>
@@ -129,18 +129,19 @@ export default function TravelLegCard({ leg, day, api }: {
             {misdated && (
                 <p className="mt-2 rounded-xl bg-rose-50 border border-rose-200 px-2.5 py-1.5
                     text-[11px] text-rose-800">
-                    This leaves on {misdated}, and the trip has no day for that date — so it is
-                    parked here. Set the date on the Travel tab, or add the days it needs.
+                    Diese Teilstrecke startet am {misdated}, und die Reise hat keinen Tag für dieses
+                    Datum – deshalb liegt sie vorerst hier. Passe das Datum im Tab „Verbindungen“ an
+                    oder füge die fehlenden Tage hinzu.
                 </p>
             )}
 
             {legIsOvernight(leg) && (
                 <p className="mt-2 rounded-xl bg-slate-100 px-2.5 py-1.5 text-[11px] text-slate-700">
-                    {meta.icon} Leaves day {day.day_number}
-                    {leg.depart_time ? ` at ${fmt(leg.depart_time)}` : ''}
-                    {realDate ? ` (${realDate})` : ''}, lands day{' '}
+                    {meta.icon} Abfahrt an Tag {day.day_number}
+                    {leg.depart_time ? ` um ${fmt(leg.depart_time)}` : ''}
+                    {realDate ? ` (${realDate})` : ''}, Ankunft an Tag{' '}
                     {legArrivalDay(leg, day.day_number)}
-                    {leg.arrive_time ? ` at ${fmt(leg.arrive_time)}` : ''}
+                    {leg.arrive_time ? ` um ${fmt(leg.arrive_time)}` : ''}
                     {formatDayDate(startDate, legArrivalDay(leg, day.day_number))
                         ? ` (${formatDayDate(startDate, legArrivalDay(leg, day.day_number))})`
                         : ''}.
@@ -151,13 +152,13 @@ export default function TravelLegCard({ leg, day, api }: {
                 fields. */}
             {legEnds(leg) && (
                 <p className="mt-1 text-[11px] text-sky-700">
-                    {meta.icon} Drawn on the map — turn on 🗓 Itinerary there to see it.
+                    {meta.icon} Auf der Karte eingezeichnet – dort 🗓 Reiseplan einschalten, um sie zu sehen.
                 </p>
             )}
 
             <details className="mt-2">
                 <summary className="cursor-pointer text-[11px] font-medium text-slate-600">
-                    Edit this leg
+                    Teilstrecke bearbeiten
                 </summary>
                 <div className="mt-2 border-t border-slate-200 pt-2">
                     {group && <LegFields api={api} leg={leg} group={group} />}

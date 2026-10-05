@@ -20,13 +20,13 @@ import {
 } from './ui';
 
 const QTY_LABELS: Record<string, string> = {
-    manual: 'Fixed',
-    adults: 'Adults',
-    minors: 'Minors',
+    manual: 'Fest',
+    adults: 'Erwachsene',
+    minors: 'Kinder',
     // The bar's own count. Adults and drinkers are different questions: an
     // under-21 guest eats the adult dinner and costs the bar nothing.
-    drinkers: 'Drinkers (21+)',
-    total: 'All guests',
+    drinkers: 'Trinkende (21+)',
+    total: 'Alle Gäste',
 };
 
 /**
@@ -84,26 +84,26 @@ export default function BudgetTab({ data, api }: { data: FinancePayload; api: Fi
     const announcements = {
         onDragStart: ({ active }: { active: { id: string | number } }) => {
             const found = linesById.get(Number(active.id));
-            return found ? `Picked up ${found.item.name}, in ${found.section}.` : undefined;
+            return found ? `${found.item.name} aufgenommen, in ${found.section}.` : undefined;
         },
         onDragOver: ({ over }: { over: { id: string | number } | null }) => {
             if (!over) return undefined;
             const overId = String(over.id);
             if (overId.startsWith(SECTION_DROP)) {
                 const section = categories.find((c) => c.id === Number(overId.slice(SECTION_DROP.length)));
-                return section ? `Over the end of ${section.name}.` : undefined;
+                return section ? `Über dem Ende von ${section.name}.` : undefined;
             }
             const found = linesById.get(Number(over.id));
-            return found ? `Over ${found.item.name}, in ${found.section}.` : undefined;
+            return found ? `Über ${found.item.name}, in ${found.section}.` : undefined;
         },
         onDragEnd: ({ active, over }: { active: { id: string | number }; over: { id: string | number } | null }) => {
             const found = linesById.get(Number(active.id));
             if (!found) return undefined;
-            return over ? `Dropped ${found.item.name}.` : `${found.item.name} returned to where it was.`;
+            return over ? `${found.item.name} abgelegt.` : `${found.item.name} ist wieder an seinem Platz.`;
         },
         onDragCancel: ({ active }: { active: { id: string | number } }) => {
             const found = linesById.get(Number(active.id));
-            return found ? `Cancelled. ${found.item.name} stayed put.` : undefined;
+            return found ? `Abgebrochen. ${found.item.name} bleibt, wo es war.` : undefined;
         },
     };
 
@@ -128,24 +128,24 @@ export default function BudgetTab({ data, api }: { data: FinancePayload; api: Fi
                 <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
                     <div className="flex items-baseline gap-2">
                         <span className="text-[11px] font-semibold uppercase tracking-wide text-gray-400">
-                            Total budget
+                            Gesamtbudget
                         </span>
                         <span className="text-2xl font-semibold tabular-nums text-gray-900">
                             {formatMoney(summary.budgetTotal)}
                         </span>
                     </div>
                     <div className="text-right text-xs text-gray-400">
-                        {summary.itemCount} line{summary.itemCount === 1 ? '' : 's'} ·{' '}
-                        {summary.items.filter((i) => i.state === 'paid').length} fully paid
+                        {summary.itemCount} Posten ·{' '}
+                        {summary.items.filter((i) => i.state === 'paid').length} vollständig bezahlt
                         <div className="mt-0.5">
-                            Headcount: {settings.adult_count} adults + {settings.minor_count} minors
-                            {settings.drinking_count > 0 && ` · ${settings.drinking_count} drinking`}
+                            Personenzahl: {settings.adult_count} Erwachsene + {settings.minor_count} Kinder
+                            {settings.drinking_count > 0 && ` · ${settings.drinking_count} trinkend`}
                         </div>
                         {summary.items.some((i) => i.stateConflict) && (
                             <div className="mt-1 text-amber-600">
-                                {summary.items.filter((i) => i.stateConflict).length} line
-                                {summary.items.filter((i) => i.stateConflict).length === 1 ? '' : 's'}
-                                {' '}where the paid tick and the payments disagree
+                                {summary.items.filter((i) => i.stateConflict).length}{' '}
+                                Posten
+                                {' '}mit Widerspruch zwischen „Bezahlt“-Haken und Zahlungen
                             </div>
                         )}
                     </div>
@@ -196,7 +196,7 @@ export default function BudgetTab({ data, api }: { data: FinancePayload; api: Fi
 
             {!categories.length && (
                 <Card className="p-6">
-                    <EmptyState>No budget sections yet. Add one below to get started.</EmptyState>
+                    <EmptyState>Noch keine Budgetbereiche. Füge unten einen hinzu.</EmptyState>
                 </Card>
             )}
 
@@ -206,22 +206,22 @@ export default function BudgetTab({ data, api }: { data: FinancePayload; api: Fi
                         value={newCategory}
                         onChange={(e) => setNewCategory(e.target.value)}
                         onKeyDown={(e) => { if (e.key === 'Enter') addCategory(); }}
-                        placeholder="New section name (e.g. Honeymoon)"
+                        placeholder="Name des neuen Bereichs (z. B. Flitterwochen)"
                         className="flex-1 bg-gray-50 border border-gray-200 rounded-2xl px-3 py-2 text-base md:text-sm
                             focus:outline-none focus:ring-2 focus:ring-accent/30"
                     />
                     <PillButton tone="accent" onClick={addCategory} disabled={!newCategory.trim()}>
-                        Add section
+                        Bereich hinzufügen
                     </PillButton>
                 </div>
                 {categories.length > 0 && (
                     <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-gray-50 pt-3">
                         <PillButton onClick={() => setTemplating(true)}>
-                            ✨ Add common line items
+                            ✨ Häufige Posten hinzufügen
                         </PillButton>
                         {data.archived.items + data.archived.categories > 0 && (
                             <span className="text-[11px] text-gray-400">
-                                {data.archived.items + data.archived.categories} archived — see Settings
+                                {data.archived.items + data.archived.categories} archiviert – siehe Einstellungen
                             </span>
                         )}
                     </div>
@@ -252,7 +252,7 @@ function CategoryBlock({ category, data, api, expanded, onToggleExpanded, draggi
     const addItem = () =>
         api.create('items', {
             category_id: category.id,
-            name: 'New line item',
+            name: 'Neuer Posten',
             unit_cost: 0,
             quantity: 1,
             qty_source: 'manual',
@@ -262,8 +262,8 @@ function CategoryBlock({ category, data, api, expanded, onToggleExpanded, draggi
     const deleteCategory = () => {
         const count = category.items.length;
         const message = count
-            ? `Archive "${category.name}" and its ${count} line item${count === 1 ? '' : 's'}? Nothing is lost — it stops counting toward your totals and you can bring it back from Settings.`
-            : `Archive "${category.name}"?`;
+            ? `„${category.name}“ und ${count === 1 ? 'den 1 Posten' : `die ${count} Posten`} archivieren? Nichts geht verloren – es zählt nicht mehr zu den Summen und kann in den Einstellungen wiederhergestellt werden.`
+            : `„${category.name}“ archivieren?`;
         if (confirm(message)) api.update('categories', { id: category.id, archived: true });
     };
 
@@ -291,18 +291,18 @@ function CategoryBlock({ category, data, api, expanded, onToggleExpanded, draggi
                 </div>
                 <div className="text-right shrink-0">
                     <div className="font-semibold tabular-nums text-sm">{formatMoney(stats?.total ?? 0)}</div>
-                    <div className="text-[11px] text-gray-400">{(stats?.pct ?? 0).toFixed(1)}% of budget</div>
+                    <div className="text-[11px] text-gray-400">{(stats?.pct ?? 0).toFixed(1).replace('.', ',')} % des Budgets</div>
                 </div>
                 <div className="flex shrink-0 items-center">
-                    <GlyphButton onClick={() => move(-1)} label={`Move ${category.name} up`}
+                    <GlyphButton onClick={() => move(-1)} label={`${category.name} nach oben`}
                         className={index === 0 ? 'pointer-events-none opacity-25' : ''}>
                         ⌃
                     </GlyphButton>
-                    <GlyphButton onClick={() => move(1)} label={`Move ${category.name} down`}
+                    <GlyphButton onClick={() => move(1)} label={`${category.name} nach unten`}
                         className={index === data.categories.length - 1 ? 'pointer-events-none opacity-25' : ''}>
                         ⌄
                     </GlyphButton>
-                    <GlyphButton onClick={deleteCategory} label={`Archive ${category.name}`}
+                    <GlyphButton onClick={deleteCategory} label={`${category.name} archivieren`}
                         className="text-lg leading-none hover:text-rose-500">
                         &times;
                     </GlyphButton>
@@ -311,12 +311,12 @@ function CategoryBlock({ category, data, api, expanded, onToggleExpanded, draggi
 
             <div className="hidden md:grid grid-cols-[minmax(0,1.7fr)_6rem_4.5rem_7rem_7rem_5rem_1.75rem] gap-2 px-4 py-2
                 text-[10px] uppercase tracking-wide text-gray-400 font-semibold border-b border-gray-50">
-                <div>Item</div>
-                <div className="text-right">Unit cost</div>
-                <div className="text-right">Qty</div>
-                <div>Qty from</div>
-                <div className="text-right">Total</div>
-                <div className="text-center">Paid</div>
+                <div>Posten</div>
+                <div className="text-right">Einzelpreis</div>
+                <div className="text-right">Menge</div>
+                <div>Menge nach</div>
+                <div className="text-right">Summe</div>
+                <div className="text-center">Bezahlt</div>
                 <div />
             </div>
 
@@ -345,8 +345,8 @@ function CategoryBlock({ category, data, api, expanded, onToggleExpanded, draggi
                 {!category.items.length && (
                     <EmptyState>
                         {dragging
-                            ? 'Drop a line here to move it into this section.'
-                            : 'No line items in this section yet.'}
+                            ? 'Posten hier ablegen, um ihn in diesen Bereich zu verschieben.'
+                            : 'Noch keine Posten in diesem Bereich.'}
                     </EmptyState>
                 )}
             </div>
@@ -357,7 +357,7 @@ function CategoryBlock({ category, data, api, expanded, onToggleExpanded, draggi
                     className="w-full border-2 border-dashed border-gray-200 rounded-2xl py-2 text-sm
                         text-gray-400 hover:text-gray-600 hover:border-gray-300 transition-colors font-medium"
                 >
-                    + Add line item
+                    + Posten hinzufügen
                 </button>
             </div>
 
@@ -407,7 +407,7 @@ function SectionPayments({ category, data, api }: {
     const addInstallment = () =>
         api.create('purchases', {
             category_id: category.id,
-            description: `${category.name} payment`,
+            description: `${category.name} Zahlung`,
             amount: 0,
             payer_id: data.payers[0]?.id ?? null,
             purchased_on: todayLocal(),
@@ -416,20 +416,20 @@ function SectionPayments({ category, data, api }: {
     return (
         <div className="border-t border-gray-100 bg-gray-50/60 px-4 py-4">
             <div className="flex flex-wrap items-baseline justify-between gap-2 mb-2">
-                <h4 className="text-sm font-semibold text-gray-800">Paid toward this section</h4>
+                <h4 className="text-sm font-semibold text-gray-800">Für diesen Bereich bezahlt</h4>
                 <span className="text-xs text-gray-400">
                     {installments.length
-                        ? `${installments.length} payment${installments.length === 1 ? '' : 's'}`
-                        : 'no payments yet'}
-                    {stats.itemSpent > 0 && ` · ${formatMoney(stats.itemSpent)} tagged to single lines`}
+                        ? `${installments.length} ${installments.length === 1 ? 'Zahlung' : 'Zahlungen'}`
+                        : 'noch keine Zahlungen'}
+                    {stats.itemSpent > 0 && ` · ${formatMoney(stats.itemSpent)} einzelnen Posten zugeordnet`}
                 </span>
             </div>
 
             <div className="grid grid-cols-3 gap-2 mb-3">
-                <Figure label="budgeted" value={stats.total} />
-                <Figure label="paid so far" value={stats.paid} tone="good" />
+                <Figure label="budgetiert" value={stats.total} />
+                <Figure label="bisher bezahlt" value={stats.paid} tone="good" />
                 <Figure
-                    label={overpaid ? 'overpaid by' : 'still owed'}
+                    label={overpaid ? 'zu viel bezahlt' : 'noch offen'}
                     value={Math.abs(stats.remaining)}
                     tone={overpaid ? 'bad' : 'warn'}
                 />
@@ -437,10 +437,10 @@ function SectionPayments({ category, data, api }: {
 
             <Bar pct={stats.paidPct} tone={overpaid ? 'rose' : 'accent'} />
             <div className="flex justify-between text-[11px] text-gray-400 mt-1 mb-3">
-                <span>{stats.paidPct.toFixed(1)}% paid</span>
+                <span>{stats.paidPct.toFixed(1).replace('.', ',')} % bezahlt</span>
                 {stats.giftApplied > 0 && (
                     <span>
-                        {formatMoney(stats.ownSpent)} yours + {formatMoney(stats.giftApplied)} gift money
+                        {formatMoney(stats.ownSpent)} von euch + {formatMoney(stats.giftApplied)} Geldgeschenke
                     </span>
                 )}
             </div>
@@ -461,21 +461,21 @@ function SectionPayments({ category, data, api }: {
                                         : 'bg-white border-gray-100'}`}>
                                 <InlineText
                                     value={row.label}
-                                    placeholder="e.g. Venue 3/4"
+                                    placeholder="z. B. Location 3/4"
                                     onCommit={(v) => api.update(resource, { id: row.id, [labelField]: v })}
                                     className="md:text-xs"
                                 />
-                                <RowField label="Date">
+                                <RowField label="Datum">
                                     <RowDate
                                         value={(row.date ?? '').slice(0, 10)}
-                                        aria-label={`Date for ${row.label}`}
+                                        aria-label={`Datum für ${row.label}`}
                                         onChange={(e) => api.update(resource, {
                                             id: row.id, [dateField]: e.target.value,
                                         })}
                                         className="md:text-[11px]"
                                     />
                                 </RowField>
-                                <RowField label={row.kind === 'gift' ? 'Gift from' : 'Paid by'}>
+                                <RowField label={row.kind === 'gift' ? 'Geschenk von' : 'Bezahlt von'}>
                                     {row.kind === 'gift' ? (
                                         <span className="block truncate px-1 text-right text-xs
                                             font-medium text-emerald-700 md:text-left md:text-[11px]">
@@ -484,39 +484,39 @@ function SectionPayments({ category, data, api }: {
                                     ) : (
                                         <RowSelect
                                             value={row.payerId ?? ''}
-                                            aria-label={`Who paid ${row.label}`}
+                                            aria-label={`Wer hat ${row.label} bezahlt`}
                                             onChange={(e) => api.update('purchases', {
                                                 id: row.id, payer_id: e.target.value || null,
                                             })}
                                             className="md:text-[11px]"
                                         >
-                                            <option value="">Unassigned</option>
+                                            <option value="">Nicht zugeordnet</option>
                                             {data.payers.map((payer) => (
                                                 <option key={payer.id} value={payer.id}>{payer.name}</option>
                                             ))}
                                         </RowSelect>
                                     )}
                                 </RowField>
-                                <RowField label="Amount">
+                                <RowField label="Betrag">
                                     <InlineNumber
                                         value={row.amount} prefix="$"
                                         onCommit={(amount) => api.update(resource, { id: row.id, amount })}
                                     />
                                 </RowField>
                                 <DeleteButton
-                                    label={`Delete ${row.label}`}
+                                    label={`${row.label} löschen`}
                                     onClick={() => {
                                         const what = row.kind === 'gift'
-                                            ? `${row.who}'s gift payment "${row.label}"`
-                                            : `"${row.label}"`;
-                                        if (confirm(`Delete ${what}?`)) api.remove(resource, row.id);
+                                            ? `die Geschenkzahlung „${row.label}“ von ${row.who}`
+                                            : `„${row.label}“`;
+                                        if (confirm(`${what.charAt(0).toUpperCase()}${what.slice(1)} löschen?`)) api.remove(resource, row.id);
                                     }}
                                 />
                             </div>
                         );
                     })}
                     <div className="flex justify-between px-2 pt-1 text-[11px] text-gray-500">
-                        <span>Payments subtotal</span>
+                        <span>Zwischensumme Zahlungen</span>
                         <span className="font-semibold tabular-nums">
                             {formatMoney(installmentSubtotal)}
                         </span>
@@ -524,11 +524,11 @@ function SectionPayments({ category, data, api }: {
                 </div>
             )}
 
-            <AddButton onClick={addInstallment}>+ Log an installment</AddButton>
+            <AddButton onClick={addInstallment}>+ Teilzahlung erfassen</AddButton>
             {installments.length === 0 && (
                 <p className="text-[11px] text-gray-400 mt-1">
-                    Use this for payments covering the whole section, like a venue deposit — not tied to
-                    any single line.
+                    Für Zahlungen, die den ganzen Bereich betreffen, z. B. die Anzahlung für die Location –
+                    nicht für einen einzelnen Posten.
                 </p>
             )}
         </div>
@@ -596,8 +596,8 @@ function ItemRow({ item, data, api, expanded, onToggleExpanded }: {
                         ref={setActivatorNodeRef}
                         {...attributes}
                         {...listeners}
-                        aria-label={`Reorder ${item.name}`}
-                        title="Drag to reorder, or move to another section"
+                        aria-label={`${item.name} verschieben`}
+                        title="Ziehen zum Sortieren oder in einen anderen Bereich verschieben"
                         // 32px square on touch, where a 20px glyph is a miss more
                         // often than a hit; trimmed on desktop, where the pointer
                         // is exact and the row wants to stay compact.
@@ -612,7 +612,7 @@ function ItemRow({ item, data, api, expanded, onToggleExpanded }: {
                     </button>
                     <GlyphButton
                         onClick={onToggleExpanded}
-                        label={`${expanded ? 'Collapse' : 'Expand'} ${item.name}`}
+                        label={`${item.name} ${expanded ? 'einklappen' : 'ausklappen'}`}
                         className={`text-xs text-gray-400 transition-transform md:text-gray-300
                             ${expanded ? 'rotate-90' : ''}`}
                     >
@@ -638,20 +638,20 @@ function ItemRow({ item, data, api, expanded, onToggleExpanded }: {
                   `md:contents` puts them straight back into the desktop grid.
                 */}
                 <div className={`${expanded ? 'grid grid-cols-1 gap-2 pb-1 pl-7' : 'hidden'} md:contents`}>
-                <RowField label="Unit cost">
+                <RowField label="Einzelpreis">
                     {item.use_subitems ? (
-                        <div className="text-right text-xs text-gray-400 pr-2 italic">from parts</div>
+                        <div className="text-right text-xs text-gray-400 pr-2 italic">aus Teilen</div>
                     ) : (
                         <InlineNumber value={item.unit_cost} prefix="$" onCommit={(unit_cost) => patch({ unit_cost })} />
                     )}
                 </RowField>
 
-                <RowField label="Qty">
+                <RowField label="Menge">
                     {item.use_subitems ? (
                         <div className="text-right text-xs text-gray-300 pr-2">—</div>
                     ) : derivedQty ? (
                         <div className="text-right text-sm tabular-nums text-gray-500 pr-2"
-                            title="Driven by the headcount in Settings">
+                            title="Ergibt sich aus der Personenzahl in den Einstellungen">
                             {effectiveQuantity(item, settings)}
                         </div>
                     ) : (
@@ -659,14 +659,14 @@ function ItemRow({ item, data, api, expanded, onToggleExpanded }: {
                     )}
                 </RowField>
 
-                <RowField label="Qty from">
+                <RowField label="Menge nach">
                     {item.use_subitems ? (
                         <div className="text-xs text-gray-300 px-2 text-right md:text-left">—</div>
                     ) : (
                         <RowSelect
                             value={item.qty_source}
                             onChange={(e) => patch({ qty_source: e.target.value })}
-                            aria-label={`Quantity source for ${item.name}`}
+                            aria-label={`Mengenquelle für ${item.name}`}
                         >
                             {Object.entries(QTY_LABELS).map(([value, label]) => (
                                 <option key={value} value={value}>{label}</option>
@@ -675,13 +675,13 @@ function ItemRow({ item, data, api, expanded, onToggleExpanded }: {
                     )}
                 </RowField>
 
-                <RowField label="Line total" className="hidden md:flex">
+                <RowField label="Postensumme" className="hidden md:flex">
                     <div className="text-right font-medium text-sm">
                         <Money value={total} />
                     </div>
                 </RowField>
 
-                <RowField label="Paid">
+                <RowField label="Bezahlt">
                     <div className="flex items-center justify-end gap-2 md:justify-center">
                         {/*
                           Only the states the toggle cannot express. "PAID" next
@@ -695,13 +695,13 @@ function ItemRow({ item, data, api, expanded, onToggleExpanded }: {
                         <Toggle
                             checked={item.is_paid}
                             onChange={(is_paid) => patch({ is_paid })}
-                            label={`Mark ${item.name} paid`}
+                            label={`${item.name} als bezahlt markieren`}
                         />
                     </div>
                 </RowField>
 
                 <DeleteButton
-                    label={`Delete ${item.name}`}
+                    label={`${item.name} löschen`}
                     onClick={() => api.removeWithUndo('items', item.id, `"${item.name}"`, {
                         category_id: item.category_id, name: item.name, unit_cost: item.unit_cost,
                         quantity: item.quantity, qty_source: item.qty_source,
@@ -715,29 +715,29 @@ function ItemRow({ item, data, api, expanded, onToggleExpanded }: {
             {paid > 0 && (
                 <div className="px-4 pb-2 -mt-1 md:pl-9 flex flex-wrap gap-x-4 gap-y-1 text-[11px]">
                     <span className="text-gray-400">
-                        Paid so far <Money value={paid} className="font-medium" />
+                        Bisher bezahlt <Money value={paid} className="font-medium" />
                     </span>
                     {giftApplied > 0 && (
                         <span className="text-gray-400">
-                            {ownSpent > 0 ? `${formatMoney(ownSpent)} yours + ` : ''}
-                            <span className="font-medium">{formatMoney(giftApplied)} gift money</span>
+                            {ownSpent > 0 ? `${formatMoney(ownSpent)} von euch + ` : ''}
+                            <span className="font-medium">{formatMoney(giftApplied)} Geldgeschenke</span>
                         </span>
                     )}
                     {variance > 0 && (
                         <span className="text-rose-600 font-medium">
-                            Over budget by {formatMoney(variance)}
+                            Über Budget um {formatMoney(variance)}
                         </span>
                     )}
                     {variance < 0 && (
                         <span className="text-gray-400">
-                            {formatMoney(-variance)} left on this line
+                            {formatMoney(-variance)} übrig bei diesem Posten
                         </span>
                     )}
                     {stats?.stateConflict && (
                         <span className="font-medium text-amber-600">
                             {item.is_paid
-                                ? 'Ticked paid, but the payments don\u2019t cover it'
-                                : 'Fully covered by payments \u2014 tick it paid?'}
+                                ? 'Als bezahlt markiert, aber die Zahlungen reichen nicht aus'
+                                : 'Durch Zahlungen vollständig gedeckt – als bezahlt markieren?'}
                         </span>
                     )}
                 </div>
@@ -752,12 +752,12 @@ function ItemDetail({ item, data, api }: { item: BudgetItem; data: FinancePayloa
     const { settings } = data;
     const linkedPurchases = data.purchases.filter((p) => p.item_id === item.id);
     const payerName = (id: number | null) =>
-        data.payers.find((p) => p.id === id)?.name ?? 'Unassigned';
+        data.payers.find((p) => p.id === id)?.name ?? 'Nicht zugeordnet';
 
     const addSubItem = () =>
         api.create('subitems', {
             item_id: item.id,
-            name: 'New part',
+            name: 'Neues Teil',
             unit_cost: 0,
             quantity: 1,
             sort_order: item.subitems.length,
@@ -771,11 +771,11 @@ function ItemDetail({ item, data, api }: { item: BudgetItem; data: FinancePayloa
     return (
         <div className="bg-gray-50/60 px-4 py-4 md:pl-9 space-y-4 border-t border-gray-100">
             <div className="flex items-center gap-3">
-                <Toggle checked={item.use_subitems} onChange={enableSubitems} label="Break into parts" />
+                <Toggle checked={item.use_subitems} onChange={enableSubitems} label="In Teile aufteilen" />
                 <div>
-                    <div className="text-sm font-medium text-gray-700">Break into parts</div>
+                    <div className="text-sm font-medium text-gray-700">In Teile aufteilen</div>
                     <div className="text-xs text-gray-400">
-                        Build this line from components — the parts add up to the line total.
+                        Diesen Posten aus Einzelteilen aufbauen – die Teile ergeben die Postensumme.
                     </div>
                 </div>
             </div>
@@ -784,10 +784,10 @@ function ItemDetail({ item, data, api }: { item: BudgetItem; data: FinancePayloa
                 <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
                     <div className="hidden md:grid grid-cols-[minmax(0,1fr)_6rem_4.5rem_7rem_1.75rem] gap-2 px-3 py-2
                         text-[10px] uppercase tracking-wide text-gray-400 font-semibold border-b border-gray-50">
-                        <div>Part</div>
-                        <div className="text-right">Unit cost</div>
-                        <div className="text-right">Qty</div>
-                        <div className="text-right">Total</div>
+                        <div>Teil</div>
+                        <div className="text-right">Einzelpreis</div>
+                        <div className="text-right">Menge</div>
+                        <div className="text-right">Summe</div>
                         <div />
                     </div>
                     {item.subitems.map((sub) => (
@@ -796,32 +796,32 @@ function ItemDetail({ item, data, api }: { item: BudgetItem; data: FinancePayloa
                                 md:grid-cols-[minmax(0,1fr)_6rem_4.5rem_7rem_1.75rem] md:items-center md:py-1.5">
                             <InlineText
                                 value={sub.name}
-                                placeholder="Part name"
+                                placeholder="Name des Teils"
                                 onCommit={(name) => api.update('subitems', { id: sub.id, name })}
                             />
-                            <RowField label="Unit cost">
+                            <RowField label="Einzelpreis">
                                 <InlineNumber
                                     value={sub.unit_cost} prefix="$"
                                     onCommit={(unit_cost) => api.update('subitems', { id: sub.id, unit_cost })}
                                 />
                             </RowField>
-                            <RowField label="Qty">
+                            <RowField label="Menge">
                                 <InlineNumber
                                     value={sub.quantity}
                                     onCommit={(quantity) => api.update('subitems', { id: sub.id, quantity })}
                                 />
                             </RowField>
-                            <RowField label="Total">
+                            <RowField label="Summe">
                                 <div className="text-right text-sm"><Money value={subItemTotal(sub)} /></div>
                             </RowField>
                             <DeleteButton
-                                label={`Delete ${sub.name}`}
+                                label={`${sub.name} löschen`}
                                 onClick={() => api.remove('subitems', sub.id)}
                             />
                         </div>
                     ))}
                     <div className="flex items-center justify-between px-3 py-2 bg-gray-50/60">
-                        <AddButton onClick={addSubItem}>+ Add part</AddButton>
+                        <AddButton onClick={addSubItem}>+ Teil hinzufügen</AddButton>
                         <div className="text-sm font-semibold tabular-nums">
                             {formatMoney(itemTotal(item, settings))}
                         </div>
@@ -830,10 +830,10 @@ function ItemDetail({ item, data, api }: { item: BudgetItem; data: FinancePayloa
             )}
 
             <div>
-                <div className="text-xs font-semibold text-gray-500 mb-1">Notes</div>
+                <div className="text-xs font-semibold text-gray-500 mb-1">Notizen</div>
                 <InlineText
                     value={item.notes ?? ''}
-                    placeholder="Vendor, contract terms, deposit schedule…"
+                    placeholder="Dienstleister, Vertragsbedingungen, Zahlungsplan …"
                     onCommit={(notes) => api.update('items', { id: item.id, notes })}
                     className="bg-white border border-gray-200 rounded-xl"
                 />
@@ -841,7 +841,7 @@ function ItemDetail({ item, data, api }: { item: BudgetItem; data: FinancePayloa
 
             <div>
                 <div className="text-xs font-semibold text-gray-500 mb-1">
-                    Payments against this line ({linkedPurchases.length})
+                    Zahlungen zu diesem Posten ({linkedPurchases.length})
                 </div>
                 {linkedPurchases.length ? (
                     <div className="space-y-1">
@@ -856,7 +856,7 @@ function ItemDetail({ item, data, api }: { item: BudgetItem; data: FinancePayloa
                     </div>
                 ) : (
                     <div className="text-xs text-gray-400">
-                        Nothing logged yet. Add one from the Purchases tab.
+                        Noch nichts erfasst. Füge eine im Tab „Ausgaben“ hinzu.
                     </div>
                 )}
             </div>

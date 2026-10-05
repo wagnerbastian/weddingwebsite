@@ -23,13 +23,13 @@ interface FundConfig {
 const DEFAULTS: FundConfig = {
     enabled: false,
     showFinancials: true,
-    title: 'Registry',
-    subtitle: 'Help us start our adventure together',
-    description: "Your presence at our wedding is the greatest gift of all. But if you'd like to give a little something extra, a contribution to our registry would mean the world to us!",
-    zelle: { handle: '', label: 'Send via Zelle' },
-    venmo: { handle: '', label: 'Send via Venmo' },
-    cashapp: { handle: '', label: 'Send via Cash App' },
-    paypal: { handle: '', label: 'Send via PayPal (Friends & Family)' },
+    title: 'Wunschliste',
+    subtitle: 'Helft uns, unser gemeinsames Abenteuer zu starten',
+    description: 'Eure Anwesenheit bei unserer Hochzeit ist das schönste Geschenk. Wenn ihr uns trotzdem eine kleine Freude machen möchtet, würden wir uns über einen Beitrag zu unserer Wunschliste riesig freuen!',
+    zelle: { handle: '', label: 'Per Zelle senden' },
+    venmo: { handle: '', label: 'Per Venmo senden' },
+    cashapp: { handle: '', label: 'Per Cash App senden' },
+    paypal: { handle: '', label: 'Per PayPal senden (Freunde & Familie)' },
     items: [],
 };
 
@@ -109,10 +109,10 @@ export default function AdminRegistryPage() {
                 setRegistryItems(Array.isArray(items) ? items : []);
             } else {
                 setImportResult({ added: 0, skipped: -1 });
-                alert(data.error || 'Import failed.');
+                alert(data.error || 'Import fehlgeschlagen.');
             }
         } catch {
-            alert('Failed to read CSV file.');
+            alert('Die CSV-Datei konnte nicht gelesen werden.');
         } finally {
             setImporting(false);
             // Reset file input so same file can be re-selected
@@ -138,10 +138,10 @@ export default function AdminRegistryPage() {
                 const items = await fetch('/api/admin/registry-items').then(r => r.json());
                 setRegistryItems(Array.isArray(items) ? items : []);
             } else {
-                alert(data.error || 'Import failed.');
+                alert(data.error || 'Import fehlgeschlagen.');
             }
         } catch {
-            alert('Failed to read CSV file.');
+            alert('Die CSV-Datei konnte nicht gelesen werden.');
         } finally {
             setTargetImporting(false);
             if (targetCsvRef.current) targetCsvRef.current.value = '';
@@ -169,9 +169,9 @@ export default function AdminRegistryPage() {
                 price: data.price || '',
                 url: urlInput.trim(),
             });
-            if (!data.success) setFetchError(data.error || 'Could not auto-fetch — fill in manually below.');
+            if (!data.success) setFetchError(data.error || 'Automatisches Abrufen nicht möglich – bitte unten manuell ausfüllen.');
         } catch {
-            setFetchError('Network error fetching URL.');
+            setFetchError('Netzwerkfehler beim Abrufen der URL.');
             setPendingItem({ id: Math.random().toString(36).slice(2, 10), store: 'other', title: '', description: '', image: '', price: '', url: urlInput.trim() });
         } finally {
             setFetching(false);
@@ -335,7 +335,7 @@ export default function AdminRegistryPage() {
         setFund(prev => ({ ...prev, [key]: { ...prev[key], [field]: value } }));
     };
 
-    if (loading) return <div className="p-8 text-gray-500">Loading...</div>;
+    if (loading) return <div className="p-8 text-gray-500">Wird geladen …</div>;
 
     const totalGoal = fund.items.reduce((s, i) => s + i.price, 0);
     const totalFunded = fund.items.reduce((s, i) => s + i.funded, 0);
@@ -345,8 +345,8 @@ export default function AdminRegistryPage() {
             {/* Header */}
             <div className="mb-6 flex items-center justify-between">
                 <div>
-                    <h1 className="text-3xl font-bold mb-1">Registry</h1>
-                    <p className="text-gray-500">Build your Honeyfund-style registry.</p>
+                    <h1 className="text-3xl font-bold mb-1">Wunschliste</h1>
+                    <p className="text-gray-500">Erstelle deine Wunschliste im Honeyfund-Stil.</p>
                 </div>
                 <div className="flex items-center gap-4">
                     <SaveStatus state={state} onRetry={retry} />
@@ -354,7 +354,7 @@ export default function AdminRegistryPage() {
                         href="/admin/rsvps?tab=donations"
                         className="px-4 py-2 rounded-xl text-sm font-medium bg-gray-200 text-gray-700 hover:bg-gray-300 shadow-md hover:shadow-lg transition-all duration-300"
                     >
-                        View donations →
+                        Spenden ansehen →
                     </a>
                     <a
                         href="/registry"
@@ -362,7 +362,7 @@ export default function AdminRegistryPage() {
                         rel="noopener noreferrer"
                         className="px-4 py-2 rounded-xl text-sm font-medium bg-accent text-white hover:bg-accent-dark shadow-md hover:shadow-lg transition-all duration-300"
                     >
-                        View page →
+                        Seite ansehen →
                     </a>
                 </div>
             </div>
@@ -370,8 +370,8 @@ export default function AdminRegistryPage() {
             {/* Enable toggle */}
             <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 mb-3 flex items-center justify-between">
                 <div>
-                    <h2 className="font-semibold text-gray-900">Page Enabled</h2>
-                    <p className="text-sm text-gray-500">Show this page to visitors</p>
+                    <h2 className="font-semibold text-gray-900">Seite aktiviert</h2>
+                    <p className="text-sm text-gray-500">Diese Seite für Besucher anzeigen</p>
                 </div>
                 <button
                     onClick={() => setFund(prev => ({ ...prev, enabled: !prev.enabled }))}
@@ -384,8 +384,8 @@ export default function AdminRegistryPage() {
             {/* Show financials toggle */}
             <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 mb-6 flex items-center justify-between">
                 <div>
-                    <h2 className="font-semibold text-gray-900">Show Financial Details</h2>
-                    <p className="text-sm text-gray-500">Display prices, progress bars, and funding amounts to guests</p>
+                    <h2 className="font-semibold text-gray-900">Finanzdetails anzeigen</h2>
+                    <p className="text-sm text-gray-500">Preise, Fortschrittsbalken und Beträge für Gäste anzeigen</p>
                 </div>
                 <button
                     onClick={() => { const updated = { ...fund, showFinancials: !fund.showFinancials }; setFund(updated); }}
@@ -398,9 +398,9 @@ export default function AdminRegistryPage() {
             {/* Tabs */}
             <div className="flex gap-1 mb-6 bg-gray-100 rounded-xl p-1 w-fit">
                 {([
-                    { key: 'experiences', label: 'Honeymoon Fund' },
-                    { key: 'registry', label: 'Registry Items' },
-                    { key: 'settings', label: 'Settings' },
+                    { key: 'experiences', label: 'Flitterwochen-Fonds' },
+                    { key: 'registry', label: 'Wunschlisten-Artikel' },
+                    { key: 'settings', label: 'Einstellungen' },
                 ] as const).map(t => (
                     <button
                         key={t.key}
@@ -419,9 +419,9 @@ export default function AdminRegistryPage() {
                     {fund.items.length > 0 && (
                         <div className="grid grid-cols-3 gap-4 mb-6">
                             {[
-                                { label: 'Total Goal', value: `$${totalGoal.toLocaleString()}` },
-                                { label: 'Total Funded', value: `$${totalFunded.toLocaleString()}` },
-                                { label: 'Progress', value: `${totalGoal > 0 ? Math.round((totalFunded / totalGoal) * 100) : 0}%` },
+                                { label: 'Gesamtziel', value: `$${totalGoal.toLocaleString('de-DE')}` },
+                                { label: 'Bisher finanziert', value: `$${totalFunded.toLocaleString('de-DE')}` },
+                                { label: 'Fortschritt', value: `${totalGoal > 0 ? Math.round((totalFunded / totalGoal) * 100) : 0}%` },
                             ].map(s => (
                                 <div key={s.label} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 text-center">
                                     <p className="text-2xl font-bold text-accent">{s.value}</p>
@@ -446,24 +446,24 @@ export default function AdminRegistryPage() {
                                                         className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" />
                                                 </div>
                                                 <div>
-                                                    <label className="text-xs font-medium text-gray-600 mb-1 block">Price ($)</label>
+                                                    <label className="text-xs font-medium text-gray-600 mb-1 block">Preis ($)</label>
                                                     <input type="number" value={editingItem.price} onChange={e => setEditingItem({ ...editingItem, price: parseFloat(e.target.value) || 0 })}
                                                         className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" />
                                                 </div>
                                             </div>
                                             <div>
-                                                <label className="text-xs font-medium text-gray-600 mb-1 block">Title</label>
+                                                <label className="text-xs font-medium text-gray-600 mb-1 block">Titel</label>
                                                 <input value={editingItem.title} onChange={e => setEditingItem({ ...editingItem, title: e.target.value })}
                                                     className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" />
                                             </div>
                                             <div>
-                                                <label className="text-xs font-medium text-gray-600 mb-1 block">Description</label>
+                                                <label className="text-xs font-medium text-gray-600 mb-1 block">Beschreibung</label>
                                                 <textarea rows={2} value={editingItem.description} onChange={e => setEditingItem({ ...editingItem, description: e.target.value })}
                                                     className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm resize-none" />
                                             </div>
                                             <div className="flex gap-2">
-                                                <button onClick={saveEditItem} className="bg-accent text-white px-4 py-2 rounded-lg text-sm font-medium">Save</button>
-                                                <button onClick={() => setEditingItem(null)} className="bg-gray-100 text-gray-700 px-4 py-2 rounded-lg text-sm">Cancel</button>
+                                                <button onClick={saveEditItem} className="bg-accent text-white px-4 py-2 rounded-lg text-sm font-medium">Speichern</button>
+                                                <button onClick={() => setEditingItem(null)} className="bg-gray-100 text-gray-700 px-4 py-2 rounded-lg text-sm">Abbrechen</button>
                                             </div>
                                         </div>
                                     ) : (
@@ -472,11 +472,11 @@ export default function AdminRegistryPage() {
                                             <div className="flex-1 min-w-0">
                                                 <div className="flex items-center gap-2 mb-0.5">
                                                     <h3 className="font-bold text-gray-900">{item.title}</h3>
-                                                    {pct >= 100 && <span className="text-xs bg-green-100 text-green-700 font-semibold px-2 py-0.5 rounded-full">Funded!</span>}
+                                                    {pct >= 100 && <span className="text-xs bg-green-100 text-green-700 font-semibold px-2 py-0.5 rounded-full">Finanziert!</span>}
                                                 </div>
                                                 <p className="text-gray-500 text-sm mb-2">{item.description}</p>
                                                 <div className="flex items-center gap-3 text-sm">
-                                                    <span className="font-semibold text-accent">${item.funded.toLocaleString()} / ${item.price.toLocaleString()}</span>
+                                                    <span className="font-semibold text-accent">${item.funded.toLocaleString('de-DE')} / ${item.price.toLocaleString('de-DE')}</span>
                                                     <span className="text-gray-400">{pct}%</span>
                                                 </div>
                                                 <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden mt-2">
@@ -486,15 +486,15 @@ export default function AdminRegistryPage() {
                                             <div className="flex gap-2 shrink-0">
                                                 <button onClick={() => { setContributingItem(item); setContributionAmount(''); }}
                                                     className="text-xs bg-green-50 text-green-700 border border-green-200 px-3 py-1.5 rounded-lg font-medium hover:bg-green-100 transition-colors">
-                                                    + Log Gift
+                                                    + Geschenk erfassen
                                                 </button>
                                                 <button onClick={() => setEditingItem(item)}
                                                     className="text-xs bg-gray-50 text-gray-700 border border-gray-200 px-3 py-1.5 rounded-lg hover:bg-gray-100 transition-colors">
-                                                    Edit
+                                                    Bearbeiten
                                                 </button>
                                                 <button onClick={() => deleteItem(item.id)}
                                                     className="text-xs bg-red-50 text-red-600 border border-red-200 px-3 py-1.5 rounded-lg hover:bg-red-100 transition-colors">
-                                                    Delete
+                                                    Löschen
                                                 </button>
                                             </div>
                                         </div>
@@ -507,7 +507,7 @@ export default function AdminRegistryPage() {
                     {/* Add item */}
                     {showAddForm ? (
                         <div className="bg-white rounded-2xl border-2 border-dashed border-accent/30 p-6 space-y-4">
-                            <h3 className="font-semibold text-gray-900">New Experience</h3>
+                            <h3 className="font-semibold text-gray-900">Neues Erlebnis</h3>
                             <div className="grid grid-cols-2 gap-3">
                                 <div>
                                     <label className="text-xs font-medium text-gray-600 mb-1 block">Emoji</label>
@@ -515,36 +515,36 @@ export default function AdminRegistryPage() {
                                         placeholder="✈️" className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" />
                                 </div>
                                 <div>
-                                    <label className="text-xs font-medium text-gray-600 mb-1 block">Price ($)</label>
+                                    <label className="text-xs font-medium text-gray-600 mb-1 block">Preis ($)</label>
                                     <input type="number" value={newItem.price || ''} onChange={e => setNewItem({ ...newItem, price: parseFloat(e.target.value) || 0 })}
                                         placeholder="250" className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" />
                                 </div>
                             </div>
                             <div>
-                                <label className="text-xs font-medium text-gray-600 mb-1 block">Title</label>
+                                <label className="text-xs font-medium text-gray-600 mb-1 block">Titel</label>
                                 <input value={newItem.title} onChange={e => setNewItem({ ...newItem, title: e.target.value })}
-                                    placeholder="One Night at the Resort" className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" />
+                                    placeholder="Eine Nacht im Resort" className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" />
                             </div>
                             <div>
-                                <label className="text-xs font-medium text-gray-600 mb-1 block">Description</label>
+                                <label className="text-xs font-medium text-gray-600 mb-1 block">Beschreibung</label>
                                 <textarea rows={2} value={newItem.description} onChange={e => setNewItem({ ...newItem, description: e.target.value })}
-                                    placeholder="Help us enjoy a beautiful night at our dream resort..." className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm resize-none" />
+                                    placeholder="Helft uns, eine wunderschöne Nacht in unserem Traumresort zu genießen …" className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm resize-none" />
                             </div>
                             <div className="flex gap-2">
                                 <button onClick={addItem} disabled={!newItem.title || !newItem.price}
                                     className="bg-accent text-white px-5 py-2 rounded-lg text-sm font-medium disabled:opacity-40">
-                                    Add Experience
+                                    Erlebnis hinzufügen
                                 </button>
                                 <button onClick={() => { setShowAddForm(false); setNewItem(BLANK_ITEM); }}
                                     className="bg-gray-100 text-gray-700 px-5 py-2 rounded-lg text-sm">
-                                    Cancel
+                                    Abbrechen
                                 </button>
                             </div>
                         </div>
                     ) : (
                         <button onClick={() => setShowAddForm(true)}
                             className="w-full border-2 border-dashed border-gray-200 rounded-2xl py-4 text-gray-400 hover:text-gray-600 hover:border-gray-300 transition-colors text-sm font-medium">
-                            + Add Experience
+                            + Erlebnis hinzufügen
                         </button>
                     )}
                 </div>
@@ -553,22 +553,22 @@ export default function AdminRegistryPage() {
             {/* ── REGISTRY ITEMS TAB ── */}
             {tab === 'registry' && (
                 <div>
-                    <p className="text-sm text-gray-500 mb-6">Paste a product URL from Target or Amazon and we&apos;ll pull in the details automatically. You can edit anything before saving.</p>
+                    <p className="text-sm text-gray-500 mb-6">Füge die URL eines Produkts von Target oder Amazon ein, und die Details werden automatisch übernommen. Vor dem Speichern lässt sich alles bearbeiten.</p>
 
                     {/* Amazon CSV import */}
                     <div className="bg-amber-50 border border-amber-200 rounded-2xl p-5 mb-6">
                         <div className="flex items-start justify-between gap-4">
                             <div className="min-w-0">
                                 <h3 className="text-sm font-semibold text-amber-900 flex items-center gap-2">
-                                    📦 Import from Amazon Registry CSV
+                                    📦 Aus Amazon-Wunschlisten-CSV importieren
                                 </h3>
                                 <p className="text-xs text-amber-700 mt-1">
-                                    On Amazon, go to your registry → <strong>Manage</strong> → <strong>Download list as spreadsheet (.csv)</strong>. Then upload it here — every item imports individually.
+                                    Gehe bei Amazon zu deiner Wunschliste → <strong>Verwalten</strong> → <strong>Liste als Tabelle herunterladen (.csv)</strong>. Lade sie dann hier hoch – jeder Artikel wird einzeln importiert.
                                 </p>
                                 {importResult && (
                                     <p className={`text-xs mt-2 font-medium ${importResult.added > 0 ? 'text-green-700' : 'text-gray-600'}`}>
-                                        ✓ {importResult.added} item{importResult.added !== 1 ? 's' : ''} added
-                                        {importResult.skipped > 0 ? `, ${importResult.skipped} skipped (already exist)` : ''}
+                                        ✓ {importResult.added} {importResult.added !== 1 ? 'Artikel' : 'Artikel'} hinzugefügt
+                                        {importResult.skipped > 0 ? `, ${importResult.skipped} übersprungen (bereits vorhanden)` : ''}
                                     </p>
                                 )}
                             </div>
@@ -585,7 +585,7 @@ export default function AdminRegistryPage() {
                                     disabled={importing}
                                     className="bg-amber-600 hover:bg-amber-700 text-white text-sm font-medium px-4 py-2 rounded-lg disabled:opacity-50 transition-colors whitespace-nowrap"
                                 >
-                                    {importing ? 'Importing…' : 'Upload CSV'}
+                                    {importing ? 'Wird importiert …' : 'CSV hochladen'}
                                 </button>
                             </div>
                         </div>
@@ -596,11 +596,11 @@ export default function AdminRegistryPage() {
                         <div className="flex items-start justify-between gap-4">
                             <div className="min-w-0 flex-1">
                                 <h3 className="text-sm font-semibold text-red-900 flex items-center gap-2">
-                                    🎯 Import from Target Registry
+                                    🎯 Aus Target-Wunschliste importieren
                                 </h3>
                                 <p className="text-xs text-red-700 mt-1">
-                                    Target doesn&apos;t offer a native export, so use the bookmarklet below.
-                                    Run it on your Target registry page — it downloads a CSV automatically.
+                                    Target bietet keinen eigenen Export, nutze daher das Bookmarklet unten.
+                                    Führe es auf deiner Target-Wunschlistenseite aus – es lädt automatisch eine CSV herunter.
                                 </p>
 
                                 {/* Bookmarklet section */}
@@ -609,38 +609,38 @@ export default function AdminRegistryPage() {
                                         onClick={() => setShowTargetBookmarklet(v => !v)}
                                         className="text-xs text-red-700 underline font-medium"
                                     >
-                                        {showTargetBookmarklet ? 'Hide' : 'Show'} bookmarklet instructions →
+                                        Anleitung zum Bookmarklet {showTargetBookmarklet ? 'ausblenden' : 'anzeigen'} →
                                     </button>
 
                                     {showTargetBookmarklet && (
                                         <div className="mt-3 space-y-3">
-                                            <p className="text-xs text-red-800 font-medium">Step 1 — Add the bookmarklet to your browser:</p>
+                                            <p className="text-xs text-red-800 font-medium">Schritt 1 – Bookmarklet zum Browser hinzufügen:</p>
                                             <p className="text-xs text-red-700">
-                                                Drag this link to your bookmarks bar, or right-click → Bookmark this link:
+                                                Ziehe diesen Link in deine Lesezeichenleiste oder klicke mit der rechten Maustaste → Link als Lesezeichen speichern:
                                             </p>
                                             <a
-                                                href={`javascript:(function(){var items=[];document.querySelectorAll('[data-test="registry-item"]').forEach(function(el){var title=(el.querySelector('[data-test="product-title"]')||el.querySelector('a[href*="/p/"]')||{}).textContent||'';var price=(el.querySelector('[data-test="current-price"]')||el.querySelector('[data-test="reg-price"]')||{}).textContent||'';var img=(el.querySelector('img')||{}).src||'';var link=el.querySelector('a[href*="/p/"]');var url=link?'https://www.target.com'+link.getAttribute('href'):'';if(title.trim())items.push({title:title.trim(),price:price.trim(),image:img,url:url});});if(!items.length){alert('No items found. Make sure you are on your Target registry page with items visible.');return;}var csv='title,price,image,url\\n'+items.map(function(i){return[i.title,i.price,i.image,i.url].map(function(v){return'"'+v.replace(/"/g,'""')+'"';}).join(',');}).join('\\n');var a=document.createElement('a');a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);a.download='target-registry.csv';a.click();alert('Downloaded '+items.length+' items. Upload the CSV file in the admin panel.');})();`}
+                                                href={`javascript:(function(){var items=[];document.querySelectorAll('[data-test="registry-item"]').forEach(function(el){var title=(el.querySelector('[data-test="product-title"]')||el.querySelector('a[href*="/p/"]')||{}).textContent||'';var price=(el.querySelector('[data-test="current-price"]')||el.querySelector('[data-test="reg-price"]')||{}).textContent||'';var img=(el.querySelector('img')||{}).src||'';var link=el.querySelector('a[href*="/p/"]');var url=link?'https://www.target.com'+link.getAttribute('href'):'';if(title.trim())items.push({title:title.trim(),price:price.trim(),image:img,url:url});});if(!items.length){alert('Keine Artikel gefunden. Stelle sicher, dass du auf deiner Target-Wunschlistenseite bist und die Artikel sichtbar sind.');return;}var csv='title,price,image,url\\n'+items.map(function(i){return[i.title,i.price,i.image,i.url].map(function(v){return'"'+v.replace(/"/g,'""')+'"';}).join(',');}).join('\\n');var a=document.createElement('a');a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);a.download='target-registry.csv';a.click();alert(items.length+' Artikel heruntergeladen. Lade die CSV-Datei im Admin-Bereich hoch.');})();`}
                                                 className="inline-block bg-red-600 text-white text-xs font-bold px-4 py-2 rounded-lg cursor-grab"
                                                 onClick={e => e.preventDefault()}
                                             >
-                                                🎯 Export Target Registry
+                                                🎯 Target-Wunschliste exportieren
                                             </a>
-                                            <p className="text-xs text-red-800 font-medium">Step 2 — Run it on Target:</p>
+                                            <p className="text-xs text-red-800 font-medium">Schritt 2 – Auf Target ausführen:</p>
                                             <ol className="text-xs text-red-700 list-decimal list-inside space-y-1">
-                                                <li>Go to <strong>target.com</strong> → your registry → <strong>Manage registry</strong></li>
-                                                <li>Scroll down so all your items are loaded on the page</li>
-                                                <li>Click the <strong>&ldquo;🎯 Export Target Registry&rdquo;</strong> bookmark</li>
-                                                <li>A <code>target-registry.csv</code> file will download automatically</li>
+                                                <li>Öffne <strong>target.com</strong> → deine Wunschliste → <strong>Manage registry</strong></li>
+                                                <li>Scrolle nach unten, damit alle Artikel auf der Seite geladen sind</li>
+                                                <li>Klicke auf das Lesezeichen <strong>„🎯 Export Target Registry“</strong></li>
+                                                <li>Eine Datei <code>target-registry.csv</code> wird automatisch heruntergeladen</li>
                                             </ol>
-                                            <p className="text-xs text-red-800 font-medium">Step 3 — Upload it here:</p>
+                                            <p className="text-xs text-red-800 font-medium">Schritt 3 – Hier hochladen:</p>
                                         </div>
                                     )}
                                 </div>
 
                                 {targetImportResult && (
                                     <p className={`text-xs mt-2 font-medium ${targetImportResult.added > 0 ? 'text-green-700' : 'text-gray-600'}`}>
-                                        ✓ {targetImportResult.added} item{targetImportResult.added !== 1 ? 's' : ''} added
-                                        {targetImportResult.skipped > 0 ? `, ${targetImportResult.skipped} skipped (already exist)` : ''}
+                                        ✓ {targetImportResult.added} Artikel hinzugefügt
+                                        {targetImportResult.skipped > 0 ? `, ${targetImportResult.skipped} übersprungen (bereits vorhanden)` : ''}
                                     </p>
                                 )}
                             </div>
@@ -658,7 +658,7 @@ export default function AdminRegistryPage() {
                                     disabled={targetImporting}
                                     className="bg-red-600 hover:bg-red-700 text-white text-sm font-medium px-4 py-2 rounded-lg disabled:opacity-50 transition-colors whitespace-nowrap"
                                 >
-                                    {targetImporting ? 'Importing…' : 'Upload CSV'}
+                                    {targetImporting ? 'Wird importiert …' : 'CSV hochladen'}
                                 </button>
                             </div>
                         </div>
@@ -666,7 +666,7 @@ export default function AdminRegistryPage() {
 
                     {/* URL fetch bar */}
                     <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 mb-6">
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Add item from URL</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Artikel per URL hinzufügen</label>
                         <div className="flex gap-2">
                             <input
                                 ref={urlInputRef}
@@ -683,7 +683,7 @@ export default function AdminRegistryPage() {
                                 disabled={fetching || !urlInput.trim()}
                                 className="bg-accent text-white px-5 py-2 rounded-lg text-sm font-medium disabled:opacity-40 shrink-0"
                             >
-                                {fetching ? 'Fetching…' : 'Fetch →'}
+                                {fetching ? 'Wird abgerufen …' : 'Abrufen →'}
                             </button>
                         </div>
                         {fetchError && <p className="text-amber-600 text-xs mt-2">⚠️ {fetchError}</p>}
@@ -692,11 +692,11 @@ export default function AdminRegistryPage() {
                     {/* Pending item preview / edit form */}
                     {pendingItem && (
                         <div className="bg-white rounded-2xl border-2 border-accent/30 shadow-sm p-5 mb-6">
-                            <h3 className="font-semibold text-gray-900 mb-4">Review &amp; Save</h3>
+                            <h3 className="font-semibold text-gray-900 mb-4">Prüfen &amp; speichern</h3>
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 {/* Image preview */}
                                 <div>
-                                    <label className="block text-xs font-medium text-gray-600 mb-1">Image URL</label>
+                                    <label className="block text-xs font-medium text-gray-600 mb-1">Bild-URL</label>
                                     <input
                                         type="text"
                                         value={pendingItem.image || ''}
@@ -711,7 +711,7 @@ export default function AdminRegistryPage() {
                                 </div>
                                 <div className="space-y-3">
                                     <div>
-                                        <label className="block text-xs font-medium text-gray-600 mb-1">Store</label>
+                                        <label className="block text-xs font-medium text-gray-600 mb-1">Shop</label>
                                         <select
                                             value={pendingItem.store || 'other'}
                                             onChange={e => setPendingItem(p => p ? { ...p, store: e.target.value as RegistryItem['store'] } : p)}
@@ -719,7 +719,7 @@ export default function AdminRegistryPage() {
                                         >
                                             <option value="target">Target</option>
                                             <option value="amazon">Amazon</option>
-                                            <option value="other">Other</option>
+                                            <option value="other">Sonstiges</option>
                                         </select>
                                     </div>
                                     <div>
@@ -732,7 +732,7 @@ export default function AdminRegistryPage() {
                                         />
                                     </div>
                                     <div>
-                                        <label className="block text-xs font-medium text-gray-600 mb-1">Price (display only)</label>
+                                        <label className="block text-xs font-medium text-gray-600 mb-1">Preis (nur zur Anzeige)</label>
                                         <input
                                             type="text"
                                             value={pendingItem.price || ''}
@@ -758,13 +758,13 @@ export default function AdminRegistryPage() {
                                     disabled={!pendingItem.title}
                                     className="bg-accent text-white px-5 py-2 rounded-lg text-sm font-medium disabled:opacity-40"
                                 >
-                                    Save Item
+                                    Artikel speichern
                                 </button>
                                 <button
                                     onClick={() => { setPendingItem(null); setUrlInput(''); setFetchError(''); }}
                                     className="bg-gray-100 text-gray-700 px-5 py-2 rounded-lg text-sm"
                                 >
-                                    Cancel
+                                    Abbrechen
                                 </button>
                             </div>
                         </div>
@@ -774,14 +774,14 @@ export default function AdminRegistryPage() {
                     {registryItems.length === 0 && !pendingItem && (
                         <div className="text-center py-16 text-gray-400">
                             <p className="text-4xl mb-3">🛍️</p>
-                            <p className="text-sm">No registry items yet — paste a URL above to add your first item.</p>
+                            <p className="text-sm">Noch keine Artikel – füge oben eine URL ein, um den ersten hinzuzufügen.</p>
                         </div>
                     )}
 
                     {['target', 'amazon', 'other'].map(store => {
                         const storeItems = registryItems.filter(i => i.store === store);
                         if (storeItems.length === 0) return null;
-                        const storeLabel = store === 'target' ? '🎯 Target' : store === 'amazon' ? '📦 Amazon' : '🛍️ Other';
+                        const storeLabel = store === 'target' ? '🎯 Target' : store === 'amazon' ? '📦 Amazon' : '🛍️ Sonstiges';
                         return (
                             <div key={store} className="mb-8">
                                 <h3 className="font-semibold text-gray-700 text-sm uppercase tracking-wider mb-3">{storeLabel}</h3>
@@ -791,7 +791,7 @@ export default function AdminRegistryPage() {
                                             {editingRegItem?.id === item.id ? (
                                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                                     <div>
-                                                        <label className="block text-xs font-medium text-gray-600 mb-1">Image URL</label>
+                                                        <label className="block text-xs font-medium text-gray-600 mb-1">Bild-URL</label>
                                                         <input type="text" value={editingRegItem.image}
                                                             onChange={e => setEditingRegItem(p => p ? { ...p, image: e.target.value } : p)}
                                                             className="w-full border border-gray-300 rounded-lg px-3 py-2 text-xs mb-2" />
@@ -808,7 +808,7 @@ export default function AdminRegistryPage() {
                                                                 className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" />
                                                         </div>
                                                         <div>
-                                                            <label className="block text-xs font-medium text-gray-600 mb-1">Price</label>
+                                                            <label className="block text-xs font-medium text-gray-600 mb-1">Preis</label>
                                                             <input type="text" value={editingRegItem.price}
                                                                 onChange={e => setEditingRegItem(p => p ? { ...p, price: e.target.value } : p)}
                                                                 className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" />
@@ -821,8 +821,8 @@ export default function AdminRegistryPage() {
                                                         </div>
                                                     </div>
                                                     <div className="sm:col-span-2 flex gap-2">
-                                                        <button onClick={() => updateRegistryItem(editingRegItem)} className="bg-accent text-white px-4 py-2 rounded-lg text-sm font-medium">Save</button>
-                                                        <button onClick={() => setEditingRegItem(null)} className="bg-gray-100 text-gray-700 px-4 py-2 rounded-lg text-sm">Cancel</button>
+                                                        <button onClick={() => updateRegistryItem(editingRegItem)} className="bg-accent text-white px-4 py-2 rounded-lg text-sm font-medium">Speichern</button>
+                                                        <button onClick={() => setEditingRegItem(null)} className="bg-gray-100 text-gray-700 px-4 py-2 rounded-lg text-sm">Abbrechen</button>
                                                     </div>
                                                 </div>
                                             ) : (
@@ -840,11 +840,11 @@ export default function AdminRegistryPage() {
                                                     <div className="flex gap-2 shrink-0">
                                                         <button onClick={() => setEditingRegItem(item)}
                                                             className="text-xs bg-gray-50 text-gray-700 border border-gray-200 px-3 py-1.5 rounded-lg hover:bg-gray-100 transition-colors">
-                                                            Edit
+                                                            Bearbeiten
                                                         </button>
                                                         <button onClick={() => deleteRegistryItem(item.id)}
                                                             className="text-xs bg-red-50 text-red-600 border border-red-200 px-3 py-1.5 rounded-lg hover:bg-red-100 transition-colors">
-                                                            Delete
+                                                            Löschen
                                                         </button>
                                                     </div>
                                                 </div>
@@ -862,14 +862,14 @@ export default function AdminRegistryPage() {
             {tab === 'settings' && (
                 <div className="space-y-6">
                     <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 space-y-5">
-                        <h2 className="text-lg font-semibold text-gray-900">Page Content</h2>
+                        <h2 className="text-lg font-semibold text-gray-900">Seiteninhalt</h2>
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Page Title</label>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Seitentitel</label>
                             <input type="text" value={fund.title} onChange={e => setFund(p => ({ ...p, title: e.target.value }))}
-                                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" placeholder="Registry" />
+                                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" placeholder="Wunschliste" />
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Subtitle</label>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Untertitel</label>
                             <input type="text" value={fund.subtitle} onChange={e => setFund(p => ({ ...p, subtitle: e.target.value }))}
                                 className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" />
                         </div>
@@ -879,14 +879,14 @@ export default function AdminRegistryPage() {
                                 className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm resize-none" />
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Nav Card Subtitle</label>
-                            <p className="text-xs text-gray-500 mb-1">Short tagline shown on the Registry card at the bottom of the home page.</p>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Untertitel der Navigationskarte</label>
+                            <p className="text-xs text-gray-500 mb-1">Kurzer Slogan auf der Wunschlisten-Karte unten auf der Startseite.</p>
                             <input type="text" value={registryPageSubtitle} onChange={e => setRegistryPageSubtitle(e.target.value)}
                                 className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
-                                placeholder="e.g. Help us start our adventure" />
+                                placeholder="z. B. Helft uns, unser Abenteuer zu starten" />
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Background Color</label>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Hintergrundfarbe</label>
                             <div className="flex items-center gap-3">
                                 <input type="color" value={bgColor} onChange={e => setBgColor(e.target.value)}
                                     className="h-9 w-16 rounded border border-gray-300 cursor-pointer p-0.5" />
@@ -898,14 +898,14 @@ export default function AdminRegistryPage() {
 
                     <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 space-y-5">
                         <div>
-                            <h2 className="text-lg font-semibold text-gray-900">Payment Methods</h2>
-                            <p className="text-sm text-gray-500 mt-0.5">Leave handle blank to hide on the public page.</p>
+                            <h2 className="text-lg font-semibold text-gray-900">Zahlungsmethoden</h2>
+                            <p className="text-sm text-gray-500 mt-0.5">Lass das Feld leer, um die Methode auf der öffentlichen Seite auszublenden.</p>
                         </div>
                         {([
-                            { key: 'zelle' as const, name: 'Zelle', icon: '🏦', placeholder: 'phone or email' },
-                            { key: 'venmo' as const, name: 'Venmo', icon: '💙', placeholder: '@yourhandle' },
-                            { key: 'cashapp' as const, name: 'Cash App', icon: '💚', placeholder: '$yourcashtag' },
-                            { key: 'paypal' as const, name: 'PayPal', icon: '💛', placeholder: 'yourhandle' },
+                            { key: 'zelle' as const, name: 'Zelle', icon: '🏦', placeholder: 'Telefon oder E-Mail' },
+                            { key: 'venmo' as const, name: 'Venmo', icon: '💙', placeholder: '@deinname' },
+                            { key: 'cashapp' as const, name: 'Cash App', icon: '💚', placeholder: '$deincashtag' },
+                            { key: 'paypal' as const, name: 'PayPal', icon: '💛', placeholder: 'deinname' },
                         ]).map(({ key, name, icon, placeholder }) => (
                             <div key={key} className="border border-gray-100 rounded-xl p-4 bg-gray-50">
                                 <div className="flex items-center gap-2 mb-3">
@@ -914,12 +914,12 @@ export default function AdminRegistryPage() {
                                 </div>
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                     <div>
-                                        <label className="block text-xs font-medium text-gray-600 mb-1">Handle</label>
+                                        <label className="block text-xs font-medium text-gray-600 mb-1">Benutzername</label>
                                         <input type="text" value={fund[key].handle} onChange={e => updatePayment(key, 'handle', e.target.value)}
                                             placeholder={placeholder} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white" />
                                     </div>
                                     <div>
-                                        <label className="block text-xs font-medium text-gray-600 mb-1">Display Label</label>
+                                        <label className="block text-xs font-medium text-gray-600 mb-1">Beschriftung</label>
                                         <input type="text" value={fund[key].label} onChange={e => updatePayment(key, 'label', e.target.value)}
                                             className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white" />
                                     </div>
@@ -936,18 +936,18 @@ export default function AdminRegistryPage() {
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
                     <div className="absolute inset-0 bg-black/40" onClick={() => { setContributingItem(null); setDonorSearch(''); setSelectedDonor(null); setDonationEvent('Wedding Day'); setOtherEvent(''); setCoGivers([]); setCoGiverSearch(''); }} />
                     <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6 z-10">
-                        <h2 className="text-lg font-bold text-gray-900 mb-1">Log a Gift</h2>
+                        <h2 className="text-lg font-bold text-gray-900 mb-1">Geschenk erfassen</h2>
                         <p className="text-sm text-gray-500 mb-4">{contributingItem.emoji} {contributingItem.title}</p>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Amount received ($)</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Erhaltener Betrag ($)</label>
                         <input
                             type="number"
                             value={contributionAmount}
                             onChange={e => setContributionAmount(e.target.value)}
-                            placeholder={`up to $${(contributingItem.price - contributingItem.funded).toLocaleString()} remaining`}
+                            placeholder={`noch bis zu $${(contributingItem.price - contributingItem.funded).toLocaleString('de-DE')}`}
                             className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm mb-4"
                             autoFocus
                         />
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Who donated?</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Wer hat gespendet?</label>
                         {selectedDonor ? (
                             <div className="flex items-center justify-between border border-gray-300 rounded-lg px-3 py-2 text-sm mb-4">
                                 <span>{selectedDonor.guest_name}</span>
@@ -959,7 +959,7 @@ export default function AdminRegistryPage() {
                                     type="text"
                                     value={donorSearch}
                                     onChange={e => setDonorSearch(e.target.value)}
-                                    placeholder="Search guest list..."
+                                    placeholder="Gästeliste durchsuchen …"
                                     className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
                                 />
                                 {donorSearch.trim() && (
@@ -978,13 +978,13 @@ export default function AdminRegistryPage() {
                                                 </button>
                                             ))}
                                         {donorPeople.filter(p => p.name.toLowerCase().includes(donorSearch.toLowerCase())).length === 0 && (
-                                            <p className="px-3 py-2 text-sm text-gray-400">No matching guest</p>
+                                            <p className="px-3 py-2 text-sm text-gray-400">Kein passender Gast</p>
                                         )}
                                     </div>
                                 )}
                             </div>
                         )}
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Co-givers (optional)</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Mitgebende (optional)</label>
                         {coGivers.length > 0 && (
                             <div className="flex flex-wrap gap-1 mb-2">
                                 {coGivers.map(c => (
@@ -1000,7 +1000,7 @@ export default function AdminRegistryPage() {
                             value={coGiverSearch}
                             onChange={e => setCoGiverSearch(e.target.value)}
                             onKeyDown={e => { if (e.key === 'Enter' && coGiverSearch.trim()) { e.preventDefault(); addCoGiver({ id: null, name: coGiverSearch }); } }}
-                            placeholder="Add a co-giver (type & Enter, or pick below)"
+                            placeholder="Mitgebende:n hinzufügen (tippen & Enter oder unten wählen)"
                             className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
                         />
                         {coGiverSearch.trim() && (
@@ -1017,34 +1017,34 @@ export default function AdminRegistryPage() {
                             </div>
                         )}
                         {!coGiverSearch.trim() && <div className="mb-4" />}
-                        <label className="block text-sm font-medium text-gray-700 mb-1">From what event?</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Bei welchem Anlass?</label>
                         <select
                             value={donationEvent}
                             onChange={e => setDonationEvent(e.target.value)}
                             className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm mb-3"
                         >
-                            <option>Bridal Shower</option>
-                            <option>Engagement Party</option>
-                            <option>Wedding Day</option>
-                            <option>Other</option>
+                            <option value="Bridal Shower">Junggesellinnenabschied</option>
+                            <option value="Engagement Party">Verlobungsfeier</option>
+                            <option value="Wedding Day">Hochzeitstag</option>
+                            <option value="Other">Sonstiges</option>
                         </select>
                         {donationEvent === 'Other' && (
                             <input
                                 type="text"
                                 value={otherEvent}
                                 onChange={e => setOtherEvent(e.target.value)}
-                                placeholder="Name the event"
+                                placeholder="Name des Anlasses"
                                 className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm mb-4"
                             />
                         )}
                         <div className="flex gap-2">
                             <button onClick={logContribution} disabled={!contributionAmount}
                                 className="flex-1 bg-accent text-white py-2 rounded-lg text-sm font-medium disabled:opacity-40">
-                                Save
+                                Speichern
                             </button>
                             <button onClick={() => { setContributingItem(null); setDonorSearch(''); setSelectedDonor(null); setDonationEvent('Wedding Day'); setOtherEvent(''); setCoGivers([]); setCoGiverSearch(''); }}
                                 className="flex-1 bg-gray-100 text-gray-700 py-2 rounded-lg text-sm">
-                                Cancel
+                                Abbrechen
                             </button>
                         </div>
                     </div>

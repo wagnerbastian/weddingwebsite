@@ -29,6 +29,6 @@ export async function GET() {
         });
     } catch (error) {
         console.error('Error loading archived finance rows:', error);
-        return NextResponse.json({ error: 'Failed to load archived rows' }, { status: 500 });
+        return NextResponse.json({ error: 'Archiv konnte nicht geladen werden' }, { status: 500 });
     }
 }

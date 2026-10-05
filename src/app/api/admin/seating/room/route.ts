@@ -51,7 +51,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ success: true, room: result.rows[0] });
   } catch (error) {
     console.error(error);
-    return NextResponse.json({ error: 'Failed to save room' }, { status: 500 });
+    return NextResponse.json({ error: 'Raum konnte nicht gespeichert werden' }, { status: 500 });
   } finally {
     client.release();
   }
@@ -67,7 +67,7 @@ export async function DELETE() {
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error(error);
-    return NextResponse.json({ error: 'Failed to delete room' }, { status: 500 });
+    return NextResponse.json({ error: 'Raum konnte nicht gelöscht werden' }, { status: 500 });
   } finally {
     client.release();
   }

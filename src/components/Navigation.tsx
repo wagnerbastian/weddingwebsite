@@ -116,14 +116,14 @@ export default function Navigation({
     }, [pathname]);
 
     const allLinks = [
-        { href: '/', label: 'Home' },
-        { href: '/#about', label: 'About' },
-        { href: '/our-story', label: 'Our Story' },
-        { href: '/wedding-party', label: 'Wedding Party' },
-        { href: '/schedule', label: 'Schedule' },
-        { href: '/photos', label: 'Photos' },
-        { href: '/registry', label: 'Registry' },
-        { href: '/rsvp', label: 'RSVP' },
+        { href: '/', label: 'Start' },
+        { href: '/#about', label: 'Über uns' },
+        { href: '/our-story', label: 'Unsere Geschichte' },
+        { href: '/wedding-party', label: 'Trauzeugen & Team' },
+        { href: '/schedule', label: 'Ablauf' },
+        { href: '/photos', label: 'Fotos' },
+        { href: '/registry', label: 'Wunschliste' },
+        { href: '/rsvp', label: 'Rückmeldung' },
     ];
     const basicModePages = ['/', '/#about', '/our-story', '/photos'];
     const links = (basicMode && !isAdmin
@@ -243,7 +243,7 @@ export default function Navigation({
                         {logoMode && weddingLogo ? (
                             <Image
                                 src={`/api/photos/${weddingLogo}`}
-                                alt="Wedding Logo"
+                                alt="Hochzeitslogo"
                                 width={400}
                                 height={72}
                                 className="h-[72px] w-auto object-contain"
@@ -316,7 +316,7 @@ export default function Navigation({
                         aria-controls="mobile-menu"
                         aria-expanded={isOpen}
                     >
-                        <span className="sr-only">Open main menu</span>
+                        <span className="sr-only">Hauptmenü öffnen</span>
                         <div className="relative w-6 h-5 flex flex-col justify-between">
                             <span className={`block h-0.5 bg-current rounded-full transition-all duration-300 origin-center ${isOpen ? 'rotate-45 translate-y-2.5' : ''}`} />
                             <span className={`block h-0.5 bg-current rounded-full transition-all duration-200 ${isOpen ? 'opacity-0 scale-x-0' : ''}`} />

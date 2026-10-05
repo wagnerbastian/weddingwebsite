@@ -27,10 +27,10 @@ export default function TripArchives({ api }: { api: HoneymoonApi }) {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ name }),
             });
-            if (!res.ok) { setMessage('Could not save a snapshot.'); return; }
+            if (!res.ok) { setMessage('Schnappschuss konnte nicht gespeichert werden.'); return; }
             setName('');
             await api.refresh();
-            setMessage('Saved.');
+            setMessage('Gespeichert.');
         } finally {
             setBusy('');
         }
@@ -38,8 +38,8 @@ export default function TripArchives({ api }: { api: HoneymoonApi }) {
 
     const restore = async (id: number, label: string) => {
         if (!confirm(
-            `Restore “${label}”? Everything currently in the portal is replaced — `
-            + 'the current state is snapshotted first, so this is undoable.',
+            `„${label}“ wiederherstellen? Alles, was gerade im Portal ist, wird ersetzt – `
+            + 'der aktuelle Stand wird vorher als Schnappschuss gesichert, das lässt sich also rückgängig machen.',
         )) return;
         setBusy(`restore-${id}`);
         setMessage('');
@@ -50,16 +50,16 @@ export default function TripArchives({ api }: { api: HoneymoonApi }) {
                 body: JSON.stringify({ id, confirm: true }),
             });
             const body = await res.json().catch(() => ({}));
-            if (!res.ok) { setMessage(body.error ?? 'Could not restore that.'); return; }
+            if (!res.ok) { setMessage(body.error ?? 'Wiederherstellen fehlgeschlagen.'); return; }
             await api.refresh();
-            setMessage(`Restored “${body.restored}”. The previous state was saved as a snapshot.`);
+            setMessage(`„${body.restored}“ wiederhergestellt. Der vorherige Stand wurde als Schnappschuss gespeichert.`);
         } finally {
             setBusy('');
         }
     };
 
     const forget = async (id: number, label: string) => {
-        if (!confirm(`Delete the snapshot “${label}”? This one is not undoable.`)) return;
+        if (!confirm(`Schnappschuss „${label}“ löschen? Das lässt sich nicht rückgängig machen.`)) return;
         await fetch(`/api/admin/honeymoon/archives?id=${id}`, { method: 'DELETE' });
         await api.refresh();
     };
@@ -69,16 +69,16 @@ export default function TripArchives({ api }: { api: HoneymoonApi }) {
             <div className="flex flex-wrap items-end gap-2">
                 <div className="min-w-40 flex-1">
                     <label className="mb-1 block text-xs font-semibold text-gray-500">
-                        Call it
+                        Name
                     </label>
                     <TextField
                         value={name}
-                        placeholder="Before I moved everything to week two"
+                        placeholder="Bevor ich alles in Woche zwei verschoben habe"
                         onChange={(e) => setName(e.target.value)}
                     />
                 </div>
                 <Button tone="primary" onClick={snapshot} disabled={busy === 'save'}>
-                    {busy === 'save' ? 'Saving…' : 'Snapshot the trip'}
+                    {busy === 'save' ? 'Wird gespeichert …' : 'Schnappschuss erstellen'}
                 </Button>
             </div>
 
@@ -86,8 +86,8 @@ export default function TripArchives({ api }: { api: HoneymoonApi }) {
 
             {archives.length === 0 ? (
                 <p className="text-xs text-gray-400">
-                    No snapshots yet. Worth taking one before a big reshuffle — and one at the end,
-                    which is how the portal outlives the honeymoon.
+                    Noch keine Schnappschüsse. Sinnvoll vor einer großen Umplanung – und einer am Ende,
+                    damit das Portal die Flitterwochen überdauert.
                 </p>
             ) : (
                 <ul className="space-y-1.5">
@@ -101,19 +101,19 @@ export default function TripArchives({ api }: { api: HoneymoonApi }) {
                                 {archive.name}
                             </span>
                             <span className="shrink-0 text-[11px] text-gray-400 tabular-nums">
-                                {archive.places} places · {archive.days} days
+                                {archive.places} {archive.places === 1 ? 'Ort' : 'Orte'} · {archive.days} {archive.days === 1 ? 'Tag' : 'Tage'}
                                 {archive.created_at
-                                    ? ` · ${new Date(archive.created_at).toLocaleDateString()}`
+                                    ? ` · ${new Date(archive.created_at).toLocaleDateString('de-DE')}`
                                     : ''}
                             </span>
                             <Button
                                 onClick={() => restore(archive.id, archive.name)}
                                 disabled={busy === `restore-${archive.id}`}
                             >
-                                {busy === `restore-${archive.id}` ? 'Restoring…' : 'Restore'}
+                                {busy === `restore-${archive.id}` ? 'Wird wiederhergestellt …' : 'Wiederherstellen'}
                             </Button>
                             <Button tone="danger" onClick={() => forget(archive.id, archive.name)}>
-                                Delete
+                                Löschen
                             </Button>
                         </li>
                     ))}

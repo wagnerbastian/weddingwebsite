@@ -26,7 +26,7 @@ export async function GET() {
     return NextResponse.json(result.rows);
   } catch (error) {
     console.error('Error fetching guest list:', error);
-    return NextResponse.json({ error: 'Failed to fetch guest list' }, { status: 500 });
+    return NextResponse.json({ error: 'Gästeliste konnte nicht geladen werden' }, { status: 500 });
   }
 }
 
@@ -35,7 +35,7 @@ export async function POST(request: Request) {
     const { guest_name, email, phone, party_size, notes, invited, party_members, address, flag, relationship, plus_one_name, upsert, kind, rsvp_status } = await request.json();
 
     if (typeof guest_name !== 'string' || !guest_name.trim()) {
-      return NextResponse.json({ error: 'guest_name is required' }, { status: 400 });
+      return NextResponse.json({ error: 'Gastname ist erforderlich' }, { status: 400 });
     }
 
     // Schema lives in database/init.sql (including the unique index the
@@ -73,7 +73,7 @@ export async function POST(request: Request) {
     return NextResponse.json(result.rows[0]);
   } catch (error) {
     console.error('Error adding guest:', error);
-    return NextResponse.json({ error: 'Failed to add guest' }, { status: 500 });
+    return NextResponse.json({ error: 'Gast konnte nicht hinzugefügt werden' }, { status: 500 });
   }
 }
 
@@ -193,7 +193,7 @@ export async function PUT(request: Request) {
   } catch (error) {
     await client.query('ROLLBACK').catch(() => {});
     console.error('Error updating guest:', error);
-    return NextResponse.json({ error: 'Failed to update guest' }, { status: 500 });
+    return NextResponse.json({ error: 'Gast konnte nicht aktualisiert werden' }, { status: 500 });
   } finally {
     client.release();
   }
@@ -213,7 +213,7 @@ export async function PATCH(request: Request) {
     // Single-address update — the original behaviour, kept intact.
     if (ids === undefined) {
       if (!id) {
-        return NextResponse.json({ error: 'Missing id' }, { status: 400 });
+        return NextResponse.json({ error: 'ID fehlt' }, { status: 400 });
       }
 
       const result = await pool.query(
@@ -222,7 +222,7 @@ export async function PATCH(request: Request) {
       );
 
       if (result.rowCount === 0) {
-        return NextResponse.json({ error: 'Guest not found' }, { status: 404 });
+        return NextResponse.json({ error: 'Gast nicht gefunden' }, { status: 404 });
       }
 
       return NextResponse.json(result.rows[0]);
@@ -230,7 +230,7 @@ export async function PATCH(request: Request) {
 
     const targets = (Array.isArray(ids) ? ids : []).filter(n => Number.isInteger(n));
     if (targets.length === 0) {
-      return NextResponse.json({ error: 'No guest ids given' }, { status: 400 });
+      return NextResponse.json({ error: 'Keine Gast-IDs angegeben' }, { status: 400 });
     }
 
     const sets: string[] = [];
@@ -258,7 +258,7 @@ export async function PATCH(request: Request) {
     }
 
     if (sets.length === 0) {
-      return NextResponse.json({ error: 'No fields to update' }, { status: 400 });
+      return NextResponse.json({ error: 'Keine Felder zum Aktualisieren' }, { status: 400 });
     }
 
     const result = await pool.query(
@@ -271,7 +271,7 @@ export async function PATCH(request: Request) {
     return NextResponse.json({ success: true, updated: result.rowCount });
   } catch (error) {
     console.error('Error updating guests:', error);
-    return NextResponse.json({ error: 'Failed to update guests' }, { status: 500 });
+    return NextResponse.json({ error: 'Gäste konnten nicht aktualisiert werden' }, { status: 500 });
   }
 }
 
@@ -282,6 +282,6 @@ export async function DELETE(request: Request) {
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error('Error deleting guest:', error);
-    return NextResponse.json({ error: 'Failed to delete guest' }, { status: 500 });
+    return NextResponse.json({ error: 'Gast konnte nicht gelöscht werden' }, { status: 500 });
   }
 }

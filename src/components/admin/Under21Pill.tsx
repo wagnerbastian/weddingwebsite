@@ -18,14 +18,14 @@ export default function Under21Pill({ on, onChange }: {
             type="button"
             aria-pressed={on}
             onClick={() => onChange(!on)}
-            title="Under 21 — eats the adult meal, but is left out of the bar charge"
+            title="Unter 21 – isst das Erwachsenenmenü, wird aber bei der Getränkeabrechnung nicht mitgezählt"
             className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
                 on
                     ? 'bg-amber-600 text-white'
                     : 'bg-gray-50 text-gray-500 hover:bg-gray-100 hover:text-gray-700'
             }`}
         >
-            Under 21
+            Unter 21
         </button>
     );
 }

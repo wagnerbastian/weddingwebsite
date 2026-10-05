@@ -28,15 +28,15 @@ import {
 } from './ui';
 
 const SECTION_TITLES: Record<SheetSection, string> = {
-    plan: 'On the trip',
-    where: 'Where',
-    booking: 'Booking & cost',
-    stay: 'The stay',
-    practical: 'Practical',
-    notes: 'Notes & links',
-    opinions: 'What you two think',
-    photos: 'Photos',
-    nearby: 'Nearby',
+    plan: 'Auf der Reise',
+    where: 'Wo',
+    booking: 'Buchung & Kosten',
+    stay: 'Die Unterkunft',
+    practical: 'Praktisches',
+    notes: 'Notizen & Links',
+    opinions: 'Eure Meinung',
+    photos: 'Fotos',
+    nearby: 'In der Nähe',
 };
 
 /**
@@ -86,11 +86,11 @@ export default function PlaceSheet() {
                 ? { 'data-place-sheet': String(place.id), 'data-sections': sheetSections(place).join(',') }
                 : { 'data-place-sheet': 'form' }}
             title={state.kind === 'new'
-                ? <h2 className="text-lg font-semibold text-gray-900">Add a place</h2>
+                ? <h2 className="text-lg font-semibold text-gray-900">Ort hinzufügen</h2>
                 : place && <SheetTitle place={place} />}
             actions={place && !formMode ? (
                 <>
-                    <Button className="hidden sm:inline-flex" onClick={() => setEditing(true)}>Edit everything</Button>
+                    <Button className="hidden sm:inline-flex" onClick={() => setEditing(true)}>Alles bearbeiten</Button>
                     <PlaceMenu place={place} onEdit={() => setEditing(true)} />
                 </>
             ) : undefined}
@@ -136,23 +136,23 @@ function PlaceMenu({ place, onEdit }: { place: Place; onEdit: () => void }) {
     const { close } = usePlaceSheet();
     return (
         <OverflowMenu items={[
-            { label: 'Edit everything', onClick: onEdit },
+            { label: 'Alles bearbeiten', onClick: onEdit },
             ...(hasCoords(place) ? [{
-                label: 'Show on the map',
+                label: 'Auf der Karte zeigen',
                 onClick: () => { router.push(`/admin/honeymoon/map?place=${place.id}`); },
             }] : []),
             ...(place.needs_review ? [{
-                label: 'Pin looks right',
+                label: 'Pin stimmt',
                 onClick: () => api.patchPlace(place.id, { needs_review: false }),
             }] : []),
             place.is_excursion
-                ? { label: 'Not an excursion', onClick: () => api.patchPlace(place.id, { is_excursion: false }) }
-                : { label: 'Make it an excursion', onClick: () => api.patchPlace(place.id, { is_excursion: true }) },
+                ? { label: 'Kein Ausflug', onClick: () => api.patchPlace(place.id, { is_excursion: false }) }
+                : { label: 'Als Ausflug markieren', onClick: () => api.patchPlace(place.id, { is_excursion: true }) },
             place.archived
-                ? { label: 'Put back on the shortlist', onClick: () => api.patchPlace(place.id, { archived: false }) }
-                : { label: 'Remove from the shortlist', onClick: () => api.patchPlace(place.id, { archived: true }) },
+                ? { label: 'Zurück in die Auswahl', onClick: () => api.patchPlace(place.id, { archived: false }) }
+                : { label: 'Aus der Auswahl entfernen', onClick: () => api.patchPlace(place.id, { archived: true }) },
             {
-                label: 'Delete',
+                label: 'Löschen',
                 danger: true,
                 // Undoable, so no confirm — the toast is the safety net.
                 onClick: () => { close(); void api.removePlaces([place]); },
@@ -182,7 +182,7 @@ function PlaceBody({ place, onEdit }: { place: Place; onEdit: () => void }) {
     const set = (fields: Record<string, unknown>) => api.update('places', { id: place.id, ...fields });
 
     const regionOptions = [
-        { key: '', label: '— no area —' },
+        { key: '', label: '— keine Region —' },
         ...(api.data?.regions ?? []).map((r) => ({ key: String(r.id), label: r.name })),
     ];
 
@@ -190,7 +190,7 @@ function PlaceBody({ place, onEdit }: { place: Place; onEdit: () => void }) {
         plan: (
             <div className="space-y-2">
                 {onDays.length === 0 ? (
-                    <p className="text-sm text-gray-500">Not on any day yet.</p>
+                    <p className="text-sm text-gray-500">Noch an keinem Tag eingeplant.</p>
                 ) : (
                     <ul className="space-y-1">
                         {onDays.map(({ day, asBase }) => (
@@ -201,10 +201,10 @@ function PlaceBody({ place, onEdit }: { place: Place; onEdit: () => void }) {
                                     className="flex min-h-11 md:min-h-0 w-full items-baseline gap-2 rounded-xl px-2 py-1
                                         text-left text-sm text-gray-700 hover:bg-gray-50"
                                 >
-                                    <span className="font-medium">Day {day.day_number}</span>
+                                    <span className="font-medium">Tag {day.day_number}</span>
                                     <span className="text-gray-400">{formatDayDate(startDate, day.day_number) ?? ''}</span>
                                     <span className="min-w-0 flex-1 truncate">{day.title ?? ''}</span>
-                                    {asBase && <span className="text-[11px] text-emerald-700">sleeping here</span>}
+                                    {asBase && <span className="text-[11px] text-emerald-700">übernachtet hier</span>}
                                 </button>
                             </li>
                         ))}
@@ -213,16 +213,16 @@ function PlaceBody({ place, onEdit }: { place: Place; onEdit: () => void }) {
                 {days.length > 0 && (
                     <MiniSelect
                         value=""
-                        aria-label="Add to a day"
+                        aria-label="Zu einem Tag hinzufügen"
                         onChange={async (e) => {
                             const dayId = Number(e.target.value);
                             if (dayId) await api.create('stops', { day_id: dayId, place_id: place.id });
                         }}
                     >
-                        <option value="">+ Add to a day…</option>
+                        <option value="">+ Zu einem Tag hinzufügen …</option>
                         {days.map((day) => (
                             <option key={day.id} value={day.id}>
-                                Day {day.day_number}{day.title ? ` — ${day.title}` : ''}
+                                Tag {day.day_number}{day.title ? ` — ${day.title}` : ''}
                             </option>
                         ))}
                     </MiniSelect>
@@ -231,16 +231,16 @@ function PlaceBody({ place, onEdit }: { place: Place; onEdit: () => void }) {
         ),
         where: (
             <div className="space-y-2">
-                <Field label="Address">
-                    <InlineText value={place.address ?? ''} placeholder="+ Add an address"
+                <Field label="Adresse">
+                    <InlineText value={place.address ?? ''} placeholder="+ Adresse hinzufügen"
                         onCommit={(address) => set({ address })} />
                 </Field>
-                <Field label="Area">
+                <Field label="Region">
                     <CustomisableSelect
                         compact
-                        label={`Area for ${place.name}`}
+                        label={`Region für ${place.name}`}
                         value={place.region_id != null ? String(place.region_id) : ''}
-                        placeholder="Ubud, Seminyak…"
+                        placeholder="Ubud, Seminyak …"
                         options={regionOptions}
                         onChange={(next) => set({ region_id: next === '' ? null : Number(next) })}
                         onCreate={async (typed) => {
@@ -254,7 +254,7 @@ function PlaceBody({ place, onEdit }: { place: Place; onEdit: () => void }) {
                 </Field>
                 {hasCoords(place) ? (
                     <div className="flex flex-wrap gap-2 pt-1">
-                        <LinkPill href={navUrl(place)} dark>Directions</LinkPill>
+                        <LinkPill href={navUrl(place)} dark>Route</LinkPill>
                         <LinkPill href={`https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${place.lat},${place.lng}`}>
                             Street View
                         </LinkPill>
@@ -264,29 +264,29 @@ function PlaceBody({ place, onEdit }: { place: Place; onEdit: () => void }) {
                             className="min-h-11 md:min-h-0 rounded-full border border-gray-200 px-3 py-1.5 text-xs
                                 font-medium text-gray-700 hover:bg-gray-50"
                         >
-                            Show on the map
+                            Auf der Karte zeigen
                         </button>
                     </div>
                 ) : (
                     <div className="flex flex-wrap items-center gap-2">
-                        <span className="text-xs text-amber-700">Not pinned yet — it won&apos;t show on the map.</span>
-                        <Button onClick={onEdit}>Find it</Button>
+                        <span className="text-xs text-amber-700">Noch kein Pin – der Ort erscheint nicht auf der Karte.</span>
+                        <Button onClick={onEdit}>Finden</Button>
                     </div>
                 )}
                 {place.needs_review && hasCoords(place) && (
                     <div className="flex items-center justify-between gap-2 rounded-2xl bg-amber-50 px-3 py-2">
-                        <span className="text-xs text-amber-800">Placed automatically — check it.</span>
-                        <Button onClick={() => api.patchPlace(place.id, { needs_review: false })}>Looks right</Button>
+                        <span className="text-xs text-amber-800">Automatisch platziert – bitte prüfen.</span>
+                        <Button onClick={() => api.patchPlace(place.id, { needs_review: false })}>Stimmt</Button>
                     </div>
                 )}
             </div>
         ),
         booking: (
             <div className="space-y-2">
-                <Field label="Price">
+                <Field label="Preis">
                     <InlineText
                         value={priceText(place, home)}
-                        placeholder={place.category === 'stay' ? '+ Price per night — type 250' : '+ Price — type 40'}
+                        placeholder={place.category === 'stay' ? '+ Preis pro Nacht – z. B. 250 eintippen' : '+ Preis – z. B. 40 eintippen'}
                         onCommit={(typed) => set(pricePatch(place, typed, home))}
                     />
                 </Field>
@@ -296,18 +296,18 @@ function PlaceBody({ place, onEdit }: { place: Place; onEdit: () => void }) {
         stay: <StaySection place={place} />,
         practical: (
             <div className="space-y-1">
-                <Field label="Hours">
+                <Field label="Öffnungszeiten">
                     <InlineText value={place.opening_hours ?? ''} placeholder="+ Mo-Su 09:00-18:00"
                         onCommit={(opening_hours) => set({ opening_hours })} />
                     {place.opening_hours && describeHours(place.opening_hours) && (
                         <p className="px-2 text-[11px] text-gray-400">{describeHours(place.opening_hours)}</p>
                     )}
                 </Field>
-                <Field label="Best time">
-                    <InlineText value={place.best_time ?? ''} placeholder="+ Sunrise · avoid weekends"
+                <Field label="Beste Zeit">
+                    <InlineText value={place.best_time ?? ''} placeholder="+ Sonnenaufgang · Wochenenden meiden"
                         onCommit={(best_time) => set({ best_time })} />
                 </Field>
-                <Field label="Type">
+                <Field label="Typ">
                     <CategorySelect
                         value={place.category}
                         places={api.data?.places ?? []}
@@ -321,7 +321,7 @@ function PlaceBody({ place, onEdit }: { place: Place; onEdit: () => void }) {
                         {place.amenities.join(' · ')}
                     </p>
                 )}
-                <p className="px-2 pt-1 text-[11px] text-gray-400">Source: {sourceLabel(place.source)}</p>
+                <p className="px-2 pt-1 text-[11px] text-gray-400">Quelle: {sourceLabel(place.source)}</p>
             </div>
         ),
         notes: (
@@ -329,7 +329,7 @@ function PlaceBody({ place, onEdit }: { place: Place; onEdit: () => void }) {
                 <InlineText
                     multiline
                     value={place.description ?? ''}
-                    placeholder="+ Notes — what you liked, when to go, what to book…"
+                    placeholder="+ Notizen – was euch gefallen hat, wann ihr hinfahren solltet, was zu buchen ist …"
                     className="-ml-2 text-sm text-gray-700"
                     onCommit={(description) => set({ description })}
                 />
@@ -353,7 +353,7 @@ function PlaceBody({ place, onEdit }: { place: Place; onEdit: () => void }) {
                         ))}
                     </ul>
                 )}
-                {listing && <Button onClick={() => setPreviewing(true)}>Preview the listing</Button>}
+                {listing && <Button onClick={() => setPreviewing(true)}>Angebot in der Vorschau ansehen</Button>}
             </div>
         ),
         opinions: (
@@ -364,7 +364,7 @@ function PlaceBody({ place, onEdit }: { place: Place; onEdit: () => void }) {
         ),
         photos: <PlacePhotos api={api} place={place} compact />,
         nearby: nearby.length === 0 ? (
-            <p className="text-sm text-gray-500">Nothing else pinned within 8 km.</p>
+            <p className="text-sm text-gray-500">Im Umkreis von 8 km ist nichts weiter gepinnt.</p>
         ) : (
             <ul className="space-y-0.5">
                 {nearby.map(({ place: other, km }) => (
@@ -400,8 +400,8 @@ function PlaceBody({ place, onEdit }: { place: Place; onEdit: () => void }) {
                 {place.rank != null && (
                     <span className="rounded-full bg-gray-900 px-2 py-0.5 text-[11px] font-semibold text-white">#{place.rank}</span>
                 )}
-                {place.is_excursion && <span className="rounded-full bg-sky-100 px-2 py-0.5 text-[11px] text-sky-800">Excursion</span>}
-                {place.archived && <span className="rounded-full bg-gray-100 px-2 py-0.5 text-[11px] text-gray-600">Removed</span>}
+                {place.is_excursion && <span className="rounded-full bg-sky-100 px-2 py-0.5 text-[11px] text-sky-800">Ausflug</span>}
+                {place.archived && <span className="rounded-full bg-gray-100 px-2 py-0.5 text-[11px] text-gray-600">Entfernt</span>}
                 <CategoryChip category={place.category} />
             </div>
 
@@ -435,14 +435,14 @@ function StaySection({ place }: { place: Place }) {
     const checks = (api.data?.price_checks ?? []).filter((c) => c.place_id === place.id);
     return (
         <dl className="space-y-1 text-sm">
-            <Row label="Nights on the itinerary">{nights || 'none yet'}</Row>
+            <Row label="Nächte im Reiseplan">{nights || 'noch keine'}</Row>
             {booking?.check_in && (
-                <Row label="Booked">
+                <Row label="Gebucht">
                     {formatDate(booking.check_in)} → {formatDate(booking.check_out) ?? '?'}
                 </Row>
             )}
             {checks.map((check, index) => (
-                <Row key={`${check.checked_at}-${index}`} label={index === 0 ? 'Last price check' : 'Before that'}>
+                <Row key={`${check.checked_at}-${index}`} label={index === 0 ? 'Letzte Preisprüfung' : 'Davor'}>
                     {check.amount != null ? formatMoney(check.amount, check.currency || home) : check.price_note ?? '—'}
                     {check.checked_at && <span className="text-gray-400"> · {formatDate(check.checked_at.slice(0, 10))}</span>}
                 </Row>

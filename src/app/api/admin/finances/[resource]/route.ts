@@ -178,13 +178,13 @@ function coerce(field: Field, raw: unknown, key = 'value'): unknown {
             // failure a ledger can have, so it is a 400, not a default.
             if (raw == null || raw === '') return 0;
             const n = parseAmount(raw);
-            if (n == null) throw new BadValue(`${key} must be a number`);
+            if (n == null) throw new BadValue(`„${key}“ muss eine Zahl sein`);
             return n;
         }
         case 'int': {
             if (raw == null || raw === '') return 0;
             const n = parseAmount(raw);
-            if (n == null) throw new BadValue(`${key} must be a whole number`);
+            if (n == null) throw new BadValue(`„${key}“ muss eine ganze Zahl sein`);
             return Math.trunc(n);
         }
         case 'bool':
@@ -197,7 +197,7 @@ function coerce(field: Field, raw: unknown, key = 'value'): unknown {
         }
         case 'enum':
             if (field.values?.includes(String(raw))) return String(raw);
-            throw new BadValue(`${key} must be one of ${field.values?.join(', ')}`);
+            throw new BadValue(`„${key}“ muss einer der folgenden Werte sein: ${field.values?.join(', ')}`);
     }
 }
 
@@ -243,7 +243,7 @@ async function updateSettings(body: Record<string, unknown>) {
     for (const [key, field] of Object.entries(SETTINGS_FIELDS)) {
         if (key in body) { columns.push(key); values.push(coerce(field, body[key], key)); }
     }
-    if (!columns.length) return NextResponse.json({ error: 'No fields to update' }, { status: 400 });
+    if (!columns.length) return NextResponse.json({ error: 'Keine Felder zum Aktualisieren' }, { status: 400 });
     const sets = columns.map((c, i) => `${c} = $${i + 1}`).join(', ');
     const result = await pool.query(
         `UPDATE finance_settings SET ${sets} WHERE id = 1 RETURNING *`, values,
@@ -262,19 +262,19 @@ export async function POST(request: Request, { params }: Params) {
         if (resource === 'settings') return await updateSettings(body);
 
         const def = resolve(resource);
-        if (!def) return NextResponse.json({ error: 'Unknown resource' }, { status: 404 });
+        if (!def) return NextResponse.json({ error: 'Unbekannte Ressource' }, { status: 404 });
 
         for (const key of def.required) {
             const value = body[key];
             const missing = value == null || value === ''
                 || (def.fields[key]?.kind === 'ref' && coerce(def.fields[key], value, key) == null);
             if (missing) {
-                return NextResponse.json({ error: `${key} is required` }, { status: 400 });
+                return NextResponse.json({ error: `„${key}“ ist erforderlich` }, { status: 400 });
             }
         }
 
         const { columns, values } = collect(def, body);
-        if (!columns.length) return NextResponse.json({ error: 'No fields provided' }, { status: 400 });
+        if (!columns.length) return NextResponse.json({ error: 'Keine Felder übergeben' }, { status: 400 });
         applyTargetExclusivity(def, columns, values);
 
         const placeholders = columns.map((_, i) => `$${i + 1}`).join(', ');
@@ -286,7 +286,7 @@ export async function POST(request: Request, { params }: Params) {
     } catch (error) {
         if (error instanceof BadValue) return NextResponse.json({ error: error.message }, { status: 400 });
         console.error(`Error creating ${resource}:`, error);
-        return NextResponse.json({ error: `Failed to create ${resource}` }, { status: 500 });
+        return NextResponse.json({ error: `Erstellen fehlgeschlagen (${resource})` }, { status: 500 });
     }
 }
 
@@ -301,7 +301,7 @@ export async function PATCH(request: Request, { params }: Params) {
         if (resource === 'settings') return await updateSettings(await request.json());
 
         const def = resolve(resource);
-        if (!def) return NextResponse.json({ error: 'Unknown resource' }, { status: 404 });
+        if (!def) return NextResponse.json({ error: 'Unbekannte Ressource' }, { status: 404 });
 
         const body = await request.json();
 
@@ -349,11 +349,11 @@ export async function PATCH(request: Request, { params }: Params) {
             const ids = body.ids
                 .map((raw: unknown) => Math.trunc(Number(raw)))
                 .filter((n: number) => Number.isFinite(n) && n > 0);
-            if (!ids.length) return NextResponse.json({ error: 'No valid ids' }, { status: 400 });
+            if (!ids.length) return NextResponse.json({ error: 'Keine gültigen IDs' }, { status: 400 });
             const { columns, values } = collect(def, body);
             applyTargetExclusivity(def, columns, values);
             stampThankYou(def, body, columns, values);
-            if (!columns.length) return NextResponse.json({ error: 'No fields to update' }, { status: 400 });
+            if (!columns.length) return NextResponse.json({ error: 'Keine Felder zum Aktualisieren' }, { status: 400 });
             const sets = columns.map((c, i) => `${c} = $${i + 1}`).join(', ');
             const result = await pool.query(
                 `UPDATE ${def.table} SET ${sets} WHERE id = ANY($${columns.length + 1})`,
@@ -364,11 +364,11 @@ export async function PATCH(request: Request, { params }: Params) {
 
         const id = Math.trunc(Number(body.id));
         if (!Number.isFinite(id) || id <= 0) {
-            return NextResponse.json({ error: 'Valid id required' }, { status: 400 });
+            return NextResponse.json({ error: 'Gültige ID erforderlich' }, { status: 400 });
         }
 
         const { columns, values } = collect(def, body);
-        if (!columns.length) return NextResponse.json({ error: 'No fields to update' }, { status: 400 });
+        if (!columns.length) return NextResponse.json({ error: 'Keine Felder zum Aktualisieren' }, { status: 400 });
         applyTargetExclusivity(def, columns, values);
         stampThankYou(def, body, columns, values);
 
@@ -377,12 +377,12 @@ export async function PATCH(request: Request, { params }: Params) {
             `UPDATE ${def.table} SET ${sets} WHERE id = $${columns.length + 1} RETURNING *`,
             [...values, id],
         );
-        if (!result.rowCount) return NextResponse.json({ error: 'Not found' }, { status: 404 });
+        if (!result.rowCount) return NextResponse.json({ error: 'Nicht gefunden' }, { status: 404 });
         return NextResponse.json(result.rows[0]);
     } catch (error) {
         if (error instanceof BadValue) return NextResponse.json({ error: error.message }, { status: 400 });
         console.error(`Error updating ${resource}:`, error);
-        return NextResponse.json({ error: `Failed to update ${resource}` }, { status: 500 });
+        return NextResponse.json({ error: `Aktualisieren fehlgeschlagen (${resource})` }, { status: 500 });
     }
 }
 
@@ -391,19 +391,19 @@ export async function DELETE(request: Request, { params }: Params) {
     try {
         await ensureFinanceTables();
         const def = resolve(resource);
-        if (!def) return NextResponse.json({ error: 'Unknown resource' }, { status: 404 });
+        if (!def) return NextResponse.json({ error: 'Unbekannte Ressource' }, { status: 404 });
 
         const id = Math.trunc(Number(new URL(request.url).searchParams.get('id')));
         if (!Number.isFinite(id) || id <= 0) {
-            return NextResponse.json({ error: 'Valid id required' }, { status: 400 });
+            return NextResponse.json({ error: 'Gültige ID erforderlich' }, { status: 400 });
         }
 
         const result = await pool.query(`DELETE FROM ${def.table} WHERE id = $1`, [id]);
-        if (!result.rowCount) return NextResponse.json({ error: 'Not found' }, { status: 404 });
+        if (!result.rowCount) return NextResponse.json({ error: 'Nicht gefunden' }, { status: 404 });
         return NextResponse.json({ success: true });
     } catch (error) {
         if (error instanceof BadValue) return NextResponse.json({ error: error.message }, { status: 400 });
         console.error(`Error deleting ${resource}:`, error);
-        return NextResponse.json({ error: `Failed to delete ${resource}` }, { status: 500 });
+        return NextResponse.json({ error: `Löschen fehlgeschlagen (${resource})` }, { status: 500 });
     }
 }

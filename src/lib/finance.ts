@@ -253,10 +253,10 @@ export function paidState(paid: number, budget: number, override: boolean): Paid
 }
 
 export const PAID_STATE_LABEL: Record<PaidState, string> = {
-    unpaid: 'Not paid',
-    partial: 'Part paid',
-    paid: 'Paid',
-    overpaid: 'Overpaid',
+    unpaid: 'Offen',
+    partial: 'Teilweise',
+    paid: 'Bezahlt',
+    overpaid: 'Zu viel',
 };
 
 export interface ItemSummary {
@@ -629,10 +629,10 @@ export function buildSummary(input: SummaryInput): FinanceSummary {
         return {
             ...sp,
             targetName: sp.item_id != null
-                ? itemName.get(sp.item_id) ?? 'Deleted line'
+                ? itemName.get(sp.item_id) ?? 'Gelöschter Posten'
                 : sp.category_id != null
-                    ? categoryName.get(sp.category_id) ?? 'Deleted section'
-                    : 'Whole wedding',
+                    ? categoryName.get(sp.category_id) ?? 'Gelöschter Bereich'
+                    : 'Ganze Hochzeit',
             daysUntilDue: days,
             isOverdue: !sp.settled && days != null && days < 0,
             isDueSoon: !sp.settled && days != null && days >= 0 && days <= 30,
@@ -670,9 +670,9 @@ export function buildSummary(input: SummaryInput): FinanceSummary {
         warnings.push({
             kind: 'no-drinkers',
             message: drinkerLines.length === 1
-                ? `${drinkerLines[0].name} is charged per drinker, but nobody is counted as drinking.`
-                : `${drinkerLines.length} lines are charged per drinker, but nobody is counted as drinking.`,
-            detail: 'Set the Drinkers count in Settings — until you do, these lines total $0.',
+                ? `${drinkerLines[0].name} wird pro trinkender Person berechnet, aber niemand ist als trinkend eingetragen.`
+                : `${drinkerLines.length} Posten werden pro trinkender Person berechnet, aber niemand ist als trinkend eingetragen.`,
+            detail: 'Trage in den Einstellungen die Zahl der Trinkenden ein – bis dahin ergeben diese Posten 0 $.',
             amount: 0,
         });
     }
@@ -684,14 +684,14 @@ export function buildSummary(input: SummaryInput): FinanceSummary {
     if (drinkerLines.length === 0 && num(settings.drinking_count) > 0) {
         warnings.push({
             kind: 'drinkers-unused',
-            message: `${num(settings.drinking_count)} people are counted as drinking, but no budget line is charged per drinker.`,
-            detail: 'Set a line\u2019s Qty from to Drinkers (21+) \u2014 usually the bar \u2014 or the count changes nothing.',
+            message: `${num(settings.drinking_count)} Personen sind als trinkend eingetragen, aber kein Budgetposten wird pro trinkender Person berechnet.`,
+            detail: 'Stelle bei einem Posten – meist der Bar – „Menge nach“ auf „Trinkende (21+)“, sonst ändert die Zahl nichts.',
             amount: 0,
         });
     }
 
     const normalise = (text: string) =>
-        text.toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+        text.toLowerCase().replace(/[^a-z0-9äöüß]+/g, ' ').trim();
     for (let i = 0; i < purchases.length; i += 1) {
         for (let j = i + 1; j < purchases.length; j += 1) {
             const a = purchases[i];
@@ -703,10 +703,10 @@ export function buildSummary(input: SummaryInput): FinanceSummary {
             if (sameTarget || shared.length > 0) {
                 warnings.push({
                     kind: sameTarget ? 'same-amount' : 'similar-name',
-                    message: `"${a.description}" and "${b.description}" are both ${formatMoney(num(a.amount))}`,
+                    message: `„${a.description}“ und „${b.description}“ betragen beide ${formatMoney(num(a.amount))}`,
                     detail: sameTarget
-                        ? 'Same amount against the same budget line — possibly logged twice.'
-                        : 'Same amount and overlapping wording — possibly logged twice.',
+                        ? 'Gleicher Betrag beim selben Budgetposten – möglicherweise doppelt erfasst.'
+                        : 'Gleicher Betrag und ähnliche Bezeichnung – möglicherweise doppelt erfasst.',
                     amount: money(num(a.amount)),
                 });
             }
@@ -716,8 +716,8 @@ export function buildSummary(input: SummaryInput): FinanceSummary {
         if (item.total > 0 && item.paid > item.total * 2) {
             warnings.push({
                 kind: 'over-line',
-                message: `${item.name}: ${formatMoney(item.paid)} paid against a ${formatMoney(item.total)} budget`,
-                detail: 'More than double the budgeted amount — check the budget figure or the payments.',
+                message: `${item.name}: ${formatMoney(item.paid)} bezahlt bei einem Budget von ${formatMoney(item.total)}`,
+                detail: 'Mehr als das Doppelte des Budgets – prüfe den Budgetwert oder die Zahlungen.',
                 amount: money(item.paid - item.total),
             });
         }
@@ -766,6 +766,6 @@ export function buildSummary(input: SummaryInput): FinanceSummary {
 
 export function formatMoney(value: number): string {
     const n = num(value);
-    const s = Math.abs(n).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-    return `${n < 0 ? '-' : ''}$${s}`;
+    const s = Math.abs(n).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    return `${n < 0 ? '-' : ''}${s}\u00a0$`;
 }

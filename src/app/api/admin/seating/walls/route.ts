@@ -37,7 +37,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ success: true, wall: result.rows[0] });
   } catch (error) {
     console.error(error);
-    return NextResponse.json({ error: 'Failed to save wall' }, { status: 500 });
+    return NextResponse.json({ error: 'Wand konnte nicht gespeichert werden' }, { status: 500 });
   } finally {
     client.release();
   }
@@ -51,7 +51,7 @@ export async function DELETE(request: Request) {
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error(error);
-    return NextResponse.json({ error: 'Failed to delete wall' }, { status: 500 });
+    return NextResponse.json({ error: 'Wand konnte nicht gelöscht werden' }, { status: 500 });
   } finally {
     client.release();
   }

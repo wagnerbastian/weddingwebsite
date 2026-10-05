@@ -318,16 +318,16 @@ async function fetchClimate(point: LatLng, dateIso: string): Promise<DayWeather 
 /** Open-Meteo's WMO codes, in the words a person would use. */
 export function weatherLabel(code: number | null): string | null {
     if (code == null) return null;
-    if (code === 0) return 'Clear';
-    if (code <= 2) return 'Mostly sunny';
-    if (code === 3) return 'Overcast';
-    if (code <= 48) return 'Fog';
-    if (code <= 57) return 'Drizzle';
-    if (code <= 67) return 'Rain';
-    if (code <= 77) return 'Snow';
-    if (code <= 82) return 'Showers';
-    if (code <= 86) return 'Snow showers';
-    return 'Thunderstorms';
+    if (code === 0) return 'Klar';
+    if (code <= 2) return 'Überwiegend sonnig';
+    if (code === 3) return 'Bedeckt';
+    if (code <= 48) return 'Nebel';
+    if (code <= 57) return 'Nieselregen';
+    if (code <= 67) return 'Regen';
+    if (code <= 77) return 'Schnee';
+    if (code <= 82) return 'Schauer';
+    if (code <= 86) return 'Schneeschauer';
+    return 'Gewitter';
 }
 
 /* ------------------------------------------------------------------ */
@@ -448,7 +448,7 @@ export async function flightLookup(flightNumber: string, dateIso: string): Promi
 
     const clean = flightNumber.replace(/\s+/g, '').toUpperCase();
     if (!/^[A-Z0-9]{2,3}\d{1,4}$/.test(clean)) {
-        return { configured: true, flight: null, error: 'That does not look like a flight number' };
+        return { configured: true, flight: null, error: 'Das sieht nicht nach einer Flugnummer aus' };
     }
 
     const host = process.env.FLIGHT_API_HOST || 'aerodatabox.p.rapidapi.com';
@@ -481,16 +481,16 @@ export async function flightLookup(flightNumber: string, dateIso: string): Promi
             }
             return {
                 rows: null,
-                error: 'The lookup service is rate-limiting us — try again in a moment.',
+                error: 'Der Abfragedienst begrenzt gerade die Anfragen – versuch es gleich noch einmal.',
             };
         }
-        if (!res.ok) return { rows: null, error: `The lookup service said ${res.status}` };
+        if (!res.ok) return { rows: null, error: `Der Abfragedienst antwortete mit ${res.status}` };
         const text = await res.text();
         if (!text.trim()) return null;
         try {
             return { rows: JSON.parse(text) };
         } catch {
-            return { rows: null, error: 'The lookup service sent something unreadable' };
+            return { rows: null, error: 'Der Abfragedienst hat etwas Unlesbares geschickt' };
         }
     };
 
@@ -522,10 +522,10 @@ export async function flightLookup(flightNumber: string, dateIso: string): Promi
         return {
             configured: true,
             flight: null,
-            error: `No schedule found for ${clean}. Check the number, or enter the times by hand.`,
+            error: `Kein Flugplan gefunden für ${clean}. Prüfe die Nummer oder trag die Zeiten von Hand ein.`,
         };
     } catch {
-        return { configured: true, flight: null, error: 'Could not reach the lookup service' };
+        return { configured: true, flight: null, error: 'Der Abfragedienst ist nicht erreichbar' };
     }
 }
 

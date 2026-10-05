@@ -99,7 +99,7 @@ console.log('\nWho takes a chair');
 
     const unnamed = guest(5, 'Mabel Grey', 3, [{ name: null }, { name: null }]);
     check('an unnamed slot is seated under a placeholder',
-        partyAttendees(unnamed).map(p => p.name).join(', ') === "Mabel Grey, Mabel's guest 1, Mabel's guest 2",
+        partyAttendees(unnamed).map(p => p.name).join(', ') === "Mabel Grey, Begleitung 1 von Mabel, Begleitung 2 von Mabel",
         partyAttendees(unnamed).map(p => p.name).join(', '));
 
     // party_size is the authority: a plus-one left on a party since shrunk to one
@@ -145,7 +145,7 @@ console.log('\nWho takes a chair');
     // an unnamed slot like any other — not a person called "(Collin's Date)".
     const onlyNote = guest(11, 'Collin Woldt', 2, [], { plus_one_name: "(Collin's Date)" });
     check('a plus-one that is only a note is an unnamed slot',
-        partyAttendees(onlyNote).map(p => p.name).join(', ') === "Collin Woldt, Collin's guest 1",
+        partyAttendees(onlyNote).map(p => p.name).join(', ') === "Collin Woldt, Begleitung 1 von Collin",
         partyAttendees(onlyNote).map(p => p.name).join(', '));
 
     // The guest editor writes `party_members` and has no plus-one field — that
@@ -441,7 +441,7 @@ console.log('\nWhat is wrong with the plan');
     const familyIssues = seatingIssues([familyTable], [guest(1, 'A', 5)]).filter(i => i.kind === 'declined-seated');
     check('a table full of people who declined is one line, not five', familyIssues.length === 1, `${familyIssues.length} lines`);
     check('that line names a few and counts the rest',
-        familyIssues[0].label.includes('5 people') && familyIssues[0].label.includes('and 2 more'),
+        familyIssues[0].label.includes('5 Personen') && familyIssues[0].label.includes('und 2 weitere'),
         familyIssues[0].label);
     check('that line still points at every chair to free', familyIssues[0].seats.length === 5);
 
@@ -504,13 +504,13 @@ console.log('\nWhat is wrong with the plan');
 {
     console.log('\nRSVP against the chart');
 
-    const over = table(1, 'Table 1', 8, [seat(0, 'Ada', 1, 1), seat(1, "Ada's guest 1", 1)]);
+    const over = table(1, 'Table 1', 8, [seat(0, 'Ada', 1, 1), seat(1, 'Begleitung 1 von Ada', 1)]);
     const overIssues = seatingIssues([over], [guest(1, 'Ada', 2, [], { rsvp_guests: 1 })]);
     check('a party holding more chairs than it answered for is flagged',
         overIssues.some(i => i.kind === 'rsvp-mismatch'), JSON.stringify(overIssues.map(i => i.kind)));
     check('that line says both numbers',
-        overIssues.find(i => i.kind === 'rsvp-mismatch')!.label.includes('answered for 1')
-        && overIssues.find(i => i.kind === 'rsvp-mismatch')!.label.includes('2 chairs'));
+        overIssues.find(i => i.kind === 'rsvp-mismatch')!.label.includes('für 1 zugesagt')
+        && overIssues.find(i => i.kind === 'rsvp-mismatch')!.label.includes('2 Stühle'));
     check('that line points at the chairs to free',
         overIssues.find(i => i.kind === 'rsvp-mismatch')!.seats.length === 2);
 
@@ -518,7 +518,7 @@ console.log('\nWhat is wrong with the plan');
     const underIssue = seatingIssues([under], [guest(1, 'Ada', 4, [], { rsvp_guests: 4 })])
         .find(i => i.kind === 'rsvp-mismatch')!;
     check('a party short a chair is flagged too', underIssue !== undefined);
-    check('and reads as short, not spare', underIssue.label.includes('only 3 chairs'), underIssue.label);
+    check('and reads as short, not spare', underIssue.label.includes('nur 3 Stühle'), underIssue.label);
 
     check('a party seated for exactly what it answered is not flagged',
         seatingIssues([over], [guest(1, 'Ada', 4, [], { rsvp_guests: 2 })])
@@ -545,7 +545,7 @@ console.log('\nWhat is wrong with the plan');
     ]).find(i => i.kind === 'rsvp-off-list')!;
     check('RSVPs matching no household are flagged', offList !== undefined);
     check('that line counts the people, not the forms',
-        offList.label.includes('3 people'), offList.label);
+        offList.label.includes('3 Personen'), offList.label);
     check('and names them', offList.label.includes('Greg') && offList.label.includes('Olive'));
     check('no off-list RSVPs, no line',
         seatingIssues([table(1, 'Table 1', 8, [])], []).every(i => i.kind !== 'rsvp-off-list'));
@@ -636,16 +636,16 @@ console.log('\nExporting the chart');
         ALL_DIET_CODES.includes('KID') && ALL_DIET_CODES.includes('NOM'));
 
     const parts = tallyParts(t, 8);
-    check('the tally leads with seats of capacity', parts[0] === '5 seated of 8', parts[0]);
+    check('the tally leads with seats of capacity', parts[0] === '5 besetzt von 8', parts[0]);
     check('a restriction nobody has is left out', parts.every(p => !p.startsWith('0 ')), parts.join(' · '));
     check('the tally ends with the plates that carry no restriction — the chicken',
-        parts[parts.length - 1] === '2 chicken', parts[parts.length - 1]);
+        parts[parts.length - 1] === '2 Hähnchen', parts[parts.length - 1]);
     check('with no capacity it just says seated',
-        tallyParts(tally(table1))[0] === '5 seated');
+        tallyParts(tally(table1))[0] === '5 besetzt');
     check('an empty table still reads as zero',
-        tallyParts(tally([]), 10)[0] === '0 seated of 10');
+        tallyParts(tally([]), 10)[0] === '0 besetzt von 10');
     check('a block with no chairs names its own leading number',
-        tallyParts(t, null, 'plates')[0] === '5 plates', tallyParts(t, null, 'plates')[0]);
+        tallyParts(t, null, 'Mahlzeiten')[0] === '5 Mahlzeiten', tallyParts(t, null, 'Mahlzeiten')[0]);
 
     // The two-column counts sheet gets half a page per table, and its heading
     // already says "5/8" — so the short form drops the headcount and uses the
@@ -667,7 +667,7 @@ console.log('\nExporting the chart');
             .map(c => c.code).join(',') === 'VEG,VGN,GF,NUT,OTH,',
         tallyChips({ ...t, VGN: 1, GF: 1, NUT: 1, OTH: 1 }).map(c => c.code).join(','));
     check('the two sheets name the bucket from one place',
-        NO_RESTRICTION_LABEL === 'Chicken', NO_RESTRICTION_LABEL);
+        NO_RESTRICTION_LABEL === 'Hähnchen', NO_RESTRICTION_LABEL);
 
     /* free chairs */
     const exTable = (seat_count: number, people: ExportPerson[]) => ({
@@ -683,7 +683,7 @@ console.log('\nExporting the chart');
     check('a parenthetical note is not the surname',
         surname("Natalie Williams (Zack's Girlfriend)") === 'Williams');
     check('a one-word name sorts under itself', surname('Cher') === 'Cher');
-    check('an unnamed companion still sorts', surname("Anna's guest 1") === '1');
+    check('an unnamed companion still sorts', surname('Begleitung 1 von Anna') === 'Anna');
 
     const data: SeatingExportData = {
         title: 'Nora & Elliot',
@@ -717,16 +717,16 @@ console.log('\nExporting the chart');
         rows.every(r => r.length === csvHeaders(opts).length));
     check('each restriction is its own yes/blank column, for pivoting',
         csvHeaders(opts).includes('Vegan')
-        && rows.find(r => r[2] === 'Ada Marsh')?.[csvHeaders(opts).indexOf('Vegan')] === 'yes');
+        && rows.find(r => r[2] === 'Ada Marsh')?.[csvHeaders(opts).indexOf('Vegan')] === 'ja');
     check('someone with no restriction leaves those columns blank',
         rows.find(r => r[2] === 'Bo Zeller')?.[csvHeaders(opts).indexOf('Vegan')] === '');
     check('an unseated person says so rather than claiming a table',
-        rows.find(r => r[2] === 'Di Nolan')?.[0] === 'Not seated');
+        rows.find(r => r[2] === 'Di Nolan')?.[0] === 'Ohne Platz');
     check('turning the unseated off drops their rows',
         csvRows(data, { ...opts, unseated: false }).length === 3);
     check('household and side are columns only when asked for',
-        !csvHeaders(opts).includes('Household')
-        && csvHeaders({ ...opts, household: true, side: true }).includes('Side'));
+        !csvHeaders(opts).includes('Gruppe')
+        && csvHeaders({ ...opts, household: true, side: true }).includes('Seite'));
 
     /* vendors */
     check('vendors sort by role, then by name',
@@ -750,28 +750,28 @@ console.log('\nExporting the chart');
     const withVendors: ExportOptions = { ...opts, vendors: true };
     const vendorRows = csvRows(data, withVendors);
     check('vendors are off the spreadsheet until asked for',
-        csvRows(data, opts).every(r => r[0] !== 'Vendor'));
+        csvRows(data, opts).every(r => r[0] !== 'Dienstleister'));
     check('asking for them adds one row per vendor',
         vendorRows.length === rows.length + data.vendors.length, String(vendorRows.length));
     check('a vendor row still has a cell for every column',
         vendorRows.every(r => r.length === csvHeaders(withVendors).length));
     check('a vendor brings a Role and a Meal column rather than borrowing guest ones',
-        csvHeaders(withVendors).includes('Role') && csvHeaders(withVendors).includes('Meal')
-        && !csvHeaders(opts).includes('Role'));
+        csvHeaders(withVendors).includes('Rolle') && csvHeaders(withVendors).includes('Mahlzeit')
+        && !csvHeaders(opts).includes('Rolle'));
     // Every guest row is a plate, so the column totals every plate the *file*
     // lists — which is the printed grand total plus anyone not seated yet, since
     // the sheet counts chairs and the spreadsheet counts people.
     check('every guest counts as a meal, so the Meal column totals the plates in the file',
-        vendorRows.filter(r => r[csvHeaders(withVendors).indexOf('Meal')] === 'yes').length === 7,
-        String(vendorRows.filter(r => r[csvHeaders(withVendors).indexOf('Meal')] === 'yes').length));
+        vendorRows.filter(r => r[csvHeaders(withVendors).indexOf('Mahlzeit')] === 'ja').length === 7,
+        String(vendorRows.filter(r => r[csvHeaders(withVendors).indexOf('Mahlzeit')] === 'ja').length));
     check('and dropping the unseated brings it back to the printed grand total',
         csvRows(data, { ...withVendors, unseated: false })
-            .filter(r => r[csvHeaders(withVendors).indexOf('Meal')] === 'yes').length
+            .filter(r => r[csvHeaders(withVendors).indexOf('Mahlzeit')] === 'ja').length
             === grandTotal(seatedPeople(data), data.vendors));
     check("a vendor's restriction reaches the spreadsheet",
-        vendorRows.find(r => r[2] === 'Wes Okafor')?.[csvHeaders(withVendors).indexOf('Nut allergy')] === 'yes');
+        vendorRows.find(r => r[2] === 'Wes Okafor')?.[csvHeaders(withVendors).indexOf('Nussallergie')] === 'ja');
     check('a vendor is filed as a vendor, not as an unseated guest',
-        vendorRows.find(r => r[2] === 'Ivy Lund')?.[0] === 'Vendor');
+        vendorRows.find(r => r[2] === 'Ivy Lund')?.[0] === 'Dienstleister');
 
     /* fitting on one page */
     check('a sheet that already fits is left alone',
@@ -794,10 +794,10 @@ console.log('\nExporting the chart');
         pageCount(0) === 1);
 
     check('the filename carries the date, so a folder of them sorts',
-        exportFilename('csv', new Date(2026, 8, 19)) === 'seating-chart-2026-09-19.csv',
+        exportFilename('csv', new Date(2026, 8, 19)) === 'sitzplan-2026-09-19.csv',
         exportFilename('csv', new Date(2026, 8, 19)));
     check('a single-digit month and day are padded',
-        exportFilename('pdf', new Date(2027, 0, 5)) === 'seating-chart-2027-01-05.pdf');
+        exportFilename('pdf', new Date(2027, 0, 5)) === 'sitzplan-2027-01-05.pdf');
 }
 
 /* ---- recording what people cannot eat ---- */
@@ -926,8 +926,8 @@ console.log('\nCarrying a rename');
     const ambiguous = staleSeatNames(
         [table(1, 'Table 1', 8, [
             seat(0, 'Mabel Grey', 11, 11),
-            seat(1, "Mabel's guest 1", 11),
-            seat(2, "Mabel's guest 2", 11),
+            seat(1, 'Begleitung 1 von Mabel', 11),
+            seat(2, 'Begleitung 2 von Mabel', 11),
         ])],
         [guest(11, 'Mabel Grey', 3, [{ name: 'Ann Frost' }, { name: 'Bea Frost' }])],
     );

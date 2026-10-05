@@ -78,7 +78,7 @@ export default function FilesTab() {
                 const res = await fetch('/api/admin/honeymoon/upload', { method: 'POST', body });
                 const payload = await res.json().catch(() => ({}));
                 if (!res.ok || !payload.filename) {
-                    setError(`${file.name}: ${payload.error ?? 'the upload failed'}`);
+                    setError(`${file.name}: ${payload.error ?? 'Das Hochladen ist fehlgeschlagen'}`);
                 } else {
                     await api.create('documents', {
                         name: file.name.replace(/\.[^.]+$/, ''),
@@ -96,11 +96,11 @@ export default function FilesTab() {
     }, [activeFolder, api]);
 
     const folderLabel = activeFolder === 'all'
-        ? 'All files'
-        : [...folders.kinds, ...folders.people].find((f) => f.key === activeFolder)?.label ?? 'All files';
+        ? 'Alle Dokumente'
+        : [...folders.kinds, ...folders.people].find((f) => f.key === activeFolder)?.label ?? 'Alle Dokumente';
 
     const allFolders = [
-        { key: 'all', label: 'All files', icon: '🗂️', count: documents.length },
+        { key: 'all', label: 'Alle Dokumente', icon: '🗂️', count: documents.length },
         ...folders.kinds,
     ];
 
@@ -131,17 +131,17 @@ export default function FilesTab() {
                             type="search"
                             value={query}
                             onChange={(e) => setQuery(e.target.value)}
-                            placeholder="Search files…"
-                            aria-label="Search files"
+                            placeholder="Dokumente suchen …"
+                            aria-label="Dokumente suchen"
                             className="min-h-11 md:min-h-0 w-full sm:w-56 rounded-full border border-gray-200 bg-white px-4
                                 py-1.5 text-base md:text-sm focus:outline-none focus:ring-2 focus:ring-accent/30"
                         />
                         <Segmented<'grid' | 'list'>
-                            ariaLabel="File view"
+                            ariaLabel="Ansicht"
                             size="sm"
                             value={view}
                             onChange={setView}
-                            options={[{ key: 'grid', label: '▦ Grid' }, { key: 'list', label: '☰ List' }]}
+                            options={[{ key: 'grid', label: '▦ Raster' }, { key: 'list', label: '☰ Liste' }]}
                         />
                     </>
                 )}
@@ -151,11 +151,11 @@ export default function FilesTab() {
                             <span
                                 data-offline-status
                                 className={`text-xs ${offline.saved === documents.length ? 'text-emerald-700' : 'text-gray-500'}`}
-                                title="Kept on this device by the portal's offline cache, so they open with no signal"
+                                title="Vom Offline-Speicher des Portals auf diesem Gerät gehalten, damit sie ohne Empfang öffnen"
                             >
                                 {offline.supported
-                                    ? `Saved for offline: ${offline.saved} of ${documents.length}`
-                                    : 'Offline copies need a secure (https) connection'}
+                                    ? `Offline gespeichert: ${offline.saved} von ${documents.length}`
+                                    : 'Offline-Kopien brauchen eine sichere Verbindung (https)'}
                             </span>
                         )}
                         <input
@@ -167,14 +167,14 @@ export default function FilesTab() {
                             onChange={(e) => upload(e.target.files)}
                         />
                         <Button tone="primary" onClick={() => input.current?.click()} disabled={busy > 0}>
-                            {busy > 0 ? `Uploading… ${busy} left` : '+ Add files'}
+                            {busy > 0 ? `Wird hochgeladen … noch ${busy}` : '+ Dokumente hinzufügen'}
                         </Button>
-                        <Hint label="About these files">
-                            Passports, visas, insurance, tickets, vaccination cards and booking
-                            confirmations — images or PDFs up to 25 MB each. Drop files anywhere on this
-                            page. They are kept on this device for offline use once this tab has been
-                            opened with a connection. They are stored like every other upload in the
-                            portal: the links are unlisted, not secret.
+                        <Hint label="Zu diesen Dokumenten">
+                            Reisepässe, Visa, Versicherungen, Tickets, Impfpässe und Buchungsbestätigungen
+                            – Bilder oder PDFs bis 25 MB. Zieh Dateien einfach irgendwo auf diese Seite.
+                            Sie werden für die Offline-Nutzung auf diesem Gerät gespeichert, sobald dieser
+                            Tab einmal mit Verbindung geöffnet wurde. Gespeichert werden sie wie jeder andere
+                            Upload im Portal: Die Links sind nicht gelistet, aber nicht geheim.
                         </Hint>
                     </>
                 )}
@@ -214,14 +214,14 @@ export default function FilesTab() {
             ) : (
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-[13rem_1fr]">
                     {/* ---- Folders ---- */}
-                    <nav aria-label="Folders" className="min-w-0">
+                    <nav aria-label="Ordner" className="min-w-0">
                         <ul className="flex gap-1.5 overflow-x-auto pb-1 md:flex-col md:gap-0.5 md:overflow-visible [scrollbar-width:none]">
                             {allFolders.map((f) => (
                                 <FolderButton key={f.key} folder={f} active={activeFolder === f.key} onPick={setFolder} />
                             ))}
                             {folders.people.length > 0 && (
                                 <li className="hidden md:block px-3 pb-1 pt-3 text-[11px] font-semibold uppercase tracking-wide text-gray-400">
-                                    People
+                                    Personen
                                 </li>
                             )}
                             {folders.people.map((f) => (
@@ -234,7 +234,7 @@ export default function FilesTab() {
                     <div className="min-w-0">
                         {shown.length === 0 ? (
                             <div className="rounded-2xl border border-dashed border-gray-200 bg-white">
-                                <EmptyState title="Nothing here" hint="Try another folder, or clear the search." />
+                                <EmptyState title="Hier ist nichts" hint="Probier einen anderen Ordner oder lösche die Suche." />
                             </div>
                         ) : view === 'grid' ? (
                             <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
@@ -254,7 +254,7 @@ export default function FilesTab() {
                             </ul>
                         )}
                         <p className="mt-2 px-1 text-[11px] text-gray-400">
-                            {shown.length} of {documents.length} file{documents.length === 1 ? '' : 's'} · drop files anywhere here to add them
+                            {shown.length} von {documents.length} {documents.length === 1 ? 'Dokument' : 'Dokumenten'} · Dateien hier ablegen, um sie hinzuzufügen
                         </p>
                     </div>
                 </div>
@@ -264,7 +264,7 @@ export default function FilesTab() {
                 <div className="pointer-events-none absolute inset-0 z-30 flex items-center justify-center rounded-3xl
                     border-2 border-dashed border-accent bg-accent/10 backdrop-blur-[1px]">
                     <p className="rounded-full bg-white px-5 py-2 text-sm font-medium text-gray-800 shadow">
-                        Drop to add to {folderLabel}
+                        Ablegen zum Hinzufügen: {folderLabel}
                     </p>
                 </div>
             )}
@@ -324,7 +324,7 @@ function FileTile({ doc, warned, onOpen }: { doc: TripDocument; warned: boolean;
                 )}
                 {warned && (
                     <span className="absolute right-2 top-2 rounded-full bg-amber-500 px-2 py-0.5 text-[10px] font-semibold text-white">
-                        ⚠ check
+                        ⚠ prüfen
                     </span>
                 )}
             </div>
@@ -332,7 +332,7 @@ function FileTile({ doc, warned, onOpen }: { doc: TripDocument; warned: boolean;
                 <p className="truncate text-sm font-medium text-gray-900">{doc.name}</p>
                 <p className="truncate text-[11px] text-gray-500">
                     {meta.icon} {meta.label}{doc.person ? ` · ${doc.person}` : ''}
-                    {doc.expires_on ? ` · expires ${formatDate(doc.expires_on)}` : ''}
+                    {doc.expires_on ? ` · läuft ab ${formatDate(doc.expires_on)}` : ''}
                 </p>
             </div>
         </button>
@@ -363,7 +363,7 @@ function FileRow({ doc, warned, onOpen }: { doc: TripDocument; warned: boolean; 
             </span>
             {doc.expires_on && (
                 <span className={`hidden sm:inline shrink-0 text-xs ${warned ? 'font-medium text-amber-700' : 'text-gray-500'}`}>
-                    {warned && '⚠ '}expires {formatDate(doc.expires_on)}
+                    {warned && '⚠ '}läuft ab {formatDate(doc.expires_on)}
                 </span>
             )}
         </button>
@@ -386,15 +386,15 @@ function FirstFiles({ onAdd }: { onAdd: () => void }) {
     return (
         <div className="mx-auto max-w-xl rounded-3xl border border-dashed border-gray-300 bg-white px-6 py-10 text-center">
             <p className="text-3xl" aria-hidden>🗂️</p>
-            <h2 className="mt-2 text-lg font-semibold text-gray-900">The papers you would hate to lose</h2>
+            <h2 className="mt-2 text-lg font-semibold text-gray-900">Die Papiere, die ihr ungern verlieren würdet</h2>
             <p className="mx-auto mt-1 max-w-sm text-sm text-gray-500">
-                Passports, visas, insurance, e-tickets, vaccination cards, booking confirmations. Drop
-                them here and they open on the trip, with or without signal.
+                Reisepässe, Visa, Versicherungen, E-Tickets, Impfpässe, Buchungsbestätigungen. Legt
+                sie hier ab, und sie öffnen sich unterwegs – mit oder ohne Empfang.
             </p>
             <div className="mt-4">
-                <Button tone="primary" onClick={onAdd}>+ Add files</Button>
+                <Button tone="primary" onClick={onAdd}>+ Dokumente hinzufügen</Button>
             </div>
-            <p className="mt-3 text-[11px] text-gray-400">Images or PDFs, up to 25 MB each. Drag them onto this page.</p>
+            <p className="mt-3 text-[11px] text-gray-400">Bilder oder PDFs, bis 25 MB. Zieh sie einfach auf diese Seite.</p>
         </div>
     );
 }
@@ -444,7 +444,7 @@ function FileViewer({ docs, openId, onOpen, warnings }: {
                 <div className="min-w-0">
                     <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-400">
                         {kindMeta(doc.kind).icon} {kindMeta(doc.kind).label}
-                        {at >= 0 && ` · ${at + 1} of ${docs.length}`}
+                        {at >= 0 && ` · ${at + 1} von ${docs.length}`}
                     </p>
                     <InlineText
                         value={doc.name}
@@ -455,17 +455,17 @@ function FileViewer({ docs, openId, onOpen, warnings }: {
             )}
             actions={doc && (
                 <>
-                    <Button className="!px-3" onClick={() => step(-1)} disabled={at <= 0} aria-label="Previous file">‹</Button>
-                    <Button className="!px-3" onClick={() => step(1)} disabled={at < 0 || at >= docs.length - 1} aria-label="Next file">›</Button>
+                    <Button className="!px-3" onClick={() => step(-1)} disabled={at <= 0} aria-label="Vorheriges Dokument">‹</Button>
+                    <Button className="!px-3" onClick={() => step(1)} disabled={at < 0 || at >= docs.length - 1} aria-label="Nächstes Dokument">›</Button>
                     <OverflowMenu items={[
                         {
-                            label: 'Open in a new tab',
+                            label: 'In neuem Tab öffnen',
                             onClick: () => { window.open(fileUrl(doc), '_blank', 'noopener'); },
                         },
                         {
-                            label: 'Delete',
+                            label: 'Löschen',
                             danger: true,
-                            onClick: () => { onOpen(null); void api.removeRow('documents', doc, `Deleted ${doc.name}`); },
+                            onClick: () => { onOpen(null); void api.removeRow('documents', doc, `${doc.name} gelöscht`); },
                         },
                     ]} />
                 </>
@@ -485,17 +485,17 @@ function FileViewer({ docs, openId, onOpen, warnings }: {
                         )}
                     </div>
                     <dl className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                        <Field label="What it is">
-                            <MiniSelect value={doc.kind} onChange={(e) => set({ kind: e.target.value })} aria-label="What it is">
+                        <Field label="Art">
+                            <MiniSelect value={doc.kind} onChange={(e) => set({ kind: e.target.value })} aria-label="Art">
                                 {DOCUMENT_KINDS.map((k) => <option key={k.key} value={k.key}>{k.icon} {k.label}</option>)}
                             </MiniSelect>
                         </Field>
-                        <Field label="Whose">
+                        <Field label="Von wem">
                             {/* The trip's two names when Settings has them; a box to type
                                 one when it does not, so a file can always be someone's. */}
                             {partners.length > 0 ? (
-                                <MiniSelect value={doc.person ?? ''} onChange={(e) => set({ person: e.target.value })} aria-label="Whose">
-                                    <option value="">Shared</option>
+                                <MiniSelect value={doc.person ?? ''} onChange={(e) => set({ person: e.target.value })} aria-label="Von wem">
+                                    <option value="">Gemeinsam</option>
                                     {[...new Set([...partners, ...(doc.person ? [doc.person] : [])])].map((name) => (
                                         <option key={name} value={name}>{name}</option>
                                     ))}
@@ -503,25 +503,25 @@ function FileViewer({ docs, openId, onOpen, warnings }: {
                             ) : (
                                 <InlineText
                                     value={doc.person ?? ''}
-                                    placeholder="+ A name, or leave for Shared"
+                                    placeholder="+ Ein Name, oder leer für Gemeinsam"
                                     className="-ml-2 text-sm"
                                     onCommit={(person) => set({ person: person.trim() })}
                                 />
                             )}
                         </Field>
-                        <Field label="Expires">
+                        <Field label="Läuft ab">
                             <input
                                 type="date"
                                 key={`exp-${doc.id}-${doc.expires_on ?? ''}`}
                                 defaultValue={doc.expires_on ?? ''}
                                 onBlur={(e) => { if (e.target.value !== (doc.expires_on ?? '')) set({ expires_on: e.target.value }); }}
-                                aria-label="Expires"
+                                aria-label="Läuft ab"
                                 className="min-h-11 md:min-h-0 rounded-full border border-gray-200 bg-white px-4 py-1.5 text-base md:text-sm"
                             />
                         </Field>
-                        <Field label="For">
+                        <Field label="Gehört zu">
                             <MiniSelect
-                                aria-label="What it is for"
+                                aria-label="Gehört zu"
                                 value={doc.place_id != null ? `p${doc.place_id}` : doc.travel_id != null ? `t${doc.travel_id}` : ''}
                                 onChange={(e) => {
                                     const v = e.target.value;
@@ -532,29 +532,29 @@ function FileViewer({ docs, openId, onOpen, warnings }: {
                                 }}
                                 className="max-w-full"
                             >
-                                <option value="">The whole trip</option>
+                                <option value="">Die ganze Reise</option>
                                 {legs.length > 0 && (
-                                    <optgroup label="Travel">
+                                    <optgroup label="Verbindungen">
                                         {legs.map(({ leg, day }) => (
                                             <option key={`t${leg.id}`} value={`t${leg.id}`}>
-                                                {travelModeMeta(leg.mode).icon} {[leg.from_text, leg.to_text].filter(Boolean).join(' → ') || 'A leg'} · day {day.day_number}
+                                                {travelModeMeta(leg.mode).icon} {[leg.from_text, leg.to_text].filter(Boolean).join(' → ') || 'Eine Teilstrecke'} · Tag {day.day_number}
                                             </option>
                                         ))}
                                     </optgroup>
                                 )}
                                 {places.length > 0 && (
-                                    <optgroup label="Places">
+                                    <optgroup label="Orte">
                                         {places.map((p) => <option key={`p${p.id}`} value={`p${p.id}`}>{p.name}</option>)}
                                     </optgroup>
                                 )}
                             </MiniSelect>
                         </Field>
                     </dl>
-                    <Field label="Notes">
+                    <Field label="Notizen">
                         <InlineText
                             multiline
                             value={doc.notes ?? ''}
-                            placeholder="+ Policy number, the 24h line, what to show at the desk…"
+                            placeholder="+ Policennummer, die 24-Stunden-Hotline, was am Schalter vorzuzeigen ist …"
                             className="-ml-2 text-sm text-gray-700"
                             onCommit={(notes) => set({ notes })}
                         />
@@ -565,7 +565,7 @@ function FileViewer({ docs, openId, onOpen, warnings }: {
                         rel="noopener noreferrer"
                         className="inline-flex min-h-11 md:min-h-0 items-center text-sm text-accent hover:underline"
                     >
-                        Open the original ↗
+                        Original öffnen ↗
                     </a>
                 </div>
             )}

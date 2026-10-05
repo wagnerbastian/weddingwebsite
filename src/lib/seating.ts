@@ -101,7 +101,7 @@ export function partyAttendees(guest: GuestListEntry): PartyAttendee[] {
         people.push({
             // A name that was only a note — "(Collin's Date)" — cleans to nothing,
             // which is the same as never having been given one.
-            name: name || `${primary.split(' ')[0]}'s guest ${i + 1}`,
+            name: name || `Begleitung ${i + 1} von ${primary.split(' ')[0]}`,
             guestListId: null,
             // Carried on the person rather than read back by index afterwards:
             // this loop skips anyone who declined, so the returned array no
@@ -639,11 +639,11 @@ export function seatingIssues(
         const partySeats = seats.filter(s => s.seat.party_group_id === groupId);
         const name = guests.find(g => g.id === groupId)?.guest_name
             ?? partySeats[0]?.seat.display_name
-            ?? 'A party';
+            ?? 'Eine Gruppe';
         const tableNames = [...new Set(partySeats.map(s => s.table.name))].join(', ');
         issues.push({
             kind: 'split-party',
-            label: `${name}'s party is split across ${tableNames}`,
+            label: `Die Gruppe von ${name} sitzt an verschiedenen Tischen: ${tableNames}`,
             seats: partySeats.map(({ table, seat }) => ({ seating_table_id: table.id, seat_index: seat.seat_index })),
             guestIds: [groupId],
         });
@@ -655,14 +655,14 @@ export function seatingIssues(
     for (const table of tables) {
         const declined = table.seats.filter(s => s.rsvp_status === 'declined');
         if (declined.length === 0) continue;
-        const names = declined.map(s => s.display_name || s.guest_name || 'Someone');
+        const names = declined.map(s => s.display_name || s.guest_name || 'Jemand');
         const shown = names.slice(0, 3).join(', ');
         const rest = names.length - 3;
         issues.push({
             kind: 'declined-seated',
             label: names.length === 1
-                ? `${shown} is not coming but is seated at ${table.name}`
-                : `${names.length} people seated at ${table.name} are not coming — ${shown}${rest > 0 ? ` and ${rest} more` : ''}`,
+                ? `${shown} kommt nicht, sitzt aber an ${table.name}`
+                : `${names.length} Personen an ${table.name} kommen nicht – ${shown}${rest > 0 ? ` und ${rest} weitere` : ''}`,
             seats: declined.map(s => ({ seating_table_id: table.id, seat_index: s.seat_index })),
             guestIds: declined.map(s => s.guest_list_id).filter((id): id is number => id !== null),
         });
@@ -676,7 +676,7 @@ export function seatingIssues(
         if (declared > 0 && seated > declared) {
             issues.push({
                 kind: 'over-capacity',
-                label: `${table.name} has ${seated} people in ${declared} chair${declared === 1 ? '' : 's'}`,
+                label: `${table.name}: ${seated} Personen auf ${declared} ${declared === 1 ? 'Stuhl' : 'Stühlen'}`,
                 seats: table.seats.map(s => ({ seating_table_id: table.id, seat_index: s.seat_index })),
                 guestIds: [],
             });
@@ -694,12 +694,12 @@ export function seatingIssues(
         if (partySeats.length === 0) continue;
         const expected = expectedSeats(guest);
         if (expected === partySeats.length) continue;
-        const chairs = `${partySeats.length} chair${partySeats.length === 1 ? '' : 's'}`;
+        const chairs = `${partySeats.length} ${partySeats.length === 1 ? 'Stuhl' : 'Stühle'}`;
         issues.push({
             kind: 'rsvp-mismatch',
             label: partySeats.length > expected
-                ? `${guest.guest_name}'s party answered for ${expected} but has ${chairs}`
-                : `${guest.guest_name}'s party answered for ${expected} but has only ${chairs}`,
+                ? `Die Gruppe von ${guest.guest_name} hat für ${expected} zugesagt, hat aber ${chairs}`
+                : `Die Gruppe von ${guest.guest_name} hat für ${expected} zugesagt, hat aber nur ${chairs}`,
             seats: partySeats.map(({ table, seat }) => ({ seating_table_id: table.id, seat_index: seat.seat_index })),
             guestIds: [guest.id],
         });
@@ -715,7 +715,7 @@ export function seatingIssues(
         const rest = offList.length - 3;
         issues.push({
             kind: 'rsvp-off-list',
-            label: `${people} ${people === 1 ? 'person' : 'people'} RSVP'd but ${offList.length === 1 ? 'is' : 'are'} not on the guest list — ${shown}${rest > 0 ? ` and ${rest} more` : ''}`,
+            label: `${people} ${people === 1 ? 'Person hat' : 'Personen haben'} zugesagt, ${people === 1 ? 'steht' : 'stehen'} aber nicht auf der Gästeliste – ${shown}${rest > 0 ? ` und ${rest} weitere` : ''}`,
             seats: [],
             guestIds: [],
         });
@@ -731,8 +731,8 @@ export function seatingIssues(
         issues.push({
             kind: 'stale-name',
             label: stale.length === 1
-                ? `A seat still says ${stale[0].from}; the guest list says ${stale[0].to}`
-                : `${stale.length} seats have names the guest list has changed — ${shown}${rest > 0 ? ` and ${rest} more` : ''}`,
+                ? `Ein Platz trägt noch den Namen ${stale[0].from}, die Gästeliste sagt ${stale[0].to}`
+                : `${stale.length} Plätze tragen Namen, die in der Gästeliste geändert wurden – ${shown}${rest > 0 ? ` und ${rest} weitere` : ''}`,
             seats: stale.map(r => ({ seating_table_id: r.seating_table_id, seat_index: r.seat_index })),
             guestIds: [],
         });
@@ -743,7 +743,7 @@ export function seatingIssues(
     if (unseated.length > 0) {
         issues.push({
             kind: 'unseated-guest',
-            label: `${unseated.length} ${unseated.length === 1 ? 'party is' : 'parties are'} coming with nowhere to sit`,
+            label: `${unseated.length} ${unseated.length === 1 ? 'Gruppe kommt' : 'Gruppen kommen'} ohne Sitzplatz`,
             seats: [],
             guestIds: unseated.map(g => g.id),
         });
@@ -760,5 +760,24 @@ export async function applySeatChange(change: SeatChange): Promise<void> {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ deletes: change.deletes, seats: change.seats }),
     });
-    if (!res.ok) throw new Error('Failed to apply seating change');
+    if (!res.ok) throw new Error('Sitzplatz-Änderung konnte nicht angewendet werden');
+}
+
+/** Display names for the stored `side` values. Unknown values pass through. */
+export function sideLabel(side: string | null | undefined): string {
+    if (!side) return 'Ohne Angabe';
+    const labels: Record<string, string> = { bride: 'Braut', groom: 'Bräutigam', unspecified: 'Ohne Angabe' };
+    return labels[side] ?? side;
+}
+
+/** Display names for the stored RSVP answers. Unknown values pass through. */
+export function rsvpLabel(status: string | null | undefined): string {
+    if (!status) return 'Keine Antwort';
+    const labels: Record<string, string> = {
+        attending: 'Zusage',
+        declined: 'Absage',
+        pending: 'Offen',
+        likely_not_coming: 'Kommt wohl nicht',
+    };
+    return labels[status] ?? status;
 }

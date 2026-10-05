@@ -10,8 +10,15 @@ import type { DocumentKind, Trip, TripDocument } from './honeymoon';
 
 /** Folder names: a folder holds several of a thing. */
 const FOLDER_LABELS: Record<string, string> = {
-    passport: 'Passports', visa: 'Visas', insurance: 'Insurance', ticket: 'Tickets',
-    vaccination: 'Vaccinations', reservation: 'Reservations', other: 'Other',
+    passport: 'Reisepässe', visa: 'Visa', insurance: 'Versicherungen', ticket: 'Tickets',
+    vaccination: 'Impfungen', reservation: 'Reservierungen', other: 'Sonstiges',
+};
+
+/** The document's name inside a warning sentence (German nouns keep their capital). */
+const DOC_NOUNS: Record<string, { article: string; noun: string }> = {
+    passport: { article: 'Der', noun: 'Reisepass' },
+    visa: { article: 'Das', noun: 'Visum' },
+    insurance: { article: 'Die', noun: 'Versicherung' },
 };
 
 /** Filename words, in the order they are tested — the first match wins. */
@@ -70,25 +77,26 @@ export function documentWarnings(
         const margin = addDays(end, PASSPORT_MARGIN_DAYS);
         for (const doc of docs) {
             if (!doc.expires_on || !['passport', 'visa', 'insurance'].includes(doc.kind)) continue;
-            const whose = doc.person ? `${doc.person}'s ` : '';
-            const what = DOCUMENT_KINDS.find((k) => k.key === doc.kind)?.label.toLowerCase() ?? 'document';
+            const person = doc.person?.trim();
+            const owner = person ? `${person}${/[sßxz]$/i.test(person) ? '’' : 's'} ` : '';
+            const what = DOC_NOUNS[doc.kind] ?? { article: 'Das', noun: 'Dokument' };
             const on = formatDate(doc.expires_on);
-            const lead = (text: string) => text.charAt(0).toUpperCase() + text.slice(1);
+            const subject = person ? `${owner}${what.noun}` : `${what.article} ${what.noun}`;
             if (doc.expires_on < start) {
-                warnings.push({ documentId: doc.id, level: 'warn', message: lead(`${whose}${what} expires ${on}, before you leave.`) });
+                warnings.push({ documentId: doc.id, level: 'warn', message: `${subject} läuft am ${on} ab, vor der Abreise.` });
             } else if (doc.expires_on <= end) {
-                warnings.push({ documentId: doc.id, level: 'warn', message: lead(`${whose}${what} expires ${on}, during the trip.`) });
+                warnings.push({ documentId: doc.id, level: 'warn', message: `${subject} läuft am ${on} ab, während der Reise.` });
             } else if (doc.kind === 'passport' && doc.expires_on < margin) {
                 warnings.push({
                     documentId: doc.id,
                     level: 'warn',
-                    message: lead(`${whose}passport expires ${on}, under six months after you come home — many countries refuse that.`),
+                    message: `${person ? owner : 'Der '}Reisepass läuft am ${on} ab, weniger als sechs Monate nach der Rückkehr – viele Länder lassen so nicht einreisen.`,
                 });
             }
         }
     }
     if (!docs.some((doc) => doc.kind === 'passport')) {
-        warnings.push({ documentId: null, level: 'info', message: 'No passport on file yet.' });
+        warnings.push({ documentId: null, level: 'info', message: 'Noch kein Reisepass hinterlegt.' });
     }
     return warnings;
 }
@@ -125,7 +133,7 @@ export function documentFolders(docs: TripDocument[]): { kinds: Folder[]; people
     const people: Folder[] = [...byPerson.entries()]
         .sort((a, b) => a[0].localeCompare(b[0]))
         .map(([person, count]) => ({ key: `person:${person}`, label: person, icon: '👤', count }));
-    if (shared) people.push({ key: 'person:', label: 'Shared', icon: '👥', count: shared });
+    if (shared) people.push({ key: 'person:', label: 'Gemeinsam', icon: '👥', count: shared });
     return { kinds, people };
 }
 

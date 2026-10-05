@@ -19,6 +19,7 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { SeatingTableData, SeatData, SeatTransferPayload, ColorMode } from './types';
+import { rsvpLabel } from '@/lib/seating';
 
 interface TableNodeProps {
   data: {
@@ -97,10 +98,10 @@ function SeatChip({
       onMouseEnter={() => setHover(true)}
       onMouseLeave={() => setHover(false)}
       title={hasDeclined
-        ? `${name} is not coming — remove them from this table`
+        ? `${name} kommt nicht – von diesem Tisch entfernen`
         : colorMode === 'rsvp'
-          ? (seat.rsvp_status ? `RSVP: ${seat.rsvp_status}` : 'No RSVP yet')
-          : (isSplit ? 'Party is split — drag to move' : `Drag ${name} to another table`)}
+          ? (seat.rsvp_status ? `Rückmeldung: ${rsvpLabel(seat.rsvp_status)}` : 'Noch keine Rückmeldung')
+          : (isSplit ? 'Gruppe ist getrennt – zum Verschieben ziehen' : `${name} auf einen anderen Tisch ziehen`)}
     >
       {colorMode === 'party' && isSplit && <span className="text-yellow-500 mr-0.5">⚠</span>}
       <span className="truncate max-w-[80px]">{name}</span>
@@ -115,7 +116,7 @@ function SeatChip({
             if (e.altKey || e.shiftKey) onRemoveParty();
             else onRemoveSeat();
           }}
-          title={`Remove ${name} from this table (Alt-click to remove their whole party)`}
+          title={`${name} von diesem Tisch entfernen (Alt-Klick entfernt die ganze Gruppe)`}
         >
           ×
         </button>
@@ -202,10 +203,11 @@ function ReorderModal({
         <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
           <div>
             <h3 className="text-base font-semibold text-gray-800">{table.name}</h3>
-            <p className="text-xs text-gray-400 mt-0.5">Drag to set seating order</p>
+            <p className="text-xs text-gray-400 mt-0.5">Ziehen, um die Reihenfolge festzulegen</p>
           </div>
           <button
             onClick={onClose}
+            aria-label="Schließen"
             className="text-gray-400 hover:text-gray-600 transition-colors p-1 rounded"
           >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -217,7 +219,7 @@ function ReorderModal({
         {/* Sortable list */}
         <div className="flex-1 overflow-y-auto p-4">
           {seats.length === 0 ? (
-            <p className="text-center text-gray-400 text-sm py-6">No one seated here yet.</p>
+            <p className="text-center text-gray-400 text-sm py-6">Hier sitzt noch niemand.</p>
           ) : (
             <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
               <SortableContext items={seats.map(s => s.seat_index)} strategy={verticalListSortingStrategy}>
@@ -238,13 +240,13 @@ function ReorderModal({
             className="flex-1 text-sm font-medium text-white py-2 rounded-lg"
             style={{ backgroundColor: 'var(--accent, #6366f1)' }}
           >
-            Save Order
+            Reihenfolge speichern
           </button>
           <button
             onClick={onClose}
             className="flex-1 text-sm font-medium text-gray-600 py-2 rounded-lg border border-gray-200 hover:bg-gray-50"
           >
-            Cancel
+            Abbrechen
           </button>
         </div>
       </div>
@@ -299,7 +301,7 @@ function TableControls({
       ) : (
         <button
           className="nodrag p-1 rounded text-gray-400 hover:text-gray-600 hover:bg-white/50 transition-colors"
-          title="Rename"
+          title="Umbenennen"
           onClick={startRename}
         >
           <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -313,7 +315,7 @@ function TableControls({
       {table.seats.length > 1 && (
         <button
           className="nodrag p-1 rounded text-gray-400 hover:text-indigo-500 hover:bg-white/50 transition-colors"
-          title="Reorder seats"
+          title="Plätze neu anordnen"
           onClick={e => { e.stopPropagation(); onReorder(); }}
         >
           <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -328,20 +330,20 @@ function TableControls({
 
       {confirmDelete ? (
         <div className="flex items-center gap-1">
-          <span className="text-xs text-red-500">Delete?</span>
+          <span className="text-xs text-red-500">Löschen?</span>
           <button
             className="nodrag text-xs bg-red-100 text-red-700 rounded px-1.5 py-0.5 hover:bg-red-200"
             onClick={e => { e.stopPropagation(); onDelete(); }}
-          >Yes</button>
+          >Ja</button>
           <button
             className="nodrag text-xs bg-gray-100 text-gray-600 rounded px-1.5 py-0.5 hover:bg-gray-200"
             onClick={e => { e.stopPropagation(); setConfirmDelete(false); }}
-          >No</button>
+          >Nein</button>
         </div>
       ) : (
         <button
           className="nodrag p-1 rounded text-red-400 hover:text-red-600 hover:bg-white/50 transition-colors"
-          title="Delete table"
+          title="Tisch löschen"
           onClick={e => { e.stopPropagation(); setConfirmDelete(true); }}
         >
           <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -433,14 +435,14 @@ function TableBody({
           {table.name}
         </span>
         {totalSeatCount === 0 ? (
-          <span className="text-xs text-gray-400 mt-0.5">Drop guests here</span>
+          <span className="text-xs text-gray-400 mt-0.5">Gäste hierher ziehen</span>
         ) : seatCount < totalSeatCount ? (
           <span className="text-center mt-0.5 leading-tight flex flex-col items-center">
-            <span className="text-xs text-gray-400">{seatCount} {seatCount === 1 ? 'person' : 'people'}</span>
-            <span className="text-[9px] text-orange-400 font-medium">+{totalSeatCount - seatCount} likely not coming</span>
+            <span className="text-xs text-gray-400">{seatCount} {seatCount === 1 ? 'Person' : 'Personen'}</span>
+            <span className="text-[9px] text-orange-400 font-medium">+{totalSeatCount - seatCount} wahrscheinlich nicht dabei</span>
           </span>
         ) : (
-          <span className="text-xs text-gray-400 mt-0.5">{seatCount} {seatCount === 1 ? 'person' : 'people'}</span>
+          <span className="text-xs text-gray-400 mt-0.5">{seatCount} {seatCount === 1 ? 'Person' : 'Personen'}</span>
         )}
 
         {hovered && (

@@ -8,6 +8,7 @@
  * the same people again, one per row. Covered by `npm run check:seating`.
  */
 
+import { sideLabel } from './seating';
 import {
     ALL_DIET_CODES, DIET_CODES, DIET_LABELS, MEAL_CODES, dietCodes, dietNote,
     type DietCode, type DietaryEntry,
@@ -120,7 +121,7 @@ export type Tally = Record<DietCode, number> & {
  * they cannot drift apart. (When the entrée question lands — SEAT-1 in the
  * parking lot — this is the constant that stops being a constant.)
  */
-export const NO_RESTRICTION_LABEL = 'Chicken';
+export const NO_RESTRICTION_LABEL = 'Hähnchen';
 
 /**
  * Count a group of people by restriction.
@@ -160,12 +161,12 @@ export function tally(people: { diet: DietCode[] }[]): Tally {
  * A restriction nobody has is left out rather than printed as a zero — a line of
  * zeroes is the thing a caterer skims past.
  */
-export function tallyParts(t: Tally, seatCount: number | null = null, lead = 'seated'): string[] {
-    const parts = [seatCount && seatCount > 0 ? `${t.total} ${lead} of ${seatCount}` : `${t.total} ${lead}`];
+export function tallyParts(t: Tally, seatCount: number | null = null, lead = 'besetzt'): string[] {
+    const parts = [seatCount && seatCount > 0 ? `${t.total} ${lead} von ${seatCount}` : `${t.total} ${lead}`];
     for (const code of ALL_DIET_CODES) {
         if (t[code] > 0) parts.push(`${t[code]} ${DIET_LABELS[code].toLowerCase()}`);
     }
-    parts.push(`${t.none} ${NO_RESTRICTION_LABEL.toLowerCase()}`);
+    parts.push(`${t.none} ${NO_RESTRICTION_LABEL}`);
     return parts;
 }
 
@@ -209,6 +210,17 @@ export function pageCount(
 ): number {
     if (!(contentHeight > 0)) return 1;
     return Math.max(1, Math.ceil((contentHeight * scale) / pageHeight));
+}
+
+/** The abbreviations printed on the sheet's chips. The internal codes stay as they are. */
+export const DIET_DISPLAY_CODES: Record<DietCode, string> = {
+    VEG: 'VEG', VGN: 'VGN', GF: 'GF', NUT: 'NUS', OTH: 'SON', KID: 'KIN', NOM: 'NM',
+};
+
+/** Display names for the stored table shapes. Unknown values pass through. */
+export function tableTypeLabel(type: string): string {
+    const labels: Record<string, string> = { round: 'Rund', rectangular: 'Rechteckig', head: 'Haupttisch' };
+    return labels[type] ?? type;
 }
 
 /** One entry of the short tally. A null code is the no-restriction bucket. */
@@ -322,17 +334,25 @@ export function alphabetical(data: SeatingExportData, includeUnseated: boolean):
  */
 export function csvHeaders(opts: ExportOptions): string[] {
     return [
-        'Table',
-        'Seat',
+        'Tisch',
+        'Platz',
         'Name',
-        ...(opts.household ? ['Household'] : []),
-        ...(opts.side ? ['Side'] : []),
-        ...(opts.vendors ? ['Role', 'Meal'] : []),
-        'RSVP',
+        ...(opts.household ? ['Gruppe'] : []),
+        ...(opts.side ? ['Seite'] : []),
+        ...(opts.vendors ? ['Rolle', 'Mahlzeit'] : []),
+        'Rückmeldung',
         ...ALL_DIET_CODES.map(code => DIET_LABELS[code]),
-        'Note',
+        'Notiz',
     ];
 }
+
+/** Display names for the stored RSVP answers in the spreadsheet. */
+const RSVP_LABELS: Record<string, string> = {
+    attending: 'Zusage',
+    declined: 'Absage',
+    pending: 'Offen',
+    likely_not_coming: 'Kommt wohl nicht',
+};
 
 /**
  * One row per person — never one per party.
@@ -344,27 +364,27 @@ export function csvHeaders(opts: ExportOptions): string[] {
  */
 export function csvRows(data: SeatingExportData, opts: ExportOptions): unknown[][] {
     const rows = (people: ExportPerson[]) => people.map(person => [
-        person.table_name ?? 'Not seated',
+        person.table_name ?? 'Ohne Platz',
         person.seat ?? '',
         person.name,
         ...(opts.household ? [person.household] : []),
-        ...(opts.side ? [person.side ?? ''] : []),
+        ...(opts.side ? [person.side ? sideLabel(person.side) : ''] : []),
         // Not eating is the one guest row that is not a meal.
-        ...(opts.vendors ? ['', person.diet.includes('NOM') ? 'no' : 'yes'] : []),
-        person.rsvp_status ?? 'no answer',
-        ...ALL_DIET_CODES.map(code => (person.diet.includes(code) ? 'yes' : '')),
+        ...(opts.vendors ? ['', person.diet.includes('NOM') ? 'nein' : 'ja'] : []),
+        (person.rsvp_status && RSVP_LABELS[person.rsvp_status]) || person.rsvp_status || 'keine Antwort',
+        ...ALL_DIET_CODES.map(code => (person.diet.includes(code) ? 'ja' : '')),
         person.note,
     ]);
     const vendorRows = (vendors: ExportVendor[]) => vendors.map(vendor => [
-        'Vendor',
+        'Dienstleister',
         '',
         vendor.name,
         ...(opts.household ? [vendor.company ?? ''] : []),
         ...(opts.side ? [''] : []),
         vendor.role ?? '',
-        vendor.needs_meal ? 'yes' : 'no',
-        'vendor',
-        ...ALL_DIET_CODES.map(code => (vendor.diet.includes(code) ? 'yes' : '')),
+        vendor.needs_meal ? 'ja' : 'nein',
+        'Dienstleister',
+        ...ALL_DIET_CODES.map(code => (vendor.diet.includes(code) ? 'ja' : '')),
         vendor.note,
     ]);
     return [
@@ -381,5 +401,5 @@ export function exportFilename(ext: string, now: Date = new Date()): string {
         String(now.getMonth() + 1).padStart(2, '0'),
         String(now.getDate()).padStart(2, '0'),
     ].join('-');
-    return `seating-chart-${stamp}.${ext}`;
+    return `sitzplan-${stamp}.${ext}`;
 }

@@ -17,7 +17,7 @@ export async function GET(request: Request) {
         const file = path.join(process.cwd(), 'CHANGELOG.md');
         if (!fs.existsSync(file)) {
             return NextResponse.json(
-                { releases: [], latest: null, error: 'CHANGELOG.md is not part of this build.' },
+                { releases: [], latest: null, error: 'CHANGELOG.md ist nicht Teil dieses Builds.' },
                 { status: 200 },
             );
         }
@@ -40,6 +40,6 @@ export async function GET(request: Request) {
         return NextResponse.json({ releases });
     } catch (error) {
         console.error('Error reading the changelog:', error);
-        return NextResponse.json({ error: 'Failed to read the changelog' }, { status: 500 });
+        return NextResponse.json({ error: 'Das Änderungsprotokoll konnte nicht gelesen werden' }, { status: 500 });
     }
 }

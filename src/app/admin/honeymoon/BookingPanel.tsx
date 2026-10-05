@@ -69,15 +69,15 @@ export default function BookingPanel({
             <div className="rounded-2xl border border-dashed border-gray-200 p-3">
                 <p className="text-[11px] text-gray-500">
                     {kind === 'travel'
-                        ? 'No reference yet — the booking number, what it cost, when free '
-                            + 'cancellation ends.'
-                        : 'Nothing recorded yet — confirmation number, what it cost, when free '
-                            + 'cancellation ends.'}
+                        ? 'Noch keine Referenz – Buchungsnummer, Kosten, Ende der '
+                            + 'kostenlosen Stornierung.'
+                        : 'Noch nichts erfasst – Bestätigungsnummer, Kosten, Ende der '
+                            + 'kostenlosen Stornierung.'}
                 </p>
                 <Button className="mt-2" onClick={create} disabled={creating}>
                     {creating
-                        ? 'Adding…'
-                        : kind === 'travel' ? '+ Add the booking reference' : '+ Booking details'}
+                        ? 'Wird hinzugefügt …'
+                        : kind === 'travel' ? '+ Buchungsreferenz hinzufügen' : '+ Buchungsdetails'}
                 </Button>
             </div>
         );
@@ -107,31 +107,31 @@ export default function BookingPanel({
         <div className="space-y-2 rounded-2xl border border-emerald-200 bg-emerald-50/40 p-3">
             <div className="flex flex-wrap items-center gap-2">
                 <span className="text-[11px] font-semibold uppercase tracking-wide text-emerald-800">
-                    Booking
+                    Buchung
                 </span>
                 {booking.paid ? (
                     <span className="rounded-full bg-emerald-600 px-2 py-0.5 text-[10px]
                         font-semibold text-white">
-                        Paid
+                        Bezahlt
                     </span>
                 ) : owed != null && owed > 0 ? (
                     <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px]
                         font-semibold text-amber-800">
-                        {formatMoney(owed, currency)} to pay
+                        {formatMoney(owed, currency)} zu zahlen
                     </span>
                 ) : null}
                 <div className="flex-1" />
                 <button
                     type="button"
-                    onClick={() => api.removeRow('bookings', booking, 'Removed booking details')}
+                    onClick={() => api.removeRow('bookings', booking, 'Buchungsdetails entfernt')}
                     className="text-[11px] text-gray-500 underline decoration-dotted"
                 >
-                    Remove
+                    Entfernen
                 </button>
             </div>
 
             <div className="grid grid-cols-2 gap-2">
-                <Field label="Confirmation">
+                <Field label="Bestätigung">
                     <TextField
                         key={`c${booking.confirmation ?? ''}`}
                         defaultValue={booking.confirmation ?? ''}
@@ -143,11 +143,11 @@ export default function BookingPanel({
                         }}
                     />
                 </Field>
-                <Field label="Booked with">
+                <Field label="Gebucht über">
                     <TextField
                         key={`p${booking.provider ?? ''}`}
                         defaultValue={booking.provider ?? ''}
-                        placeholder="Booking.com / direct"
+                        placeholder="Booking.com / direkt"
                         onBlur={(e) => {
                             if (e.target.value !== (booking.provider ?? '')) {
                                 set({ provider: e.target.value });
@@ -159,7 +159,7 @@ export default function BookingPanel({
 
             {kind === 'stay' && (
                 <div className="grid grid-cols-2 gap-2">
-                    <Field label="Check in">
+                    <Field label="Check-in">
                         <TextField
                             type="date"
                             key={`ci${booking.check_in ?? ''}`}
@@ -171,7 +171,7 @@ export default function BookingPanel({
                             }}
                         />
                     </Field>
-                    <Field label="Check out">
+                    <Field label="Check-out">
                         <TextField
                             type="date"
                             key={`co${booking.check_out ?? ''}`}
@@ -188,7 +188,7 @@ export default function BookingPanel({
 
             {kind === 'table' && (
                 <div className="grid grid-cols-2 gap-2">
-                    <Field label="Party size">
+                    <Field label="Personenzahl">
                         <TextField
                             type="number"
                             min="1"
@@ -202,11 +202,11 @@ export default function BookingPanel({
                             }}
                         />
                     </Field>
-                    <Field label="Dress code">
+                    <Field label="Dresscode">
                         <TextField
                             key={`dc${booking.dress_code ?? ''}`}
                             defaultValue={booking.dress_code ?? ''}
-                            placeholder="Smart casual"
+                            placeholder="Smart Casual"
                             onBlur={(e) => {
                                 if (e.target.value !== (booking.dress_code ?? '')) {
                                     set({ dress_code: e.target.value });
@@ -218,7 +218,7 @@ export default function BookingPanel({
             )}
 
             <div className="grid grid-cols-3 gap-2">
-                <Field label={`Cost (${total?.currency || currency})`}>
+                <Field label={`Kosten (${total?.currency || currency})`}>
                     {derived ? (
                         /* Reported, not asked for. Where it comes from is said
                            out loud, so a wrong number is fixed in the one place
@@ -232,8 +232,8 @@ export default function BookingPanel({
                             <p className="text-[10px] leading-tight text-gray-400">
                                 {total?.detail
                                     ?? (place.cost == null
-                                        ? 'Add the price to the stay'
-                                        : 'From the stay’s price')}
+                                        ? 'Preis bei der Unterkunft eintragen'
+                                        : 'Aus dem Preis der Unterkunft')}
                             </p>
                         </div>
                     ) : (
@@ -252,7 +252,7 @@ export default function BookingPanel({
                         />
                     )}
                 </Field>
-                <Field label="Paid so far">
+                <Field label="Bisher bezahlt">
                     <TextField
                         type="number"
                         min="0"
@@ -265,20 +265,20 @@ export default function BookingPanel({
                         }}
                     />
                 </Field>
-                <Field label="Settled">
+                <Field label="Beglichen">
                     <SelectField
                         value={booking.paid ? 'yes' : 'no'}
                         onChange={(e) => set({ paid: e.target.value === 'yes' })}
                     >
-                        <option value="no">Not yet</option>
-                        <option value="yes">Paid in full</option>
+                        <option value="no">Noch nicht</option>
+                        <option value="yes">Vollständig bezahlt</option>
                     </SelectField>
                 </Field>
             </div>
 
             {/* The two dates worth an alarm. */}
             <div className="grid grid-cols-2 gap-2">
-                <Field label="Deposit due">
+                <Field label="Anzahlung fällig">
                     <TextField
                         type="date"
                         key={`dd${booking.deposit_due_on ?? ''}`}
@@ -290,7 +290,7 @@ export default function BookingPanel({
                         }}
                     />
                 </Field>
-                <Field label="Free cancellation until">
+                <Field label="Kostenlos stornierbar bis">
                     <TextField
                         type="date"
                         key={`cb${booking.cancel_by ?? ''}`}
@@ -307,7 +307,7 @@ export default function BookingPanel({
             {!compact && (
                 <>
                     <div className="grid grid-cols-2 gap-2">
-                        <Field label="Contact">
+                        <Field label="Kontakt">
                             <TextField
                                 key={`ct2${booking.contact ?? ''}`}
                                 defaultValue={booking.contact ?? ''}
@@ -319,7 +319,7 @@ export default function BookingPanel({
                                 }}
                             />
                         </Field>
-                        <Field label="Booking page">
+                        <Field label="Buchungsseite">
                             <TextField
                                 key={`u${booking.url ?? ''}`}
                                 defaultValue={booking.url ?? ''}
@@ -332,12 +332,12 @@ export default function BookingPanel({
                             />
                         </Field>
                     </div>
-                    <Field label="Notes">
+                    <Field label="Notizen">
                         <TextArea
                             rows={2}
                             key={`n${booking.notes ?? ''}`}
                             defaultValue={booking.notes ?? ''}
-                            placeholder="Sea-view room, late check-in agreed by email"
+                            placeholder="Zimmer mit Meerblick, später Check-in per E-Mail vereinbart"
                             onBlur={(e) => {
                                 if (e.target.value !== (booking.notes ?? '')) {
                                     set({ notes: e.target.value });
@@ -376,9 +376,9 @@ function BookingSummary({ booking, currency, total }: {
         booking.check_in && booking.check_out
             ? `${formatDate(booking.check_in)} → ${formatDate(booking.check_out)}`
             : null,
-        booking.cancel_by ? `free until ${formatDate(booking.cancel_by)}` : null,
+        booking.cancel_by ? `kostenlos bis ${formatDate(booking.cancel_by)}` : null,
         booking.deposit_due_on && !booking.paid
-            ? `deposit ${formatDate(booking.deposit_due_on)}`
+            ? `Anzahlung ${formatDate(booking.deposit_due_on)}`
             : null,
     ].filter(Boolean);
     if (!parts.length) return null;

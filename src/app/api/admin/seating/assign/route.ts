@@ -43,7 +43,7 @@ export async function POST(request: Request) {
 
     for (const seat of [...seats, ...deletes]) {
       if (!Number.isInteger(seat.seating_table_id) || !Number.isInteger(seat.seat_index) || seat.seat_index < 0) {
-        return NextResponse.json({ error: 'seating_table_id and seat_index must be integers' }, { status: 400 });
+        return NextResponse.json({ error: 'seating_table_id und seat_index müssen ganze Zahlen sein' }, { status: 400 });
       }
     }
 
@@ -75,7 +75,7 @@ export async function POST(request: Request) {
   } catch (error) {
     await client.query('ROLLBACK').catch(() => undefined);
     console.error('Error assigning seats:', error);
-    return NextResponse.json({ error: 'Failed to assign seats' }, { status: 500 });
+    return NextResponse.json({ error: 'Plätze konnten nicht zugewiesen werden' }, { status: 500 });
   } finally {
     client.release();
   }
@@ -104,13 +104,13 @@ export async function DELETE(request: Request) {
         [body.seating_table_id, body.seat_index]
       );
     } else {
-      return NextResponse.json({ error: 'Invalid delete payload' }, { status: 400 });
+      return NextResponse.json({ error: 'Ungültige Löschanfrage' }, { status: 400 });
     }
 
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error('Error unassigning seat:', error);
-    return NextResponse.json({ error: 'Failed to unassign seat' }, { status: 500 });
+    return NextResponse.json({ error: 'Platz konnte nicht freigegeben werden' }, { status: 500 });
   } finally {
     client.release();
   }

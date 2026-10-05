@@ -140,7 +140,7 @@ export function dayOfWeek(dateIso: string): number {
 export function describeHours(spec: string | null | undefined): string | null {
     const clean = (spec ?? '').trim();
     if (!clean) return null;
-    if (/^24\/7$/i.test(clean)) return 'Open all hours';
+    if (/^24\/7$/i.test(clean)) return 'Rund um die Uhr geöffnet';
     return clean.replace(/;\s*/g, ' · ');
 }
 

@@ -12,8 +12,8 @@ interface AddTableModalProps {
 const TABLE_TYPES: { type: TableType; label: string; description: string; icon: React.ReactNode }[] = [
   {
     type: 'round',
-    label: 'Round',
-    description: 'Seats arranged in a circle',
+    label: 'Rund',
+    description: 'Plätze im Kreis',
     icon: (
       <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
         <circle cx="18" cy="18" r="10" stroke="currentColor" strokeWidth="2" fill="none" />
@@ -28,8 +28,8 @@ const TABLE_TYPES: { type: TableType; label: string; description: string; icon: 
   },
   {
     type: 'rectangular',
-    label: 'Rectangular',
-    description: 'Seats along top and bottom',
+    label: 'Rechteckig',
+    description: 'Plätze oben und unten',
     icon: (
       <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
         <rect x="6" y="12" width="24" height="12" stroke="currentColor" strokeWidth="2" fill="none" rx="2" />
@@ -44,8 +44,8 @@ const TABLE_TYPES: { type: TableType; label: string; description: string; icon: 
   },
   {
     type: 'head',
-    label: 'Head Table',
-    description: 'Wide table, seats along top',
+    label: 'Haupttisch',
+    description: 'Breiter Tisch, Plätze oben',
     icon: (
       <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
         <rect x="2" y="16" width="32" height="10" stroke="currentColor" strokeWidth="2" fill="none" rx="2" />
@@ -57,7 +57,7 @@ const TABLE_TYPES: { type: TableType; label: string; description: string; icon: 
   },
 ];
 
-export default function AddTableModal({ defaultName = 'Table', onAdd, onClose }: AddTableModalProps) {
+export default function AddTableModal({ defaultName = 'Tisch', onAdd, onClose }: AddTableModalProps) {
   const [name, setName] = useState(defaultName);
   const [tableType, setTableType] = useState<TableType>('round');
 
@@ -75,10 +75,11 @@ export default function AddTableModal({ defaultName = 'Table', onAdd, onClose }:
       >
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
-          <h2 className="text-base font-semibold text-gray-800">Add Table</h2>
+          <h2 className="text-base font-semibold text-gray-800">Tisch hinzufügen</h2>
           <button
             className="text-gray-400 hover:text-gray-600 transition-colors p-1 rounded-md hover:bg-gray-100"
             onClick={onClose}
+            aria-label="Schließen"
           >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <line x1="18" y1="6" x2="6" y2="18" />
@@ -90,19 +91,19 @@ export default function AddTableModal({ defaultName = 'Table', onAdd, onClose }:
         <form onSubmit={handleSubmit} className="p-6 space-y-5">
           {/* Table Name */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">Table Name</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">Tischname</label>
             <input
               className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg outline-none focus:border-accent focus:ring-2 focus:ring-accent/20 transition-colors"
               value={name}
               onChange={e => setName(e.target.value)}
-              placeholder="e.g. Table 1, Bridal Table"
+              placeholder="z. B. Tisch 1, Brauttisch"
               required
             />
           </div>
 
           {/* Table Type */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Table Type</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Tischform</label>
             <div className="grid grid-cols-3 gap-2">
               {TABLE_TYPES.map(({ type, label, description, icon }) => (
                 <button
@@ -132,14 +133,14 @@ export default function AddTableModal({ defaultName = 'Table', onAdd, onClose }:
               className="flex-1 px-4 py-2 text-sm font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
               onClick={onClose}
             >
-              Cancel
+              Abbrechen
             </button>
             <button
               type="submit"
               className="flex-1 px-4 py-2 text-sm font-medium text-white bg-accent rounded-lg hover:bg-accent-dark transition-colors disabled:opacity-50"
               disabled={!name.trim()}
             >
-              Add Table
+              Tisch hinzufügen
             </button>
           </div>
         </form>

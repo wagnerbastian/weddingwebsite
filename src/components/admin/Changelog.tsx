@@ -58,8 +58,8 @@ export default function Changelog() {
                 // Opening is the read.
                 if (latest) { localStorage.setItem(SEEN_KEY, latest); setSeen(latest); }
             }}
-            title="What's new — the full changelog"
-            aria-label={latest ? `Changelog, version ${latest}` : 'Changelog'}
+            title="Neuigkeiten – das vollständige Änderungsprotokoll"
+            aria-label={latest ? `Änderungsprotokoll, Version ${latest}` : 'Änderungsprotokoll'}
             className="relative shrink-0 rounded-full border border-gray-200 bg-white
                 px-2 py-0.5 text-[11px] font-semibold text-gray-500 hover:text-gray-800
                 hover:border-gray-300 transition tabular-nums"

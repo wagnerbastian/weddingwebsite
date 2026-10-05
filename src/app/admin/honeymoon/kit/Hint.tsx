@@ -9,7 +9,7 @@ import { Popover } from './Popover';
  * behind a tap: on a phone those paragraphs were wrapping into a one-word-wide
  * column beside the buttons they described.
  */
-export function Hint({ children, label = 'What is this?' }: { children: React.ReactNode; label?: string }) {
+export function Hint({ children, label = 'Was ist das?' }: { children: React.ReactNode; label?: string }) {
     return (
         <Popover
             label={label}

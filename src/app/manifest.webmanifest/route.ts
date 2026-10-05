@@ -38,15 +38,15 @@ export async function GET(request: NextRequest) {
         // app whose start_url keeps changing.
         id: isAdmin ? '/admin' : '/',
         name: isAdmin
-            ? `${couple ? `${couple} ` : ''}Wedding Admin`
-            : (couple ? `${couple} | The Wedding` : 'Our Wedding'),
+            ? `${couple ? `${couple} ` : ''}Hochzeits-Admin`
+            : (couple ? `${couple} | Die Hochzeit` : 'Unsere Hochzeit'),
         // iOS truncates the Home Screen label around 12 characters anyway.
-        short_name: isAdmin ? 'Admin' : (couple ?? 'Our Wedding'),
+        short_name: isAdmin ? 'Admin' : (couple ?? 'Unsere Hochzeit'),
         description: isAdmin
-            ? 'Manage RSVPs, finances, photos and page content.'
+            ? 'Rückmeldungen, Finanzen, Fotos und Seiteninhalte verwalten.'
             : (config.weddingDate
-                ? `Join us in celebrating our wedding on ${config.weddingDate}.`
-                : 'Our wedding website.'),
+                ? `Feiert mit uns unsere Hochzeit am ${config.weddingDate}.`
+                : 'Unsere Hochzeitswebsite.'),
         start_url: isAdmin ? '/admin' : '/',
         scope: '/',
         display: 'standalone',

@@ -55,7 +55,7 @@ export default function JourneyCard({ api, group, onAddLeg }: {
                     {journeyId != null ? (
                         <InlineText
                             value={group.journey?.title ?? ''}
-                            placeholder={group.route.join(' → ') || 'Name this journey'}
+                            placeholder={group.route.join(' → ') || 'Verbindung benennen'}
                             className="font-semibold text-gray-900 -ml-2"
                             onCommit={(title) => api.update('journeys', { id: journeyId, title })}
                         />
@@ -65,7 +65,7 @@ export default function JourneyCard({ api, group, onAddLeg }: {
                     <p className="text-xs text-gray-500">
                         {group.route.length >= 2
                             ? group.route.join(' → ')
-                            : 'Add where it goes'}
+                            : 'Ziel ergänzen'}
                     </p>
                 </div>
 
@@ -79,9 +79,9 @@ export default function JourneyCard({ api, group, onAddLeg }: {
                     )}
                     {group.totalMinutes != null && (
                         <p className="text-[11px] text-gray-400 tabular-nums">
-                            {formatMinutes(group.totalMinutes)} door to door
+                            {formatMinutes(group.totalMinutes)} von Tür zu Tür
                             {group.movingMinutes != null && group.legs.length > 1
-                                && ` · ${formatMinutes(group.movingMinutes)} moving`}
+                                && ` · ${formatMinutes(group.movingMinutes)} in Bewegung`}
                         </p>
                     )}
                 </div>
@@ -90,27 +90,27 @@ export default function JourneyCard({ api, group, onAddLeg }: {
                     ...(journeyId != null ? TRAVEL_MODES
                         .filter((entry) => entry.key !== group.journey?.kind)
                         .map((entry) => ({
-                            label: `Show as ${entry.label.toLowerCase()}`,
+                            label: `Als ${entry.label} anzeigen`,
                             onClick: () => api.update('journeys', {
                                 id: journeyId, kind: entry.key,
                             }),
                         })) : []),
                     ...(journeyId == null && group.legs.length === 1 ? [{
-                        label: 'Add a connection (makes this a journey)',
+                        label: 'Anschluss hinzufügen (macht daraus eine Verbindung)',
                         onClick: () => onAddLeg(group),
                     }] : []),
                     ...(journeyId != null ? [{
-                        label: 'Delete the whole journey',
+                        label: 'Ganze Verbindung löschen',
                         danger: true,
                         onClick: async () => {
                             if (!confirm(
-                                `Delete "${journeyTitle(group)}" and its ${group.legs.length} `
-                                + 'leg(s)? You can undo it.',
+                                `„${journeyTitle(group)}" und ${group.legs.length} `
+                                + 'Teilstrecke(n) löschen? Das lässt sich rückgängig machen.',
                             )) return;
                             // The legs first: the journey row is what they point
                             // at, and deleting it only unlinks them.
                             for (const leg of group.legs) {
-                                await api.removeRow('travel', leg, 'Removed a leg');
+                                await api.removeRow('travel', leg, 'Teilstrecke entfernt');
                             }
                             await api.remove('journeys', journeyId);
                         },
@@ -150,7 +150,7 @@ export default function JourneyCard({ api, group, onAddLeg }: {
             {/* ---- The legs, with the layovers between them ---- */}
             {group.legs.length === 0 ? (
                 <p className="text-xs text-gray-400">
-                    No legs yet — add the first one below.
+                    Noch keine Teilstrecken – füge unten die erste hinzu.
                 </p>
             ) : (
                 <ol className="space-y-1.5">
@@ -168,10 +168,10 @@ export default function JourneyCard({ api, group, onAddLeg }: {
                                         <span className="h-3 w-px bg-current opacity-30" />
                                         <span>
                                             {layover.impossible
-                                                ? 'leaves before you land'
-                                                : `${formatMinutes(layover.minutes) ?? '—'} at ${layover.at ?? 'the stopover'}`}
-                                            {layover.tight && ' · tight'}
-                                            {layover.changesAirport && ' · different airport'}
+                                                ? 'startet, bevor ihr landet'
+                                                : `${formatMinutes(layover.minutes) ?? '—'} Aufenthalt${layover.at ? ` in ${layover.at}` : ''}`}
+                                            {layover.tight && ' · knapp'}
+                                            {layover.changesAirport && ' · anderer Flughafen'}
                                         </span>
                                     </div>
                                 )}
@@ -191,7 +191,7 @@ export default function JourneyCard({ api, group, onAddLeg }: {
                                         <span className="min-w-0 flex-1">
                                             <span className="block truncate text-sm text-gray-900">
                                                 {[leg.from_text, leg.to_text].filter(Boolean)
-                                                    .join(' → ') || 'Where does this leg go?'}
+                                                    .join(' → ') || 'Wohin geht diese Teilstrecke?'}
                                                 {leg.flight_no && (
                                                     <span className="ml-1.5 rounded-full bg-gray-100
                                                         px-1.5 py-0.5 text-[10px] font-semibold
@@ -218,10 +218,10 @@ export default function JourneyCard({ api, group, onAddLeg }: {
                                                         {' '}({sameInstantIn(
                                                             leg.arrive_date, leg.arrive_time,
                                                             leg.arrive_tz, homeZone,
-                                                        )} back home)
+                                                        )} zu Hause)
                                                     </span>
                                                 )}
-                                                {day && ` · day ${day.day_number}`}
+                                                {day && ` · Tag ${day.day_number}`}
                                                 {leg.from_terminal && ` · T${leg.from_terminal}`}
                                                 {leg.to_terminal && ` → T${leg.to_terminal}`}
                                             </span>
@@ -245,13 +245,13 @@ export default function JourneyCard({ api, group, onAddLeg }: {
 
             <div className="flex flex-wrap items-center gap-2">
                 <Button onClick={() => onAddLeg(group)}>
-                    {group.legs.length ? '+ Add a connection' : '+ Add the first leg'}
+                    {group.legs.length ? '+ Anschluss hinzufügen' : '+ Erste Teilstrecke hinzufügen'}
                 </Button>
                 {group.legs.length > 0 && trip?.start_date && (
                     <span className="text-[11px] text-gray-400">
-                        Placed on {group.legs.map((leg) => {
+                        Liegt auf {group.legs.map((leg) => {
                             const day = group.dayOf.get(leg.id);
-                            return day ? `day ${day.day_number}` : 'no day';
+                            return day ? `Tag ${day.day_number}` : 'kein Tag';
                         }).filter((value, index, all) => all.indexOf(value) === index).join(', ')}
                         {group.departDate && ` · ${formatDayDate(trip.start_date,
                             dayForDate(days, trip.start_date, group.departDate).dayNumber ?? 1)}`}
@@ -267,7 +267,7 @@ export default function JourneyCard({ api, group, onAddLeg }: {
             <div className="border-t border-gray-100 pt-3">
                 <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wide
                     text-gray-400">
-                    The ticket
+                    Das Ticket
                 </p>
                 {journeyId != null ? (
                     <BookingPanel api={api} kind="travel" journeyId={journeyId} />
@@ -280,7 +280,7 @@ export default function JourneyCard({ api, group, onAddLeg }: {
                 <TextField
                     key={`n${group.journey.notes ?? ''}`}
                     defaultValue={group.journey.notes ?? ''}
-                    placeholder="Anything about this journey — seat numbers, who to ask for"
+                    placeholder="Alles zu dieser Verbindung – Sitzplätze, Ansprechpartner"
                     onBlur={(e) => {
                         if (e.target.value !== (group.journey?.notes ?? '')) {
                             api.update('journeys', { id: journeyId, notes: e.target.value });
@@ -331,21 +331,21 @@ function FixDay({ api, group, legId }: {
                     onClick={extend}
                     className="underline decoration-dotted"
                 >
-                    add days up to {target.dayNumber}
+                    Tage bis {target.dayNumber} hinzufügen
                 </button>
             )}
             <MiniSelect
                 value=""
-                aria-label="Put this leg on a day"
+                aria-label="Teilstrecke auf einen Tag legen"
                 onChange={(e) => {
                     if (!e.target.value) return;
                     api.update('travel', { id: leg.id, day_id: Number(e.target.value) });
                 }}
             >
-                <option value="">or file it on…</option>
+                <option value="">oder ablegen auf …</option>
                 {days.map((day) => (
                     <option key={day.id} value={day.id}>
-                        Day {day.day_number}
+                        Tag {day.day_number}
                     </option>
                 ))}
             </MiniSelect>

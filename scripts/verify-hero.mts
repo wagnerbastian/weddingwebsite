@@ -85,7 +85,7 @@ for (const c of CASES) {
     await page.goto(BASE, { waitUntil: 'domcontentloaded' });
     await page.waitForTimeout(2500);
 
-    const placeholder = (await page.textContent('body'))?.includes('[Add hero photos in admin]');
+    const placeholder = (await page.textContent('body'))?.includes('[Titelbilder im Admin hinzufügen]');
     if (placeholder) {
         check(`${c.label} has hero photos to animate`, false,
             'the server has no hero images configured — configure one before trusting this run');

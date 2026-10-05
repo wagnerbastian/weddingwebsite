@@ -58,7 +58,7 @@ export async function GET() {
     } catch (error) {
         console.error('photos.json could not be read:', error);
         return NextResponse.json(
-            { error: 'photos.json is unreadable — it may be corrupt. Check public/config/photos.json on the volume.' },
+            { error: 'photos.json ist nicht lesbar – möglicherweise ist die Datei beschädigt. Prüfe public/config/photos.json auf dem Volume.' },
             { status: 500 },
         );
     }
@@ -71,13 +71,13 @@ export async function POST(request: Request) {
         const category = String(formData.get('category') ?? 'gallery').slice(0, 50) || 'gallery';
 
         if (!(file instanceof File)) {
-            return NextResponse.json({ error: 'No file uploaded' }, { status: 400 });
+            return NextResponse.json({ error: 'Keine Datei hochgeladen' }, { status: 400 });
         }
         const problem = rejectUpload(file);
         if (problem) return NextResponse.json({ error: problem }, { status: 400 });
 
         const filename = safeImageFilename(file.name);
-        if (!filename) return NextResponse.json({ error: 'Unsupported image type' }, { status: 400 });
+        if (!filename) return NextResponse.json({ error: 'Nicht unterstütztes Bildformat' }, { status: 400 });
 
         if (!fs.existsSync(PHOTOS_DIR)) fs.mkdirSync(PHOTOS_DIR, { recursive: true });
         fs.writeFileSync(path.join(PHOTOS_DIR, filename), Buffer.from(await file.arrayBuffer()));
@@ -97,7 +97,7 @@ export async function POST(request: Request) {
         return NextResponse.json({ success: true, photo: newPhoto });
     } catch (error) {
         console.error('Upload error:', error);
-        return NextResponse.json({ error: 'Upload failed' }, { status: 500 });
+        return NextResponse.json({ error: 'Hochladen fehlgeschlagen' }, { status: 500 });
     }
 }
 
@@ -133,11 +133,11 @@ export async function PATCH(request: Request) {
             return { photos, result: photos[photoIndex] };
         });
 
-        if (!outcome) return NextResponse.json({ error: 'Photo not found' }, { status: 404 });
+        if (!outcome) return NextResponse.json({ error: 'Foto nicht gefunden' }, { status: 404 });
         return NextResponse.json({ success: true, photo: outcome });
     } catch (error) {
         console.error('Update error:', error);
-        return NextResponse.json({ error: 'Update failed' }, { status: 500 });
+        return NextResponse.json({ error: 'Aktualisieren fehlgeschlagen' }, { status: 500 });
     }
 }
 
@@ -152,7 +152,7 @@ export async function DELETE(request: Request) {
             return { photos, result: photo };
         });
 
-        if (!removed) return NextResponse.json({ error: 'Photo not found' }, { status: 404 });
+        if (!removed) return NextResponse.json({ error: 'Foto nicht gefunden' }, { status: 404 });
 
         const filePath = resolveInPhotos(removed.filename);
         if (filePath && fs.existsSync(filePath)) fs.unlinkSync(filePath);
@@ -160,6 +160,6 @@ export async function DELETE(request: Request) {
         return NextResponse.json({ success: true });
     } catch (error) {
         console.error('Delete error:', error);
-        return NextResponse.json({ error: 'Delete failed' }, { status: 500 });
+        return NextResponse.json({ error: 'Löschen fehlgeschlagen' }, { status: 500 });
     }
 }

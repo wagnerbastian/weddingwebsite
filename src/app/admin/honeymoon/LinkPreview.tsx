@@ -51,11 +51,11 @@ export default function LinkPreview({ title, url, rating, onRate, onClose }: {
                         <div className="absolute inset-0 bg-white flex items-center justify-center p-6">
                             <div className="text-center max-w-sm">
                                 <p className="text-sm font-medium text-gray-700">
-                                    This site won&apos;t display inside the portal
+                                    Diese Seite lässt sich nicht im Portal anzeigen
                                 </p>
                                 <p className="text-xs text-gray-500 mt-1">
-                                    Some sites block being embedded. Open it in a tab instead —
-                                    your notes and rating stay here.
+                                    Manche Seiten verhindern das Einbetten. Öffne sie stattdessen in einem Tab –
+                                    deine Notizen und Bewertung bleiben hier.
                                 </p>
                                 <a
                                     href={url}
@@ -64,7 +64,7 @@ export default function LinkPreview({ title, url, rating, onRate, onClose }: {
                                     className="inline-block mt-3 rounded-full bg-accent text-white
                                         px-4 py-1.5 text-sm font-medium hover:opacity-90"
                                 >
-                                    Open the page ↗
+                                    Seite öffnen ↗
                                 </a>
                             </div>
                         </div>
@@ -92,7 +92,7 @@ export default function LinkPreview({ title, url, rating, onRate, onClose }: {
                         rel="noopener noreferrer"
                         className="text-sm text-accent hover:underline"
                     >
-                        Open in a tab ↗
+                        In neuem Tab öffnen ↗
                     </a>
                 </div>
             </div>

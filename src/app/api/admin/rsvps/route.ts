@@ -22,7 +22,7 @@ export async function GET() {
         }
     } catch (error) {
         console.error('Database Error:', error);
-        return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+        return NextResponse.json({ error: 'Interner Serverfehler' }, { status: 500 });
     }
 }
 
@@ -43,10 +43,10 @@ export async function PUT(request: Request) {
         const { guest_name, dietary_restrictions } = await request.json();
 
         if (typeof guest_name !== 'string' || guest_name.trim() === '') {
-            return NextResponse.json({ error: 'guest_name is required' }, { status: 400 });
+            return NextResponse.json({ error: 'Gastname ist erforderlich' }, { status: 400 });
         }
         if (!Array.isArray(dietary_restrictions)) {
-            return NextResponse.json({ error: 'dietary_restrictions must be an array' }, { status: 400 });
+            return NextResponse.json({ error: 'Ernährungshinweise müssen eine Liste sein' }, { status: 400 });
         }
         const entries = dietary_restrictions as DietaryEntry[];
 
@@ -72,7 +72,7 @@ export async function PUT(request: Request) {
             [guest_name],
         );
         if (household.rows.length === 0) {
-            return NextResponse.json({ error: 'No such guest' }, { status: 404 });
+            return NextResponse.json({ error: 'Gast nicht gefunden' }, { status: 404 });
         }
         const { email, phone, rsvp_status } = household.rows[0];
         // Every stored entry is a person who is coming — that is what the array
@@ -87,7 +87,7 @@ export async function PUT(request: Request) {
         return NextResponse.json({ success: true, created: true });
     } catch (error) {
         console.error('Database Error:', error);
-        return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+        return NextResponse.json({ error: 'Interner Serverfehler' }, { status: 500 });
     } finally {
         client.release();
     }
@@ -105,6 +105,6 @@ export async function DELETE(request: Request) {
         }
     } catch (error) {
         console.error('Database Error:', error);
-        return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+        return NextResponse.json({ error: 'Interner Serverfehler' }, { status: 500 });
     }
 }

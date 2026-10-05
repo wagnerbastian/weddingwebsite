@@ -161,7 +161,7 @@ export function planForDay(
         return {
             stop,
             place,
-            label: place?.name ?? stop.custom_label ?? 'Something',
+            label: place?.name ?? stop.custom_label ?? 'Etwas',
             time: stop.start_time,
             lat: place?.lat ?? null,
             lng: place?.lng ?? null,
@@ -304,27 +304,27 @@ export function emergencyFor(country: string | null | undefined): {
     const entry = clean ? EMERGENCY_NUMBERS[clean] : undefined;
     if (!entry) {
         return {
-            country: clean || 'Wherever you are',
-            numbers: [{ label: 'Emergency (GSM)', number: '112' }],
+            country: clean || 'Wo auch immer ihr seid',
+            numbers: [{ label: 'Notruf (GSM)', number: '112' }],
             guessed: true,
         };
     }
     const numbers: { label: string; number: string }[] = [];
-    if (entry.all) numbers.push({ label: 'Emergency', number: entry.all });
-    if (entry.police) numbers.push({ label: 'Police', number: entry.police });
-    if (entry.ambulance) numbers.push({ label: 'Ambulance', number: entry.ambulance });
-    if (entry.fire) numbers.push({ label: 'Fire', number: entry.fire });
+    if (entry.all) numbers.push({ label: 'Notruf', number: entry.all });
+    if (entry.police) numbers.push({ label: 'Polizei', number: entry.police });
+    if (entry.ambulance) numbers.push({ label: 'Rettungsdienst', number: entry.ambulance });
+    if (entry.fire) numbers.push({ label: 'Feuerwehr', number: entry.fire });
     return { country: clean, numbers, guessed: false };
 }
 
 /** The sections of `trip.info`, in the order they are worth reading. */
 export const INFO_SECTIONS: { key: keyof TripInfo & string; label: string; hint: string }[] = [
-    { key: 'emergency', label: 'Emergency contacts', hint: 'Who to call, and their number' },
-    { key: 'insurance', label: 'Insurance', hint: 'Policy number and the 24h hotline' },
-    { key: 'embassy', label: 'Embassy', hint: 'Address and phone in each country' },
-    { key: 'medical', label: 'Medical', hint: 'Allergies, prescriptions, blood type' },
-    { key: 'contacts', label: 'On the ground', hint: "The driver's WhatsApp, the hotel desk" },
-    { key: 'money', label: 'Money', hint: 'Cards packed, bank numbers, ATM notes' },
+    { key: 'emergency', label: 'Notfallkontakte', hint: 'Wen anrufen, und die Nummer' },
+    { key: 'insurance', label: 'Versicherung', hint: 'Policennummer und die 24-Stunden-Hotline' },
+    { key: 'embassy', label: 'Botschaft', hint: 'Adresse und Telefon in jedem Land' },
+    { key: 'medical', label: 'Medizinisches', hint: 'Allergien, Medikamente, Blutgruppe' },
+    { key: 'contacts', label: 'Vor Ort', hint: 'WhatsApp des Fahrers, die Hotelrezeption' },
+    { key: 'money', label: 'Geld', hint: 'Eingepackte Karten, Bank-Nummern, Hinweise zu Geldautomaten' },
 ];
 
 /**

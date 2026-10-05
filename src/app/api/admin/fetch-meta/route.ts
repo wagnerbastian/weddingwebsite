@@ -252,7 +252,7 @@ function extractMeta(html: string, url: string) {
 export async function POST(req: Request) {
     try {
         const { url } = await req.json();
-        if (!url || typeof url !== 'string') return NextResponse.json({ error: 'URL required' }, { status: 400 });
+        if (!url || typeof url !== 'string') return NextResponse.json({ error: 'URL ist erforderlich' }, { status: 400 });
 
         const store = detectStore(url);
 
@@ -294,8 +294,8 @@ export async function POST(req: Request) {
             success: false,
             store,
             error: lastStatus && lastStatus !== 200
-                ? `Site returned ${lastStatus}`
-                : 'No preview data on that page',
+                ? `Die Seite antwortete mit ${lastStatus}`
+                : 'Keine Vorschaudaten auf dieser Seite',
             title: '',
             description: '',
             image: '',
@@ -309,7 +309,7 @@ export async function POST(req: Request) {
             rating: null,
         });
     } catch (err) {
-        const msg = err instanceof Error ? err.message : 'Fetch failed';
+        const msg = err instanceof Error ? err.message : 'Abruf fehlgeschlagen';
         return NextResponse.json({
             success: false,
             error: msg,

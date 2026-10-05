@@ -232,9 +232,9 @@ export function formatReleaseDate(date: string): string {
     if (!iso) return date;
     const parsed = new Date(`${iso[1]}T${iso[2] ?? '00:00'}:00Z`);
     if (Number.isNaN(parsed.getTime())) return date;
-    const day = parsed.toLocaleDateString('en-US', {
+    const day = parsed.toLocaleDateString('de-DE', {
         day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC',
     });
-    return iso[2] ? `${day} · ${iso[2]} UTC` : day;
+    return iso[2] ? `${day} · ${iso[2]} Uhr UTC` : day;
 }
 

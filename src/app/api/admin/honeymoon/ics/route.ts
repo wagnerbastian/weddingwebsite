@@ -18,7 +18,7 @@ export async function GET(request: Request) {
 
         if (!data.trip.start_date) {
             return NextResponse.json(
-                { error: 'Set the trip dates first — a calendar file needs real dates.' },
+                { error: 'Lege zuerst die Reisedaten fest – eine Kalenderdatei braucht echte Daten.' },
                 { status: 400 },
             );
         }
@@ -32,7 +32,7 @@ export async function GET(request: Request) {
 
         const body = buildTripCalendar(data, { alarmMinutes, days });
         if (!body) {
-            return NextResponse.json({ error: 'Nothing to export yet.' }, { status: 400 });
+            return NextResponse.json({ error: 'Noch nichts zum Exportieren.' }, { status: 400 });
         }
         const slug = calendarSlug(data.trip.title);
 
@@ -45,6 +45,6 @@ export async function GET(request: Request) {
         });
     } catch (error) {
         console.error('Error building the honeymoon calendar:', error);
-        return NextResponse.json({ error: 'Failed to build the calendar file' }, { status: 500 });
+        return NextResponse.json({ error: 'Kalenderdatei konnte nicht erstellt werden' }, { status: 500 });
     }
 }

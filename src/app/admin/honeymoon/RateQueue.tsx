@@ -61,18 +61,18 @@ export default function RateQueue({ api, open, onClose, filter, title }: {
         <Modal open={open} onClose={onClose} title={title} wide>
             {!queue.length ? (
                 <div className="py-8 text-center">
-                    <p className="text-sm text-gray-600">Nothing unrated here. Everything is triaged.</p>
-                    <Button className="mt-3" onClick={onClose}>Close</Button>
+                    <p className="text-sm text-gray-600">Hier ist nichts unbewertet. Alles ist sortiert.</p>
+                    <Button className="mt-3" onClick={onClose}>Schließen</Button>
                 </div>
             ) : !place ? (
                 <div className="py-8 text-center">
                     <p className="text-base font-medium text-gray-900">
-                        Done — {rated} rated.
+                        Fertig – {rated} bewertet.
                     </p>
                     <p className="mt-1 text-sm text-gray-500">
-                        The shortlist and the ranking will have moved.
+                        Auswahlliste und Rangfolge haben sich verschoben.
                     </p>
-                    <Button tone="primary" className="mt-3" onClick={onClose}>Close</Button>
+                    <Button tone="primary" className="mt-3" onClick={onClose}>Schließen</Button>
                 </div>
             ) : (
                 <div className="space-y-3">
@@ -84,7 +84,7 @@ export default function RateQueue({ api, open, onClose, filter, title }: {
                                 && ` · ${api.regionById.get(place.region_id) ?? ''}`}
                         </p>
                         <p className="text-[11px] tabular-nums text-gray-400">
-                            {at + 1} of {queue.length}
+                            {at + 1} von {queue.length}
                         </p>
                     </div>
 
@@ -167,9 +167,9 @@ export default function RateQueue({ api, open, onClose, filter, title }: {
                             onClick={() => setAt((index) => Math.max(0, index - 1))}
                             disabled={at === 0}
                         >
-                            ← Back
+                            ← Zurück
                         </Button>
-                        <Button onClick={() => setAt((index) => index + 1)}>Skip →</Button>
+                        <Button onClick={() => setAt((index) => index + 1)}>Überspringen →</Button>
                     </div>
                 </div>
             )}

@@ -76,13 +76,13 @@ function SortableRow({ member, index, party, onEdit, onDelete }: SortableRowProp
           onClick={() => onEdit(party, index)}
           className="text-blue-100 bg-blue-500 px-3 py-1 rounded hover:bg-blue-600 mr-2 text-sm"
         >
-          Edit
+          Bearbeiten
         </button>
         <button
           onClick={() => onDelete(party, index)}
           className="text-red-100 bg-red-500 px-3 py-1 rounded hover:bg-red-600 text-sm"
         >
-          Delete
+          Löschen
         </button>
       </td>
     </tr>
@@ -274,7 +274,7 @@ export default function AdminWeddingPartyPage() {
     setFormData({
       id: 'officiant',
       name: officiant?.name || '',
-      role: 'Officiant',
+      role: 'Zeremonienleitung',
       relationship: officiant?.relationship || '',
       photo: officiant?.photo || '',
       photoAlign: officiant?.photoAlign || 'center',
@@ -362,14 +362,14 @@ export default function AdminWeddingPartyPage() {
       setOldPhoto(null);
     } catch (error) {
       console.error('Error saving member:', error);
-      alert('Failed to save member. Please try again.');
+      alert('Mitglied konnte nicht gespeichert werden. Bitte versuche es erneut.');
     } finally {
       setUploading(false);
     }
   };
 
   const deleteOfficiant = () => {
-    if (!confirm('Are you sure you want to remove the officiant?')) return;
+    if (!confirm('Zeremonienleitung wirklich entfernen?')) return;
     if (config.weddingParty) {
       delete config.weddingParty.officiant;
       setConfig({ ...config });
@@ -377,7 +377,7 @@ export default function AdminWeddingPartyPage() {
   };
 
   const deleteMember = (party: 'bride' | 'groom' | 'somethingBlueCrew', index: number) => {
-    if (!confirm('Are you sure you want to delete this member?')) return;
+    if (!confirm('Dieses Mitglied wirklich löschen?')) return;
 
     const partyKey = party === 'bride' ? 'brideParty' : party === 'groom' ? 'groomParty' : 'somethingBlueCrew';
     config.weddingParty[partyKey].splice(index, 1);
@@ -385,7 +385,7 @@ export default function AdminWeddingPartyPage() {
   };
 
   if (loading) {
-    return <div className="p-8">Loading...</div>;
+    return <div className="p-8">Wird geladen …</div>;
   }
 
   const brideParty = config.weddingParty?.brideParty || [];
@@ -395,56 +395,56 @@ export default function AdminWeddingPartyPage() {
   return (
     <div className="max-w-6xl">
       <AutosaveHeader
-        title="Wedding Party Management"
-        subtitle="Add and manage your wedding party members. Changes save themselves."
+        title="Trauzeugen & Team verwalten"
+        subtitle="Fügt Mitglieder hinzu und verwaltet sie. Änderungen werden automatisch gespeichert."
         state={state}
         onRetry={retry}
       />
 
       {/* Page Subtitle Section */}
       <div className="mb-8 bg-white rounded-lg shadow p-6">
-        <h2 className="text-xl font-bold mb-4">Page Settings</h2>
+        <h2 className="text-xl font-bold mb-4">Seiteneinstellungen</h2>
         <div className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Subtitle Text (appears below &quot;Our Wedding Party&quot; header)
+              Untertitel (erscheint unter der Überschrift „Trauzeugen & Team“)
             </label>
             <input
               type="text"
               value={config.weddingPartySubtitle || ''}
               onChange={(e) => setConfig({ ...config, weddingPartySubtitle: e.target.value })}
-              placeholder="Meet the special people standing by our side on our big day"
+              placeholder="Die besonderen Menschen, die an unserem großen Tag an unserer Seite stehen"
               className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent"
             />
             <p className="mt-2 text-sm text-gray-500">
-              This text appears at the top of the Wedding Party page
+              Dieser Text steht oben auf der Seite „Trauzeugen & Team“
             </p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">{config.brideName}&apos;s section title</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Titel des Bereichs von {config.brideName}</label>
               <input
                 type="text"
                 value={config.bridePartyTitle || ''}
                 onChange={(e) => setConfig({ ...config, bridePartyTitle: e.target.value })}
-                placeholder={`${config.brideName}'s Bridesmaids`}
+                placeholder={`Brautjungfern von ${config.brideName}`}
                 className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">{config.groomName}&apos;s section title</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Titel des Bereichs von {config.groomName}</label>
               <input
                 type="text"
                 value={config.groomPartyTitle || ''}
                 onChange={(e) => setConfig({ ...config, groomPartyTitle: e.target.value })}
-                placeholder={`${config.groomName}'s Groomsmen`}
+                placeholder={`Trauzeugen von ${config.groomName}`}
                 className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent"
               />
             </div>
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Something Blue Crew Section Title
+              Titel des Bereichs „Something Blue Crew“
             </label>
             <input
               type="text"
@@ -454,7 +454,7 @@ export default function AdminWeddingPartyPage() {
               className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent"
             />
             <p className="mt-2 text-sm text-gray-500">
-              Custom title for the third wedding party section
+              Eigener Titel für den dritten Bereich
             </p>
           </div>
         </div>
@@ -463,12 +463,12 @@ export default function AdminWeddingPartyPage() {
       {/* Bride's Party */}
       <div className="mb-12">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-2xl font-bold">{config.brideName}&apos;s Party</h2>
+          <h2 className="text-2xl font-bold">Team von {config.brideName}</h2>
           <button
             onClick={() => addMember('bride')}
             className="bg-accent text-white px-4 py-2 rounded-md hover:bg-accent/90"
           >
-            Add Member
+            Mitglied hinzufügen
           </button>
         </div>
 
@@ -479,16 +479,16 @@ export default function AdminWeddingPartyPage() {
         >
           <div className="bg-white rounded-lg shadow overflow-x-auto">
             {brideParty.length === 0 ? (
-              <p className="p-6 text-gray-500 text-center">No members added yet</p>
+              <p className="p-6 text-gray-500 text-center">Noch keine Mitglieder</p>
             ) : (
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
                   <tr>
                     <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase w-12"></th>
                     <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
-                    <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase hidden sm:table-cell">Role</th>
-                    <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase hidden sm:table-cell">Relationship</th>
-                    <th className="px-3 sm:px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Actions</th>
+                    <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase hidden sm:table-cell">Rolle</th>
+                    <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase hidden sm:table-cell">Beziehung</th>
+                    <th className="px-3 sm:px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Aktionen</th>
                   </tr>
                 </thead>
                 <SortableContext
@@ -517,12 +517,12 @@ export default function AdminWeddingPartyPage() {
       {/* Groom's Party */}
       <div className="mb-12">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-2xl font-bold">{config.groomName}&apos;s Party</h2>
+          <h2 className="text-2xl font-bold">Team von {config.groomName}</h2>
           <button
             onClick={() => addMember('groom')}
             className="bg-accent text-white px-4 py-2 rounded-md hover:bg-accent/90"
           >
-            Add Member
+            Mitglied hinzufügen
           </button>
         </div>
 
@@ -533,16 +533,16 @@ export default function AdminWeddingPartyPage() {
         >
           <div className="bg-white rounded-lg shadow overflow-x-auto">
             {groomParty.length === 0 ? (
-              <p className="p-6 text-gray-500 text-center">No members added yet</p>
+              <p className="p-6 text-gray-500 text-center">Noch keine Mitglieder</p>
             ) : (
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
                   <tr>
                     <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase w-12"></th>
                     <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
-                    <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase hidden sm:table-cell">Role</th>
-                    <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase hidden sm:table-cell">Relationship</th>
-                    <th className="px-3 sm:px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Actions</th>
+                    <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase hidden sm:table-cell">Rolle</th>
+                    <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase hidden sm:table-cell">Beziehung</th>
+                    <th className="px-3 sm:px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Aktionen</th>
                   </tr>
                 </thead>
                 <SortableContext
@@ -576,7 +576,7 @@ export default function AdminWeddingPartyPage() {
             onClick={() => addMember('somethingBlueCrew')}
             className="bg-accent text-white px-4 py-2 rounded-md hover:bg-accent/90"
           >
-            Add Member
+            Mitglied hinzufügen
           </button>
         </div>
 
@@ -587,16 +587,16 @@ export default function AdminWeddingPartyPage() {
         >
           <div className="bg-white rounded-lg shadow overflow-x-auto">
             {somethingBlueCrew.length === 0 ? (
-              <p className="p-6 text-gray-500 text-center">No members added yet</p>
+              <p className="p-6 text-gray-500 text-center">Noch keine Mitglieder</p>
             ) : (
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
                   <tr>
                     <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase w-12"></th>
                     <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
-                    <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase hidden sm:table-cell">Role</th>
-                    <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase hidden sm:table-cell">Relationship</th>
-                    <th className="px-3 sm:px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Actions</th>
+                    <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase hidden sm:table-cell">Rolle</th>
+                    <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase hidden sm:table-cell">Beziehung</th>
+                    <th className="px-3 sm:px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Aktionen</th>
                   </tr>
                 </thead>
                 <SortableContext
@@ -625,20 +625,20 @@ export default function AdminWeddingPartyPage() {
       {/* Officiant */}
       <div className="mb-12">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-2xl font-bold">Officiant</h2>
+          <h2 className="text-2xl font-bold">Zeremonienleitung</h2>
           {!config.weddingParty?.officiant && (
             <button
               onClick={() => addMember('officiant')}
               className="bg-accent text-white px-4 py-2 rounded-md hover:bg-accent/90"
             >
-              Add Officiant
+              Zeremonienleitung hinzufügen
             </button>
           )}
         </div>
 
         <div className="bg-white rounded-lg shadow overflow-hidden">
           {!config.weddingParty?.officiant ? (
-            <p className="p-6 text-gray-500 text-center">No officiant added yet</p>
+            <p className="p-6 text-gray-500 text-center">Noch keine Zeremonienleitung</p>
           ) : (
             <div className="p-6">
               <div className="flex items-start justify-between">
@@ -656,7 +656,7 @@ export default function AdminWeddingPartyPage() {
                   )}
                   {config.weddingParty.officiant.photo && (
                     <p className="text-xs text-gray-400 mt-2">
-                      Photo: {config.weddingParty.officiant.photo}
+                      Foto: {config.weddingParty.officiant.photo}
                     </p>
                   )}
                 </div>
@@ -665,13 +665,13 @@ export default function AdminWeddingPartyPage() {
                     onClick={editOfficiant}
                     className="text-blue-600 hover:text-blue-900"
                   >
-                    Edit
+                    Bearbeiten
                   </button>
                   <button
                     onClick={deleteOfficiant}
                     className="text-red-600 hover:text-red-900"
                   >
-                    Remove
+                    Entfernen
                   </button>
                 </div>
               </div>
@@ -686,7 +686,7 @@ export default function AdminWeddingPartyPage() {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
             <h3 className="text-2xl font-bold mb-6">
-              {editingIndex === null ? 'Add' : 'Edit'} Member
+              {editingIndex === null ? 'Mitglied hinzufügen' : 'Mitglied bearbeiten'}
             </h3>
 
             <div className="space-y-4">
@@ -706,7 +706,7 @@ export default function AdminWeddingPartyPage() {
               {editingParty !== 'officiant' && (
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Role * (e.g., Maid of Honor, Best Man, Bridesmaid, Groomsman)
+                    Rolle * (z. B. Trauzeugin, Trauzeuge, Brautjungfer, Groomsman)
                   </label>
                   <input
                     type="text"
@@ -720,7 +720,7 @@ export default function AdminWeddingPartyPage() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Relationship (optional — e.g., {editingParty === 'officiant' ? 'Friend, Pastor, Rabbi' : 'Sister, Best Friend, Brother'})
+                  Beziehung (optional – z. B. {editingParty === 'officiant' ? 'Freund, Pastor, Rabbiner' : 'Schwester, beste Freundin, Bruder'})
                 </label>
                 <input
                   type="text"
@@ -732,7 +732,7 @@ export default function AdminWeddingPartyPage() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Photo (optional)
+                  Foto (optional)
                 </label>
 
                 {/* Show current photo if exists */}
@@ -741,7 +741,7 @@ export default function AdminWeddingPartyPage() {
                     <div className="relative w-24 h-24 rounded-lg overflow-hidden border-2 border-gray-200">
                       <Image
                         src={`/api/photos/${formData.photo}`}
-                        alt="Current photo"
+                        alt="Aktuelles Foto"
                         fill
                         unoptimized
                         className="object-cover"
@@ -755,7 +755,7 @@ export default function AdminWeddingPartyPage() {
                       }}
                       className="text-sm text-red-600 hover:text-red-800"
                     >
-                      Remove photo
+                      Foto entfernen
                     </button>
                   </div>
                 )}
@@ -766,14 +766,14 @@ export default function AdminWeddingPartyPage() {
                     <div className="relative w-24 h-24 rounded-lg overflow-hidden border-2 border-green-500">
                       <Image
                         src={previewUrl ?? ''}
-                        alt="New photo"
+                        alt="Neues Foto"
                         fill
                         unoptimized
                         className="object-cover"
                       />
                     </div>
                     <div className="flex flex-col">
-                      <span className="text-sm text-green-600 font-medium">New photo selected</span>
+                      <span className="text-sm text-green-600 font-medium">Neues Foto ausgewählt</span>
                       <span className="text-xs text-gray-500">{selectedFile.name}</span>
                       <button
                         type="button"
@@ -785,7 +785,7 @@ export default function AdminWeddingPartyPage() {
                         }}
                         className="text-sm text-red-600 hover:text-red-800 text-left"
                       >
-                        Cancel
+                        Abbrechen
                       </button>
                     </div>
                   </div>
@@ -810,7 +810,7 @@ export default function AdminWeddingPartyPage() {
                     onClick={() => fileInputRef.current?.click()}
                     className="px-4 py-2 bg-gray-100 border border-gray-300 rounded-md text-sm hover:bg-gray-200 transition-colors"
                   >
-                    {formData.photo || selectedFile ? 'Change Photo' : 'Upload Photo'}
+                    {formData.photo || selectedFile ? 'Foto ändern' : 'Foto hochladen'}
                   </button>
                 </div>
 
@@ -818,21 +818,21 @@ export default function AdminWeddingPartyPage() {
                 {(formData.photo || selectedFile) && (
                   <div className="mt-4">
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Photo Vertical Alignment
+                      Vertikale Ausrichtung des Fotos
                     </label>
                     <select
                       value={formData.photoAlign || 'center'}
                       onChange={(e) => setFormData({ ...formData, photoAlign: e.target.value as 'top' | 'top-center' | 'center' | 'center-bottom' | 'bottom' })}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-accent focus:border-accent text-gray-900"
                     >
-                      <option value="top">Top Align</option>
-                      <option value="top-center">Top-Center Align</option>
-                      <option value="center">Center Align (Default)</option>
-                      <option value="center-bottom">Center-Bottom Align</option>
-                      <option value="bottom">Bottom Align</option>
+                      <option value="top">Oben</option>
+                      <option value="top-center">Oben-Mitte</option>
+                      <option value="center">Mitte (Standard)</option>
+                      <option value="center-bottom">Mitte-Unten</option>
+                      <option value="bottom">Unten</option>
                     </select>
                     <p className="mt-1 text-xs text-gray-500">
-                      Choose how the photo is positioned vertically within the frame
+                      Legt fest, wie das Foto im Rahmen vertikal positioniert wird
                     </p>
                   </div>
                 )}
@@ -840,14 +840,14 @@ export default function AdminWeddingPartyPage() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Bio (optional)
+                  Kurzvorstellung (optional)
                 </label>
                 <textarea
                   value={formData.bio || ''}
                   onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
                   className="w-full border border-gray-300 rounded-md px-3 py-2"
                   rows={4}
-                  placeholder="A short description about this person..."
+                  placeholder="Eine kurze Beschreibung dieser Person …"
                 />
               </div>
             </div>
@@ -862,14 +862,14 @@ export default function AdminWeddingPartyPage() {
                 disabled={uploading}
                 className="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50"
               >
-                Cancel
+                Abbrechen
               </button>
               <button
                 onClick={saveMember}
                 disabled={uploading || !formData.name || (editingParty !== 'officiant' && !formData.role)}
                 className="px-4 py-2 bg-accent text-white rounded-md hover:bg-accent/90 disabled:opacity-50"
               >
-                {uploading ? 'Saving...' : (editingParty === 'officiant' ? (config.weddingParty?.officiant ? 'Update' : 'Add') : (editingIndex === null ? 'Add' : 'Update')) + ' ' + (editingParty === 'officiant' ? 'Officiant' : 'Member')}
+                {uploading ? 'Wird gespeichert …' : editingParty === 'officiant' ? (config.weddingParty?.officiant ? 'Zeremonienleitung aktualisieren' : 'Zeremonienleitung hinzufügen') : (editingIndex === null ? 'Mitglied hinzufügen' : 'Mitglied aktualisieren')}
               </button>
             </div>
           </div>

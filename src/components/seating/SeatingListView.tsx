@@ -32,6 +32,8 @@ import {
     planSeatSelection,
     planUnseatSelection,
     applySeatChange,
+    rsvpLabel,
+    sideLabel,
     planRenameSeats,
     staleSeatNames,
     SeatChange,
@@ -57,11 +59,11 @@ const guestKey = (guestId: number) => `g:${guestId}`;
 
 function RsvpDot({ status }: { status: string | null }) {
     const [cls, title] =
-        status === 'declined' ? ['bg-red-400', 'Not coming']
-            : status === 'likely_not_coming' ? ['bg-orange-400', 'Likely not coming']
-                : status === 'attending' ? ['bg-green-400', 'Coming']
-                    : status ? ['bg-green-400', status]
-                        : ['bg-gray-200', 'No RSVP yet'];
+        status === 'declined' ? ['bg-red-400', 'Kommt nicht']
+            : status === 'likely_not_coming' ? ['bg-orange-400', 'Kommt wohl nicht']
+                : status === 'attending' ? ['bg-green-400', 'Kommt']
+                    : status ? ['bg-green-400', rsvpLabel(status)]
+                        : ['bg-gray-200', 'Noch keine Rückmeldung'];
     return <span className={`w-2 h-2 rounded-full shrink-0 ${cls}`} title={title} />;
 }
 
@@ -84,7 +86,7 @@ function OverflowMenu({ items }: { items: { label: string; onClick: () => void; 
             <button
                 onClick={() => setOpen(v => !v)}
                 className="px-3 py-1.5 rounded-full text-sm font-medium text-gray-600 hover:bg-gray-100 transition-colors"
-                title="More actions"
+                title="Weitere Aktionen"
             >
                 ⋯
             </button>
@@ -231,7 +233,7 @@ export default function SeatingListView({
                     rsvp: g.rsvp_status ?? null,
                 }))
                 .filter(r => matches(r.name, r.guest, r.rsvp, r.seatedAt.length > 0));
-            return [{ id: ALL_PARTIES, title: 'All parties', subtitle: `${rows.length} of ${guests.filter(g => g.invited).length}`, table: null, rows: sortRows(rows) }];
+            return [{ id: ALL_PARTIES, title: 'Alle Gruppen', subtitle: `${rows.length} von ${guests.filter(g => g.invited).length}`, table: null, rows: sortRows(rows) }];
         }
 
         const unseatedRows: Row[] = guests
@@ -263,7 +265,7 @@ export default function SeatingListView({
             return {
                 id: table.id,
                 title: table.name,
-                subtitle: `${seated} of ${capacity} seat${capacity === 1 ? '' : 's'} · ${parties} part${parties === 1 ? 'y' : 'ies'}`,
+                subtitle: `${seated} von ${capacity} ${capacity === 1 ? 'Platz' : 'Plätzen'} · ${parties} ${parties === 1 ? 'Gruppe' : 'Gruppen'}`,
                 table,
                 // Seat order is the table's own order, so the list reads the way the
                 // canvas draws it. Sorting is for the flat groupings.
@@ -274,8 +276,8 @@ export default function SeatingListView({
         return [
             {
                 id: UNSEATED,
-                title: 'Not seated',
-                subtitle: `${unseatedRows.length} part${unseatedRows.length === 1 ? 'y' : 'ies'}`,
+                title: 'Ohne Platz',
+                subtitle: `${unseatedRows.length} ${unseatedRows.length === 1 ? 'Gruppe' : 'Gruppen'}`,
                 table: null,
                 rows: sortRows(unseatedRows),
             },
@@ -389,7 +391,7 @@ export default function SeatingListView({
 
     const run = useCallback(async (change: SeatChange, message?: string) => {
         if (change.deletes.length === 0 && change.seats.length === 0) {
-            setNote(message ?? 'Nothing to do.');
+            setNote(message ?? 'Nichts zu tun.');
             return;
         }
         setBusy(true);
@@ -399,7 +401,7 @@ export default function SeatingListView({
             setNote(message ?? null);
             onRefresh();
         } catch {
-            setNote('That did not save — nothing was changed.');
+            setNote('Das wurde nicht gespeichert – es wurde nichts geändert.');
         } finally {
             setBusy(false);
         }
@@ -412,12 +414,12 @@ export default function SeatingListView({
     const moveSelectionTo = useCallback(async (tableId: number) => {
         const change = planSeatSelection(selection, tableId, tables);
         const table = tables.find(t => t.id === tableId);
-        await run(change, `Seated ${change.seats.length} at ${table?.name ?? 'the table'}.`);
+        await run(change, `${change.seats.length} an ${table?.name ?? 'den Tisch'} gesetzt.`);
     }, [selection, tables, run]);
 
     const unseatSelection = useCallback(async () => {
         const change = planUnseatSelection(selection, tables);
-        await run(change, `Freed ${change.deletes.length} chair${change.deletes.length === 1 ? '' : 's'}.`);
+        await run(change, `${change.deletes.length} ${change.deletes.length === 1 ? 'Platz' : 'Plätze'} freigegeben.`);
     }, [selection, tables, run]);
 
     const renameSeat = useCallback(async (row: Extract<Row, { kind: 'seat' }>, name: string) => {
@@ -433,7 +435,7 @@ export default function SeatingListView({
                 display_name: trimmed,
                 party_group_id: row.seat.party_group_id,
             }],
-        }, `Renamed to ${trimmed}.`);
+        }, `Umbenannt in ${trimmed}.`);
     }, [run]);
 
     // ── Drag and drop ────────────────────────────────────────────────────────
@@ -465,12 +467,12 @@ export default function SeatingListView({
         if (groupId === ALL_PARTIES) return;
         if (groupId === UNSEATED) {
             const change = planUnseatSelection(dragged, tables);
-            await run(change, `Freed ${change.deletes.length} chair${change.deletes.length === 1 ? '' : 's'}.`);
+            await run(change, `${change.deletes.length} ${change.deletes.length === 1 ? 'Platz' : 'Plätze'} freigegeben.`);
             return;
         }
         const change = planSeatSelection(dragged, groupId, tables);
         const table = tables.find(t => t.id === groupId);
-        await run(change, `Seated ${change.seats.length} at ${table?.name ?? 'the table'}.`);
+        await run(change, `${change.seats.length} an ${table?.name ?? 'den Tisch'} gesetzt.`);
     }, [rowByKey, tables, run, toSelection]);
 
     // ── Bulk actions ─────────────────────────────────────────────────────────
@@ -480,15 +482,15 @@ export default function SeatingListView({
 
     const bulkItems = [
         {
-            label: 'Swap these two',
+            label: 'Diese beiden tauschen',
             disabled: !canSwap,
-            hint: canSwap ? undefined : 'Pick exactly two seated people',
-            onClick: () => { if (canSwap) run(planSwap(selectedSeats[0], selectedSeats[1]), 'Swapped.'); },
+            hint: canSwap ? undefined : 'Genau zwei platzierte Personen auswählen',
+            onClick: () => { if (canSwap) run(planSwap(selectedSeats[0], selectedSeats[1]), 'Getauscht.'); },
         },
         {
-            label: 'Keep each party together',
+            label: 'Gruppen zusammenhalten',
             disabled: selectedRows.length === 0,
-            hint: 'Bring every split party in the selection onto one table',
+            hint: 'Jede getrennte Gruppe der Auswahl an einen Tisch bringen',
             onClick: () => {
                 const groupIds = new Set<number>();
                 for (const row of selectedRows) {
@@ -501,17 +503,17 @@ export default function SeatingListView({
                     change.deletes.push(...plan.deletes);
                     change.seats.push(...plan.seats);
                 }
-                run(change, groupIds.size === 0 ? 'Nothing in the selection is split.' : `Gathered ${groupIds.size} part${groupIds.size === 1 ? 'y' : 'ies'}.`);
+                run(change, groupIds.size === 0 ? 'In der Auswahl ist nichts getrennt.' : `${groupIds.size} ${groupIds.size === 1 ? 'Gruppe' : 'Gruppen'} zusammengeführt.`);
             },
         },
         {
-            label: 'Auto-seat into free chairs',
+            label: 'Automatisch auf freie Plätze setzen',
             disabled: selectedGuests.length === 0,
-            hint: 'Each party goes to the first table with room for all of it',
+            hint: 'Jede Gruppe kommt an den ersten Tisch mit genug Platz für alle',
             onClick: () => {
                 const unseatedOnly = selectedGuests.filter(r => r.seatedAt.length === 0).map(r => r.guest);
                 const { change, placed, unplaced } = planAutoSeat(unseatedOnly, tables);
-                run(change, `Seated ${placed.length} part${placed.length === 1 ? 'y' : 'ies'}${unplaced.length ? `; ${unplaced.length} did not fit anywhere` : ''}.`);
+                run(change, `${placed.length} ${placed.length === 1 ? 'Gruppe' : 'Gruppen'} platziert${unplaced.length ? `; ${unplaced.length} ${unplaced.length === 1 ? 'passte' : 'passten'} nirgends` : ''}.`);
             },
         },
     ];
@@ -538,7 +540,7 @@ export default function SeatingListView({
                                 grouping === g ? 'bg-white text-gray-800 shadow-sm' : 'text-gray-500 hover:text-gray-700'
                             }`}
                         >
-                            {g === 'table' ? 'By table' : 'By guest'}
+                            {g === 'table' ? 'Nach Tisch' : 'Nach Gast'}
                         </button>
                     ))}
                 </div>
@@ -546,7 +548,7 @@ export default function SeatingListView({
                 <input
                     value={search}
                     onChange={e => setSearch(e.target.value)}
-                    placeholder="Search people…"
+                    placeholder="Personen suchen …"
                     className="flex-1 min-w-[8rem] md:flex-none md:w-52 px-4 py-2 text-sm border border-gray-200 rounded-2xl bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent transition-all"
                 />
 
@@ -558,32 +560,32 @@ export default function SeatingListView({
                             : 'border-gray-200 text-gray-500'
                     }`}
                 >
-                    Filters{activeFilterCount > 0 ? ` (${activeFilterCount})` : ''}
+                    Filter{activeFilterCount > 0 ? ` (${activeFilterCount})` : ''}
                 </button>
 
                 <div className={`${filtersOpen ? 'flex' : 'hidden'} md:flex w-full md:w-auto flex-wrap items-center gap-2`}>
                 <select value={filterSide} onChange={e => setFilterSide(e.target.value)} className="px-3 py-2 text-sm border border-gray-200 rounded-2xl bg-gray-50 focus:bg-white focus:outline-none">
-                    <option value="all">Either side</option>
-                    {sides.map(s => <option key={s} value={s}>{s}</option>)}
-                    <option value="unspecified">No side</option>
+                    <option value="all">Beide Seiten</option>
+                    {sides.map(s => <option key={s} value={s}>{sideLabel(s)}</option>)}
+                    <option value="unspecified">Ohne Angabe</option>
                 </select>
 
                 <select value={filterRsvp} onChange={e => setFilterRsvp(e.target.value)} className="px-3 py-2 text-sm border border-gray-200 rounded-2xl bg-gray-50 focus:bg-white focus:outline-none">
-                    <option value="all">Any RSVP</option>
-                    {rsvpStatuses.map(s => <option key={s} value={s}>{s.replace(/_/g, ' ')}</option>)}
-                    <option value="none">No RSVP</option>
+                    <option value="all">Jede Rückmeldung</option>
+                    {rsvpStatuses.map(s => <option key={s} value={s}>{rsvpLabel(s)}</option>)}
+                    <option value="none">Keine Antwort</option>
                 </select>
 
                 <select value={filterSeated} onChange={e => setFilterSeated(e.target.value)} className="px-3 py-2 text-sm border border-gray-200 rounded-2xl bg-gray-50 focus:bg-white focus:outline-none">
-                    <option value="all">Seated or not</option>
-                    <option value="seated">Seated</option>
-                    <option value="unseated">Not seated</option>
+                    <option value="all">Mit oder ohne Platz</option>
+                    <option value="seated">Mit Platz</option>
+                    <option value="unseated">Ohne Platz</option>
                 </select>
 
                 <select value={sortBy} onChange={e => setSortBy(e.target.value as typeof sortBy)} className="px-3 py-2 text-sm border border-gray-200 rounded-2xl bg-gray-50 focus:bg-white focus:outline-none">
-                    <option value="name">Sort by name</option>
-                    <option value="party">Sort by party size</option>
-                    <option value="rsvp">Sort by RSVP</option>
+                    <option value="name">Nach Name sortieren</option>
+                    <option value="party">Nach Gruppengröße sortieren</option>
+                    <option value="rsvp">Nach Rückmeldung sortieren</option>
                 </select>
                 </div>
 
@@ -592,14 +594,14 @@ export default function SeatingListView({
                         onClick={() => setCollapsed(prev => (prev.size > 0 ? new Set() : new Set(groups.map(g => g.id))))}
                         className="px-3 py-1.5 rounded-full text-sm font-medium text-gray-600 hover:bg-gray-100 transition-colors"
                     >
-                        {collapsed.size > 0 ? 'Expand all' : 'Collapse all'}
+                        {collapsed.size > 0 ? 'Alle aufklappen' : 'Alle zuklappen'}
                     </button>
                     <button
                         onClick={onAddTable}
                         className="px-4 py-1.5 rounded-full text-sm font-medium text-white transition-opacity hover:opacity-90"
                         style={{ backgroundColor: 'var(--accent)' }}
                     >
-                        Add table
+                        Tisch hinzufügen
                     </button>
                 </div>
             </div>
@@ -611,7 +613,7 @@ export default function SeatingListView({
                         onClick={() => setShowIssues(v => !v)}
                         className="text-xs font-semibold text-amber-800 hover:text-amber-900 transition-colors"
                     >
-                        {issues.length} thing{issues.length === 1 ? '' : 's'} to look at {showIssues ? '▾' : '▸'}
+                        {issues.length} {issues.length === 1 ? 'Hinweis' : 'Hinweise'} zur Prüfung {showIssues ? '▾' : '▸'}
                     </button>
                     {showIssues && (
                         <ul className="mt-1.5 space-y-1">
@@ -627,7 +629,7 @@ export default function SeatingListView({
                                             ].filter(k => rowByKey.has(k));
                                             setSelected(new Set(keys));
                                         }}
-                                        title="Select the people this is about"
+                                        title="Betroffene Personen auswählen"
                                     >
                                         {issue.label}
                                     </button>
@@ -639,11 +641,11 @@ export default function SeatingListView({
                                             disabled={busy}
                                             onClick={() => run(
                                                 planRenameSeats(stale, tables),
-                                                `Renamed ${stale.length} seat${stale.length === 1 ? '' : 's'} to match the guest list.`,
+                                                `${stale.length} ${stale.length === 1 ? 'Platz' : 'Plätze'} an die Gästeliste angepasst.`,
                                             )}
                                             className="ml-2 px-2.5 py-0.5 rounded-full bg-amber-800 text-white text-[11px] font-medium hover:bg-amber-900 disabled:opacity-40"
                                         >
-                                            Use the guest list&rsquo;s names
+                                            Namen aus der Gästeliste übernehmen
                                         </button>
                                     )}
                                 </li>
@@ -654,7 +656,7 @@ export default function SeatingListView({
                                         onClick={() => setIssuesExpanded(v => !v)}
                                         className="text-xs font-medium text-amber-800 hover:underline"
                                     >
-                                        {issuesExpanded ? 'show fewer' : `and ${issues.length - 6} more`}
+                                        {issuesExpanded ? 'weniger anzeigen' : `und ${issues.length - 6} weitere`}
                                     </button>
                                 </li>
                             )}
@@ -699,10 +701,10 @@ export default function SeatingListView({
                                 {/* Hidden on touch-sized screens: there is no HTML5 drag there, and
                                     the hint was stealing enough width to wrap the table's own name. */}
                                 {group.id !== UNSEATED && group.id !== ALL_PARTIES && (
-                                    <span className="ml-auto hidden md:inline text-xs text-gray-400">drop here to seat</span>
+                                    <span className="ml-auto hidden md:inline text-xs text-gray-400">zum Platzieren hier ablegen</span>
                                 )}
                                 {group.id === UNSEATED && grouping === 'table' && (
-                                    <span className="ml-auto hidden md:inline text-xs text-gray-400">drop here to free the chair</span>
+                                    <span className="ml-auto hidden md:inline text-xs text-gray-400">zum Freigeben hier ablegen</span>
                                 )}
                             </div>
 
@@ -710,9 +712,9 @@ export default function SeatingListView({
                                 <div className="border-t border-gray-100">
                                     {group.rows.length === 0 ? (
                                         <p className="px-5 py-3 text-xs text-gray-400">
-                                            {group.id === UNSEATED ? 'Everyone invited has a chair.'
-                                                : group.id === ALL_PARTIES ? 'Nobody matches that.'
-                                                    : 'No one here yet.'}
+                                            {group.id === UNSEATED ? 'Alle Eingeladenen haben einen Platz.'
+                                                : group.id === ALL_PARTIES ? 'Niemand passt dazu.'
+                                                    : 'Hier sitzt noch niemand.'}
                                         </p>
                                     ) : group.rows.map(row => {
                                         const isSelected = selected.has(row.key);
@@ -756,16 +758,16 @@ export default function SeatingListView({
                                                         {row.name}
                                                     </span>
                                                 )}
-                                                {isSplit && <span className="text-[10px] font-medium text-yellow-700 bg-yellow-100 px-1.5 py-0.5 rounded-full">split</span>}
+                                                {isSplit && <span className="text-[10px] font-medium text-yellow-700 bg-yellow-100 px-1.5 py-0.5 rounded-full">getrennt</span>}
                                                 {row.kind === 'guest' && row.guest.party_size > 1 && (
-                                                    <span className="text-[10px] text-gray-400">party of {row.guest.party_size}</span>
+                                                    <span className="text-[10px] text-gray-400">{row.guest.party_size} Personen</span>
                                                 )}
                                                 <span className="ml-auto text-xs text-gray-400 truncate max-w-[40%]">
                                                     {row.kind === 'guest'
                                                         // Inside the "Not seated" block, saying "not seated" on every
                                                         // line is noise; in the guest grouping it is the whole point.
-                                                        ? (row.seatedAt.length ? row.seatedAt.map(t => t.name).join(', ') : (grouping === 'guest' ? 'not seated' : ''))
-                                                        : (row.seat.guest_list_id === null ? 'party member' : '')}
+                                                        ? (row.seatedAt.length ? row.seatedAt.map(t => t.name).join(', ') : (grouping === 'guest' ? 'ohne Platz' : ''))
+                                                        : (row.seat.guest_list_id === null ? 'Gruppenmitglied' : '')}
                                                 </span>
                                             </div>
                                         );
@@ -781,13 +783,13 @@ export default function SeatingListView({
             {totalSelected > 0 && (
                 <div className="shrink-0 bg-white/95 backdrop-blur border-t border-gray-200 px-4 py-3 flex flex-wrap items-center gap-2">
                     <span className="text-sm font-medium text-gray-700 shrink-0">
-                        {totalSelected} selected
+                        {totalSelected} ausgewählt
                     </span>
                     <button
                         onClick={() => setSelected(new Set())}
                         className="text-xs text-gray-400 hover:text-gray-600 transition-colors"
                     >
-                        clear
+                        aufheben
                     </button>
 
                     {/* The bar sits at the bottom of the list, so every row it wraps to is a
@@ -799,10 +801,10 @@ export default function SeatingListView({
                         onChange={e => { if (e.target.value) moveSelectionTo(Number(e.target.value)); }}
                         className="order-2 md:order-none flex-1 min-w-[9rem] md:flex-none md:ml-2 px-3 py-2 text-sm border border-gray-200 rounded-2xl bg-gray-50 focus:bg-white focus:outline-none"
                     >
-                        <option value="">Move to table…</option>
+                        <option value="">An Tisch verschieben …</option>
                         {tables.map(t => {
                             const { free } = occupancy(t);
-                            return <option key={t.id} value={t.id}>{t.name} — {free} free</option>;
+                            return <option key={t.id} value={t.id}>{t.name} – {free} frei</option>;
                         })}
                     </select>
 
@@ -811,7 +813,7 @@ export default function SeatingListView({
                         disabled={busy}
                         className="order-2 md:order-none shrink-0 px-4 py-2 rounded-full text-sm font-medium text-red-600 border border-red-200 hover:bg-red-50 transition-colors disabled:opacity-50"
                     >
-                        Unseat
+                        Platz freigeben
                     </button>
 
                     {/* Ordered ahead of the two controls below `md` so the bar reads as

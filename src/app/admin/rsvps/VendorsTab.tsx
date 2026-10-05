@@ -57,8 +57,8 @@ const EMPTY_FORM: VendorForm = {
 
 /** The roles a wedding actually books, offered as a datalist — never enforced. */
 const COMMON_ROLES = [
-    'Photographer', 'Videographer', 'DJ', 'Band', 'Planner', 'Coordinator',
-    'Officiant', 'Caterer', 'Florist', 'Baker', 'Hair', 'Makeup', 'Transport', 'Security',
+    'Fotograf:in', 'Videograf:in', 'DJ', 'Band', 'Hochzeitsplaner:in', 'Koordination',
+    'Trauredner:in', 'Catering', 'Floristik', 'Konditorei', 'Friseur:in', 'Make-up', 'Transport', 'Security',
 ];
 
 const INPUT = 'w-full px-4 py-2.5 border border-gray-200 rounded-2xl bg-gray-50 text-sm text-gray-900 placeholder-gray-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent transition-all';
@@ -82,7 +82,7 @@ export default function VendorsTab() {
             setVendors(await res.json());
             setError(null);
         } catch {
-            setError('Could not load the vendors.');
+            setError('Dienstleister konnten nicht geladen werden.');
         } finally {
             setLoading(false);
         }
@@ -117,19 +117,19 @@ export default function VendorsTab() {
             setForm(null);
             await refresh();
         } catch {
-            setError('Could not save that vendor.');
+            setError('Dienstleister konnte nicht gespeichert werden.');
         } finally {
             setSaving(false);
         }
     };
 
     const remove = async (vendor: Vendor) => {
-        if (!confirm(`Remove ${vendor.name} from the vendors?`)) return;
+        if (!confirm(`${vendor.name} aus den Dienstleistern entfernen?`)) return;
         try {
             await fetch(`/api/admin/vendors?id=${vendor.id}`, { method: 'DELETE' });
             await refresh();
         } catch {
-            setError('Could not remove that vendor.');
+            setError('Dienstleister konnte nicht entfernt werden.');
         }
     };
 
@@ -139,14 +139,14 @@ export default function VendorsTab() {
         <div>
             <div className="flex flex-wrap items-center gap-3 mb-6">
                 <div>
-                    <h2 className="font-serif text-xl font-bold text-gray-800">Vendors</h2>
+                    <h2 className="font-serif text-xl font-bold text-gray-800">Dienstleister</h2>
                     <p className="text-xs text-gray-500 mt-0.5">
                         {loading
-                            ? 'Loading…'
-                            : `${vendors.length} vendor${vendors.length === 1 ? '' : 's'} · ${fed.length} eating`}
+                            ? 'Wird geladen …'
+                            : `${vendors.length} ${vendors.length === 1 ? 'Dienstleister' : 'Dienstleister'} · ${fed.length} essen mit`}
                         {' · '}
                         <span className="text-gray-400">
-                            They take no chairs — turn on “Vendors” when you export the seating chart.
+                            Sie belegen keine Plätze – aktiviere „Dienstleister“ beim Exportieren des Sitzplans.
                         </span>
                     </p>
                 </div>
@@ -154,7 +154,7 @@ export default function VendorsTab() {
                     onClick={openNew}
                     className="ml-auto px-5 py-2.5 rounded-full bg-gray-900 text-white text-sm font-medium hover:bg-gray-800 transition-colors"
                 >
-                    + Add vendor
+                    + Dienstleister hinzufügen
                 </button>
             </div>
 
@@ -164,10 +164,10 @@ export default function VendorsTab() {
 
             {!loading && vendors.length === 0 && (
                 <div className="px-6 py-12 text-center bg-gray-50 rounded-3xl">
-                    <p className="text-sm text-gray-500">No vendors yet.</p>
+                    <p className="text-sm text-gray-500">Noch keine Dienstleister.</p>
                     <p className="text-xs text-gray-400 mt-1">
-                        Add the photographer, the DJ, the planner — anyone who is at the wedding
-                        working, and who may need feeding.
+                        Füge Fotograf:in, DJ, Hochzeitsplaner:in hinzu – alle, die bei der Hochzeit
+                        arbeiten und vielleicht verpflegt werden müssen.
                     </p>
                 </div>
             )}
@@ -177,11 +177,11 @@ export default function VendorsTab() {
                     <table className="min-w-full">
                         <thead className="bg-gray-50">
                             <tr>
-                                <th className="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Role</th>
+                                <th className="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Rolle</th>
                                 <th className="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
-                                <th className="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase whitespace-nowrap">Contact</th>
-                                <th className="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Meal</th>
-                                <th className="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Dietary</th>
+                                <th className="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase whitespace-nowrap">Kontakt</th>
+                                <th className="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Essen</th>
+                                <th className="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Ernährung</th>
                                 <th className="px-4 sm:px-6 py-3" />
                             </tr>
                         </thead>
@@ -215,7 +215,7 @@ export default function VendorsTab() {
                                                     ? 'bg-green-50 text-green-700'
                                                     : 'bg-gray-100 text-gray-400'
                                             }`}>
-                                                {vendor.needs_meal !== false ? 'Eating' : 'No meal'}
+                                                {vendor.needs_meal !== false ? 'Isst mit' : 'Kein Essen'}
                                             </span>
                                         </td>
                                         <td className="px-4 sm:px-6 py-4">
@@ -245,13 +245,13 @@ export default function VendorsTab() {
                                                 onClick={() => openEdit(vendor)}
                                                 className="px-3 py-1.5 rounded-full text-xs font-medium text-gray-600 hover:bg-gray-100 transition-colors"
                                             >
-                                                Edit
+                                                Bearbeiten
                                             </button>
                                             <button
                                                 onClick={() => remove(vendor)}
                                                 className="px-3 py-1.5 rounded-full text-xs font-medium text-red-600 hover:bg-red-50 transition-colors"
                                             >
-                                                Remove
+                                                Entfernen
                                             </button>
                                         </td>
                                     </tr>
@@ -267,18 +267,18 @@ export default function VendorsTab() {
                     className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4"
                     role="dialog"
                     aria-modal="true"
-                    aria-label={form.id === null ? 'Add vendor' : 'Edit vendor'}
+                    aria-label={form.id === null ? 'Dienstleister hinzufügen' : 'Dienstleister bearbeiten'}
                     onClick={e => { if (e.target === e.currentTarget) setForm(null); }}
                 >
                     <div className="bg-white rounded-3xl shadow-2xl w-full max-w-lg max-h-[92vh] overflow-y-auto">
                         <div className="px-6 py-4 border-b border-gray-100 flex items-center">
                             <h3 className="font-serif text-lg font-bold text-gray-800">
-                                {form.id === null ? 'Add vendor' : form.name || 'Edit vendor'}
+                                {form.id === null ? 'Dienstleister hinzufügen' : form.name || 'Dienstleister bearbeiten'}
                             </h3>
                             <button
                                 onClick={() => setForm(null)}
                                 className="ml-auto w-8 h-8 rounded-full bg-gray-50 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
-                                aria-label="Close"
+                                aria-label="Schließen"
                             >
                                 ✕
                             </button>
@@ -291,35 +291,35 @@ export default function VendorsTab() {
                                     className={INPUT}
                                     value={form.name}
                                     onChange={e => setForm({ ...form, name: e.target.value })}
-                                    placeholder="Who they are"
+                                    placeholder="Wer ist die Person?"
                                 />
                             </Field>
 
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                <Field label="Role">
+                                <Field label="Rolle">
                                     <input
                                         className={INPUT}
                                         list="vendor-roles"
                                         value={form.role}
                                         onChange={e => setForm({ ...form, role: e.target.value })}
-                                        placeholder="Photographer"
+                                        placeholder="Fotograf:in"
                                     />
                                     <datalist id="vendor-roles">
                                         {COMMON_ROLES.map(role => <option key={role} value={role} />)}
                                     </datalist>
                                 </Field>
-                                <Field label="Company">
+                                <Field label="Firma">
                                     <input
                                         className={INPUT}
                                         value={form.company}
                                         onChange={e => setForm({ ...form, company: e.target.value })}
-                                        placeholder="Who they work for"
+                                        placeholder="Für wen sie arbeiten"
                                     />
                                 </Field>
                             </div>
 
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                <Field label="Email">
+                                <Field label="E-Mail">
                                     <input
                                         type="email"
                                         className={INPUT}
@@ -327,7 +327,7 @@ export default function VendorsTab() {
                                         onChange={e => setForm({ ...form, email: e.target.value })}
                                     />
                                 </Field>
-                                <Field label="Phone">
+                                <Field label="Telefon">
                                     <input
                                         className={INPUT}
                                         value={form.phone}
@@ -345,9 +345,9 @@ export default function VendorsTab() {
                                         className="mt-0.5 accent-gray-900"
                                     />
                                     <span className="text-sm text-gray-700">
-                                        Needs a meal
+                                        Braucht ein Essen
                                         <span className="block text-xs text-gray-400">
-                                            Only these count toward the vendor plates on the seating export.
+                                            Nur sie zählen beim Sitzplan-Export zu den Dienstleister-Gedecken.
                                         </span>
                                     </span>
                                 </label>
@@ -355,7 +355,7 @@ export default function VendorsTab() {
 
                             {form.needs_meal && (
                                 <div>
-                                    <label className={LABEL}>Food preference</label>
+                                    <label className={LABEL}>Essenswunsch</label>
                                     <DietaryPills
                                         entry={form.dietary}
                                         codes={DIET_CODES}
@@ -363,19 +363,19 @@ export default function VendorsTab() {
                                     />
                                     {isEmptyEntry(form.dietary) && (
                                         <p className="mt-2 text-xs text-gray-400">
-                                            Nothing selected means the standard plate — the chicken.
+                                            Ohne Auswahl gibt es das Standardgericht – Hähnchen.
                                         </p>
                                     )}
                                 </div>
                             )}
 
-                            <Field label="Notes">
+                            <Field label="Notizen">
                                 <textarea
                                     rows={2}
                                     className={INPUT}
                                     value={form.notes}
                                     onChange={e => setForm({ ...form, notes: e.target.value })}
-                                    placeholder="Arrival time, where they set up, anything the planner needs"
+                                    placeholder="Ankunftszeit, Aufbauort, alles, was die Planung wissen muss"
                                 />
                             </Field>
                         </div>
@@ -385,14 +385,14 @@ export default function VendorsTab() {
                                 onClick={() => setForm(null)}
                                 className="px-5 py-2.5 rounded-full text-sm font-medium text-gray-600 hover:bg-gray-100 transition-colors"
                             >
-                                Cancel
+                                Abbrechen
                             </button>
                             <button
                                 onClick={save}
                                 disabled={saving || !form.name.trim()}
                                 className="px-5 py-2.5 rounded-full bg-gray-900 text-white text-sm font-medium hover:bg-gray-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                             >
-                                {saving ? 'Saving…' : 'Save'}
+                                {saving ? 'Wird gespeichert …' : 'Speichern'}
                             </button>
                         </div>
                     </div>

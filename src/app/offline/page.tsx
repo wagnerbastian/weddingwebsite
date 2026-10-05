@@ -4,11 +4,11 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 
 const LABELS: Record<string, string> = {
-    '/': 'Home', '/about': 'About', '/our-story': 'Our story', '/wedding-party': 'Wedding party',
-    '/schedule': 'Schedule', '/photos': 'Photos', '/rsvp': 'RSVP', '/registry': 'Registry',
-    '/admin': 'Admin', '/admin/honeymoon': 'Honeymoon', '/admin/honeymoon/today': 'Honeymoon · Today',
-    '/admin/honeymoon/itinerary': 'Honeymoon · Itinerary', '/admin/honeymoon/files': 'Honeymoon · Files',
-    '/admin/rsvps': 'RSVPs', '/admin/finances': 'Finances', '/admin/seating': 'Seating chart',
+    '/': 'Start', '/about': 'Über uns', '/our-story': 'Unsere Geschichte', '/wedding-party': 'Trauzeugen & Team',
+    '/schedule': 'Ablauf', '/photos': 'Fotos', '/rsvp': 'Rückmeldung', '/registry': 'Wunschliste',
+    '/admin': 'Admin', '/admin/honeymoon': 'Flitterwochen', '/admin/honeymoon/today': 'Flitterwochen · Heute',
+    '/admin/honeymoon/itinerary': 'Flitterwochen · Reiseplan', '/admin/honeymoon/files': 'Flitterwochen · Dokumente',
+    '/admin/rsvps': 'Rückmeldungen', '/admin/finances': 'Finanzen', '/admin/seating': 'Sitzplan',
 };
 
 /** A readable name for any saved page: "/admin/wip-control" → "Admin · Wip control". */
@@ -17,7 +17,7 @@ function labelOf(path: string): string {
     const parts = path.split('/').filter(Boolean)
         .map((part) => part.replace(/-/g, ' '))
         .map((part) => part.charAt(0).toUpperCase() + part.slice(1));
-    return parts.join(' · ') || 'Home';
+    return parts.join(' · ') || 'Start';
 }
 
 /**
@@ -40,10 +40,10 @@ export default function OfflinePage() {
 
     return (
         <div className="mx-auto max-w-xl px-6 py-16">
-            <h1 className="text-3xl font-serif text-gray-900">You&apos;re offline</h1>
+            <h1 className="text-3xl font-serif text-gray-900">Ihr seid offline</h1>
             <p className="mt-3 text-gray-600">
-                This page hasn&apos;t been saved on this device yet, so it can&apos;t open without a connection.
-                {saved && saved.length > 0 && ' These pages can:'}
+                Diese Seite ist auf diesem Gerät noch nicht gespeichert und lässt sich ohne Verbindung nicht öffnen.
+                {saved && saved.length > 0 && ' Diese Seiten funktionieren:'}
             </p>
             {saved && saved.length > 0 && (
                 <ul className="mt-6 grid grid-cols-1 gap-2 sm:grid-cols-2">
@@ -60,7 +60,7 @@ export default function OfflinePage() {
                 </ul>
             )}
             <p className="mt-8 text-sm text-gray-500">
-                Open the installed app with a connection once and it saves the whole site.
+                Öffnet die installierte App einmal mit Verbindung, dann speichert sie die ganze Website.
             </p>
         </div>
     );

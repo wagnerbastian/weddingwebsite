@@ -30,10 +30,10 @@ export async function POST(request: Request) {
     const file = formData.get('file');
 
     if (!slug || !(file instanceof File)) {
-      return NextResponse.json({ error: 'slug and file required' }, { status: 400 });
+      return NextResponse.json({ error: 'Slug und Datei erforderlich' }, { status: 400 });
     }
     if (!VALID_SLUGS.includes(slug)) {
-      return NextResponse.json({ error: 'Invalid slug' }, { status: 400 });
+      return NextResponse.json({ error: 'Ungültiger Slug' }, { status: 400 });
     }
     const problem = rejectUpload(file);
     if (problem) return NextResponse.json({ error: problem }, { status: 400 });
@@ -49,7 +49,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ success: true, filename });
   } catch (error) {
     console.error('nav-cards POST error:', error);
-    return NextResponse.json({ error: 'Upload failed' }, { status: 500 });
+    return NextResponse.json({ error: 'Hochladen fehlgeschlagen' }, { status: 500 });
   }
 }
 
@@ -58,10 +58,10 @@ export async function PATCH(request: Request) {
     const { slug, sourceFilename } = await request.json();
 
     if (!slug || typeof sourceFilename !== 'string' || !sourceFilename) {
-      return NextResponse.json({ error: 'slug and sourceFilename required' }, { status: 400 });
+      return NextResponse.json({ error: 'Slug und Quelldatei erforderlich' }, { status: 400 });
     }
     if (!VALID_SLUGS.includes(slug)) {
-      return NextResponse.json({ error: 'Invalid slug' }, { status: 400 });
+      return NextResponse.json({ error: 'Ungültiger Slug' }, { status: 400 });
     }
 
     // A gallery filename, and only a gallery filename — no path segments, and
@@ -69,10 +69,10 @@ export async function PATCH(request: Request) {
     const sourcePath = resolveInPhotos(path.basename(sourceFilename));
     const ext = extensionOf(sourceFilename);
     if (!sourcePath || !IMAGE_EXTENSIONS.has(ext)) {
-      return NextResponse.json({ error: 'Invalid source file' }, { status: 400 });
+      return NextResponse.json({ error: 'Ungültige Quelldatei' }, { status: 400 });
     }
     if (!fs.existsSync(sourcePath) || !fs.statSync(sourcePath).isFile()) {
-      return NextResponse.json({ error: 'Source file not found' }, { status: 404 });
+      return NextResponse.json({ error: 'Quelldatei nicht gefunden' }, { status: 404 });
     }
 
     if (!fs.existsSync(NAV_CARDS_DIR)) fs.mkdirSync(NAV_CARDS_DIR, { recursive: true });
@@ -86,14 +86,14 @@ export async function PATCH(request: Request) {
     return NextResponse.json({ success: true, filename });
   } catch (error) {
     console.error('nav-cards PATCH error:', error);
-    return NextResponse.json({ error: 'Link failed' }, { status: 500 });
+    return NextResponse.json({ error: 'Verknüpfen fehlgeschlagen' }, { status: 500 });
   }
 }
 
 export async function DELETE(request: Request) {
   try {
     const { slug } = await request.json();
-    if (!slug || !VALID_SLUGS.includes(slug)) return NextResponse.json({ error: 'slug required' }, { status: 400 });
+    if (!slug || !VALID_SLUGS.includes(slug)) return NextResponse.json({ error: 'Slug erforderlich' }, { status: 400 });
 
     const current = getSiteConfig().navCards ?? {};
     if (current[slug]) {
@@ -109,6 +109,6 @@ export async function DELETE(request: Request) {
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error('nav-cards DELETE error:', error);
-    return NextResponse.json({ error: 'Delete failed' }, { status: 500 });
+    return NextResponse.json({ error: 'Löschen fehlgeschlagen' }, { status: 500 });
   }
 }

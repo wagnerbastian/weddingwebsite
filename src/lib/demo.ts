@@ -71,6 +71,6 @@ export interface DemoStatus {
 export function demoStatus(): DemoStatus {
     return {
         demo: isDemoMode(),
-        notice: 'Demo instance — everything here is fictional, and nothing you change is saved.',
+        notice: 'Demo-Instanz – alles hier ist frei erfunden, und keine Änderung wird gespeichert.',
     };
 }

@@ -85,7 +85,7 @@ function SortablePhoto({ photo, onSetHero, onDelete, onToggleHeart, onEdit, onOp
                         ? 'bg-red-500 hover:bg-red-600 hover:shadow-xl'
                         : 'bg-white/90 hover:bg-white hover:shadow-xl'
                 }`}
-                title={photo.hearted ? 'Unheart photo' : 'Heart photo'}
+                title={photo.hearted ? 'Herz entfernen' : 'Foto mit Herz markieren'}
             >
                 <svg className={`w-4 h-4 ${photo.hearted ? 'text-white fill-current' : 'text-gray-700'}`} viewBox="0 0 20 20" fill={photo.hearted ? 'currentColor' : 'none'} stroke={photo.hearted ? 'none' : 'currentColor'} strokeWidth={photo.hearted ? 0 : 2}>
                     <path fillRule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clipRule="evenodd" />
@@ -98,7 +98,7 @@ function SortablePhoto({ photo, onSetHero, onDelete, onToggleHeart, onEdit, onOp
                 {...attributes}
                 onClick={(e) => e.stopPropagation()}
                 className="absolute top-2 right-2 z-20 bg-white/90 hover:bg-white rounded-full p-1.5 cursor-grab active:cursor-grabbing shadow-lg hover:shadow-xl transition-all duration-300"
-                title="Drag to reorder"
+                title="Zum Sortieren ziehen"
             >
                 <svg className="w-4 h-4 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 8h16M4 16h16" />
@@ -113,37 +113,37 @@ function SortablePhoto({ photo, onSetHero, onDelete, onToggleHeart, onEdit, onOp
                         onClick={(e) => { e.stopPropagation(); onEdit(photo); }}
                         className="text-xs bg-blue-500 hover:bg-blue-600 text-white py-1.5 px-3 rounded-lg border border-blue-400 shadow-md hover:shadow-lg transition-all duration-300"
                     >
-                        Edit Details
+                        Details bearbeiten
                     </button>
                     <button
                         onClick={(e) => { e.stopPropagation(); onSetHero('homeHero', photo.filename); }}
                         className="text-xs bg-white/10 hover:bg-white/20 text-white py-1.5 px-3 rounded-lg border border-white/30 shadow-md hover:shadow-lg transition-all duration-300"
                     >
-                        Set Home Hero
+                        Als Titelbild (Start)
                     </button>
                     <button
                         onClick={(e) => { e.stopPropagation(); onSetHero('aboutHero', photo.filename); }}
                         className="text-xs bg-white/10 hover:bg-white/20 text-white py-1.5 px-3 rounded-lg border border-white/30 shadow-md hover:shadow-lg transition-all duration-300"
                     >
-                        Set About Hero
+                        Als Titelbild (Über uns)
                     </button>
                     <button
                         onClick={(e) => { e.stopPropagation(); onSetHero('footerHeroImage', photo.filename); }}
                         className="text-xs bg-white/10 hover:bg-white/20 text-white py-1.5 px-3 rounded-lg border border-white/30 shadow-md hover:shadow-lg transition-all duration-300"
                     >
-                        Set Footer Hero
+                        Als Titelbild (Seitenende)
                     </button>
                     <button
                         onClick={(e) => { e.stopPropagation(); onSetHero('weddingLogo', photo.filename); }}
                         className="text-xs bg-white/10 hover:bg-white/20 text-white py-1.5 px-3 rounded-lg border border-white/30 shadow-md hover:shadow-lg transition-all duration-300"
                     >
-                        Set Wedding Logo
+                        Als Hochzeitslogo
                     </button>
                     <button
                         onClick={(e) => { e.stopPropagation(); onSetHero('venuePhoto', photo.filename); }}
                         className="text-xs bg-white/10 hover:bg-white/20 text-white py-1.5 px-3 rounded-lg border border-white/30 shadow-md hover:shadow-lg transition-all duration-300"
                     >
-                        Set Venue Photo
+                        Als Location-Foto
                     </button>
                 </div>
 
@@ -156,7 +156,7 @@ function SortablePhoto({ photo, onSetHero, onDelete, onToggleHeart, onEdit, onOp
                     <button
                         onClick={(e) => { e.stopPropagation(); onDelete(photo.id); }}
                         className="text-red-400 hover:text-red-200"
-                        title="Delete"
+                        title="Löschen"
                     >
                         <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -174,7 +174,7 @@ export default function AdminPhotos() {
     const [siteConfig, setSiteConfig] = useState({ homeHero: '', aboutHero: '', footerHeroImage: '', weddingLogo: '', venuePhoto: '' });
     const [editingPhoto, setEditingPhoto] = useState<Photo | null>(null);
     const [editForm, setEditForm] = useState({ title: '', description: '' });
-    const [photosSubtitle, setPhotosSubtitle] = useState('Moments from our journey together.');
+    const [photosSubtitle, setPhotosSubtitle] = useState('Momente von unserem gemeinsamen Weg.');
     const [subtitleLoaded, setSubtitleLoaded] = useState(false);
     // The lightbox tracks the open photo by id (not index) so that hearting —
     // which re-sorts the grid — keeps the same photo in view.
@@ -363,12 +363,12 @@ export default function AdminPhotos() {
         setUploading(false);
 
         if (successCount < files.length) {
-            alert(`Uploaded ${successCount}/${files.length} photos. Some failed.`);
+            alert(`${successCount} von ${files.length} Fotos hochgeladen. Einige sind fehlgeschlagen.`);
         }
     };
 
     const handleDelete = async (id: number) => {
-        if (!confirm('Are you sure you want to delete this photo?')) return;
+        if (!confirm('Dieses Foto wirklich löschen?')) return;
 
         try {
             const res = await fetch('/api/admin/photos', {
@@ -380,7 +380,7 @@ export default function AdminPhotos() {
             if (res.ok) {
                 setPhotos(prev => prev.filter(p => p.id !== id));
             } else {
-                alert('Delete failed');
+                alert('Löschen fehlgeschlagen');
             }
         } catch (err) {
             console.error(err);
@@ -396,19 +396,19 @@ export default function AdminPhotos() {
             });
             if (res.ok) {
                 setSiteConfig(prev => ({ ...prev, [type]: filename }));
-                const heroName = type === 'homeHero' ? 'Home' : type === 'aboutHero' ? 'About' : type === 'footerHeroImage' ? 'Footer' : type === 'weddingLogo' ? 'Wedding Logo' : 'Venue Photo';
-                alert(`Updated ${heroName}${type === 'homeHero' || type === 'aboutHero' || type === 'footerHeroImage' ? ' Hero Image' : ''}`);
+                const heroName = type === 'homeHero' ? 'Titelbild der Startseite' : type === 'aboutHero' ? 'Titelbild von „Über uns“' : type === 'footerHeroImage' ? 'Titelbild am Seitenende' : type === 'weddingLogo' ? 'Hochzeitslogo' : 'Location-Foto';
+                alert(`${heroName} aktualisiert`);
             }
         } catch (err) {
             console.error(err);
-            alert('Failed to update config');
+            alert('Einstellungen konnten nicht aktualisiert werden');
         }
     };
 
     // Delete from within the lightbox: after removal, advance to the next photo
     // (or close if it was the last one) so the viewer never lands on nothing.
     const handleViewerDelete = async (photo: Photo) => {
-        if (!confirm('Are you sure you want to delete this photo?')) return;
+        if (!confirm('Dieses Foto wirklich löschen?')) return;
 
         const idx = photos.findIndex((p) => p.id === photo.id);
         const remaining = photos.filter((p) => p.id !== photo.id);
@@ -429,7 +429,7 @@ export default function AdminPhotos() {
                     setViewerPhotoId(remaining[nextIdx].id);
                 }
             } else {
-                alert('Delete failed');
+                alert('Löschen fehlgeschlagen');
             }
         } catch (err) {
             console.error(err);
@@ -437,11 +437,11 @@ export default function AdminPhotos() {
     };
 
     const heroButtons: { type: 'homeHero' | 'aboutHero' | 'footerHeroImage' | 'weddingLogo' | 'venuePhoto'; label: string }[] = [
-        { type: 'homeHero', label: 'Home Hero' },
-        { type: 'aboutHero', label: 'About Hero' },
-        { type: 'footerHeroImage', label: 'Footer Hero' },
-        { type: 'weddingLogo', label: 'Wedding Logo' },
-        { type: 'venuePhoto', label: 'Venue Photo' },
+        { type: 'homeHero', label: 'Titelbild Start' },
+        { type: 'aboutHero', label: 'Titelbild Über uns' },
+        { type: 'footerHeroImage', label: 'Titelbild Seitenende' },
+        { type: 'weddingLogo', label: 'Hochzeitslogo' },
+        { type: 'venuePhoto', label: 'Location-Foto' },
     ];
 
     // Compact control bar rendered inside the lightbox for the current photo.
@@ -452,7 +452,7 @@ export default function AdminPhotos() {
                 className={`rounded-full p-2 shadow-md transition-all duration-300 ${
                     photo.hearted ? 'bg-red-500 hover:bg-red-600' : 'bg-white/90 hover:bg-white'
                 }`}
-                title={photo.hearted ? 'Unheart photo' : 'Heart photo'}
+                title={photo.hearted ? 'Herz entfernen' : 'Foto mit Herz markieren'}
             >
                 <svg className={`w-5 h-5 ${photo.hearted ? 'text-white fill-current' : 'text-gray-700'}`} viewBox="0 0 20 20" fill={photo.hearted ? 'currentColor' : 'none'} stroke={photo.hearted ? 'none' : 'currentColor'} strokeWidth={photo.hearted ? 0 : 2}>
                     <path fillRule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clipRule="evenodd" />
@@ -467,7 +467,7 @@ export default function AdminPhotos() {
                     onClick={() => setHero(type, photo.filename)}
                     className="rounded-lg border border-white/30 bg-white/10 px-3 py-1.5 text-xs text-white shadow-md transition-all duration-300 hover:bg-white/20"
                 >
-                    Set {label}
+                    {label} festlegen
                 </button>
             ))}
 
@@ -477,13 +477,13 @@ export default function AdminPhotos() {
                 onClick={() => handleEditPhoto(photo)}
                 className="rounded-lg border border-blue-400 bg-blue-500 px-3 py-1.5 text-xs text-white shadow-md transition-all duration-300 hover:bg-blue-600"
             >
-                Edit Details
+                Details bearbeiten
             </button>
             <button
                 onClick={() => handleViewerDelete(photo)}
                 className="rounded-lg border border-red-400 bg-red-500 px-3 py-1.5 text-xs text-white shadow-md transition-all duration-300 hover:bg-red-600"
             >
-                Delete
+                Löschen
             </button>
         </div>
     );
@@ -492,8 +492,8 @@ export default function AdminPhotos() {
         <div>
             <div className="flex justify-between items-center mb-6">
                 <div>
-                    <h1 className="text-3xl font-bold text-gray-900 mb-2">Photo Management</h1>
-                    <p className="text-gray-600">Upload, organize, and manage your wedding photos</p>
+                    <h1 className="text-3xl font-bold text-gray-900 mb-2">Fotos verwalten</h1>
+                    <p className="text-gray-600">Eure Hochzeitsfotos hochladen, ordnen und verwalten</p>
                 </div>
                 <div>
                     <input
@@ -509,69 +509,69 @@ export default function AdminPhotos() {
                         disabled={uploading}
                         className="bg-accent text-white px-6 py-3 rounded-xl hover:bg-accent-dark hover:shadow-xl disabled:opacity-50 transition-all duration-300 shadow-lg font-medium"
                     >
-                        {uploading ? 'Uploading...' : 'Upload Photos'}
+                        {uploading ? 'Wird hochgeladen …' : 'Fotos hochladen'}
                     </button>
                 </div>
             </div>
 
             {/* Page Subtitle Editor */}
             <div className="mb-6 p-6 bg-white rounded-2xl border border-gray-200 shadow-lg">
-                <h2 className="text-lg font-bold text-gray-900 mb-1">Page Subtitle</h2>
-                <p className="text-sm text-gray-500 mb-3">Displayed under &quot;Photo Gallery&quot; on the public photos page.</p>
+                <h2 className="text-lg font-bold text-gray-900 mb-1">Untertitel der Seite</h2>
+                <p className="text-sm text-gray-500 mb-3">Wird auf der öffentlichen Fotoseite unter „Fotogalerie“ angezeigt.</p>
                 <div className="flex gap-3">
                     <input
                         type="text"
                         value={photosSubtitle}
                         onChange={(e) => setPhotosSubtitle(e.target.value)}
                         className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-accent focus:border-accent text-gray-900"
-                        placeholder="e.g. Moments from our journey together."
+                        placeholder="z. B. Momente von unserem gemeinsamen Weg."
                     />
                     <SaveStatus state={subtitleState} onRetry={retrySubtitle} />
                 </div>
             </div>
 
             <div className="mb-8 p-6 bg-gradient-to-br from-accent/10 to-accent-light/20 rounded-2xl border border-accent/20 shadow-lg">
-                <h2 className="text-lg font-bold text-gray-900 mb-4">Current Hero Images</h2>
+                <h2 className="text-lg font-bold text-gray-900 mb-4">Aktuelle Titelbilder</h2>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     <div>
-                        <span className="text-xs font-bold text-gray-500 uppercase">Home Page</span>
+                        <span className="text-xs font-bold text-gray-500 uppercase">Startseite</span>
                         {siteConfig.homeHero ? (
                             <div className="h-20 w-32 bg-gray-200 mt-1 relative rounded-lg overflow-hidden shadow-md">
-                                <img src={`/api/photos/${siteConfig.homeHero}?w=320`} alt="Home hero" className="h-full w-full object-cover" />
+                                <img src={`/api/photos/${siteConfig.homeHero}?w=320`} alt="Titelbild Start" className="h-full w-full object-cover" />
                             </div>
-                        ) : <div className="h-20 w-32 bg-gray-200 mt-1 flex items-center justify-center text-xs rounded-lg">None</div>}
+                        ) : <div className="h-20 w-32 bg-gray-200 mt-1 flex items-center justify-center text-xs rounded-lg">Keins</div>}
                     </div>
                     <div>
-                        <span className="text-xs font-bold text-gray-500 uppercase">About Page</span>
+                        <span className="text-xs font-bold text-gray-500 uppercase">Über uns</span>
                         {siteConfig.aboutHero ? (
                             <div className="h-20 w-32 bg-gray-200 mt-1 relative rounded-lg overflow-hidden shadow-md">
-                                <img src={`/api/photos/${siteConfig.aboutHero}?w=320`} alt="About hero" className="h-full w-full object-cover" />
+                                <img src={`/api/photos/${siteConfig.aboutHero}?w=320`} alt="Titelbild Über uns" className="h-full w-full object-cover" />
                             </div>
-                        ) : <div className="h-20 w-32 bg-gray-200 mt-1 flex items-center justify-center text-xs rounded-lg">None</div>}
+                        ) : <div className="h-20 w-32 bg-gray-200 mt-1 flex items-center justify-center text-xs rounded-lg">Keins</div>}
                     </div>
                     <div>
-                        <span className="text-xs font-bold text-gray-500 uppercase">Footer</span>
+                        <span className="text-xs font-bold text-gray-500 uppercase">Seitenende</span>
                         {siteConfig.footerHeroImage ? (
                             <div className="h-20 w-32 bg-gray-200 mt-1 relative rounded-lg overflow-hidden shadow-md">
-                                <img src={`/api/photos/${siteConfig.footerHeroImage}?w=320`} alt="Footer hero" className="h-full w-full object-cover" />
+                                <img src={`/api/photos/${siteConfig.footerHeroImage}?w=320`} alt="Titelbild Seitenende" className="h-full w-full object-cover" />
                             </div>
-                        ) : <div className="h-20 w-32 bg-gray-200 mt-1 flex items-center justify-center text-xs rounded-lg">None</div>}
+                        ) : <div className="h-20 w-32 bg-gray-200 mt-1 flex items-center justify-center text-xs rounded-lg">Keins</div>}
                     </div>
                     <div>
-                        <span className="text-xs font-bold text-gray-500 uppercase">Wedding Logo</span>
+                        <span className="text-xs font-bold text-gray-500 uppercase">Hochzeitslogo</span>
                         {siteConfig.weddingLogo ? (
                             <div className="h-20 w-32 bg-gray-200 mt-1 relative rounded-lg overflow-hidden shadow-md">
-                                <img src={`/api/photos/${siteConfig.weddingLogo}?w=320`} alt="Wedding logo" className="h-full w-full object-cover" />
+                                <img src={`/api/photos/${siteConfig.weddingLogo}?w=320`} alt="Hochzeitslogo" className="h-full w-full object-cover" />
                             </div>
-                        ) : <div className="h-20 w-32 bg-gray-200 mt-1 flex items-center justify-center text-xs rounded-lg">None</div>}
+                        ) : <div className="h-20 w-32 bg-gray-200 mt-1 flex items-center justify-center text-xs rounded-lg">Keins</div>}
                     </div>
                     <div>
-                        <span className="text-xs font-bold text-gray-500 uppercase">Venue Photo</span>
+                        <span className="text-xs font-bold text-gray-500 uppercase">Location-Foto</span>
                         {siteConfig.venuePhoto ? (
                             <div className="h-20 w-32 bg-gray-200 mt-1 relative rounded-lg overflow-hidden shadow-md">
-                                <img src={`/api/photos/${siteConfig.venuePhoto}?w=320`} alt="Venue" className="h-full w-full object-cover" />
+                                <img src={`/api/photos/${siteConfig.venuePhoto}?w=320`} alt="Location" className="h-full w-full object-cover" />
                             </div>
-                        ) : <div className="h-20 w-32 bg-gray-200 mt-1 flex items-center justify-center text-xs rounded-lg">None</div>}
+                        ) : <div className="h-20 w-32 bg-gray-200 mt-1 flex items-center justify-center text-xs rounded-lg">Keins</div>}
                     </div>
                 </div>
             </div>
@@ -610,32 +610,32 @@ export default function AdminPhotos() {
             {editingPhoto && (
                 <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/50">
                     <div className="bg-white rounded-2xl shadow-xl max-w-md w-full p-6">
-                        <h3 className="text-lg font-bold text-gray-900 mb-4">Edit Photo Details</h3>
+                        <h3 className="text-lg font-bold text-gray-900 mb-4">Fotodetails bearbeiten</h3>
 
                         <div className="space-y-4">
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    Title
+                                    Titel
                                 </label>
                                 <input
                                     type="text"
                                     value={editForm.title}
                                     onChange={(e) => setEditForm({ ...editForm, title: e.target.value })}
                                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-accent focus:border-accent"
-                                    placeholder="Photo title"
+                                    placeholder="Titel des Fotos"
                                 />
                             </div>
 
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    Description
+                                    Beschreibung
                                 </label>
                                 <textarea
                                     value={editForm.description}
                                     onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
                                     rows={3}
                                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-accent focus:border-accent"
-                                    placeholder="Photo description"
+                                    placeholder="Beschreibung des Fotos"
                                 />
                             </div>
                         </div>
@@ -645,13 +645,13 @@ export default function AdminPhotos() {
                                 onClick={() => setEditingPhoto(null)}
                                 className="flex-1 px-4 py-2 border border-gray-300 rounded-xl text-gray-700 hover:bg-gray-50 transition-all duration-300 shadow-md hover:shadow-lg"
                             >
-                                Cancel
+                                Abbrechen
                             </button>
                             <button
                                 onClick={handleSaveEdit}
                                 className="flex-1 px-4 py-2 bg-accent text-white rounded-xl hover:bg-accent-dark transition-all duration-300 shadow-md hover:shadow-lg"
                             >
-                                Save
+                                Speichern
                             </button>
                         </div>
                     </div>
@@ -662,8 +662,8 @@ export default function AdminPhotos() {
             <button
                 onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
                 className="fixed bottom-6 right-6 z-40 bg-accent text-white rounded-full p-3 shadow-lg hover:bg-accent-dark hover:shadow-xl transition-all duration-300"
-                title="Scroll to top"
-                aria-label="Scroll to top"
+                title="Nach oben"
+                aria-label="Nach oben"
             >
                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />

@@ -22,7 +22,7 @@ export async function POST(request: Request) {
         return NextResponse.json(share);
     } catch (error) {
         console.error('Error creating share link:', error);
-        return NextResponse.json({ error: 'Failed to create the link' }, { status: 500 });
+        return NextResponse.json({ error: 'Link konnte nicht erstellt werden' }, { status: 500 });
     }
 }
 
@@ -32,7 +32,7 @@ export async function PATCH(request: Request) {
         const body = await request.json().catch(() => ({}));
         const id = Math.trunc(Number(body.id));
         if (!Number.isFinite(id) || id <= 0) {
-            return NextResponse.json({ error: 'Valid id required' }, { status: 400 });
+            return NextResponse.json({ error: 'Gültige ID erforderlich' }, { status: 400 });
         }
         const sets: string[] = [];
         const values: unknown[] = [];
@@ -48,17 +48,17 @@ export async function PATCH(request: Request) {
             sets.push(`expires_on = $${sets.length + 1}`);
             values.push(body.expires_on ? String(body.expires_on) : null);
         }
-        if (!sets.length) return NextResponse.json({ error: 'No fields to update' }, { status: 400 });
+        if (!sets.length) return NextResponse.json({ error: 'Keine Felder zum Aktualisieren' }, { status: 400 });
         const result = await pool.query(
             `UPDATE honeymoon_shares SET ${sets.join(', ')} WHERE id = $${values.length + 1}
              RETURNING id, token, label, scope, expires_on, revoked`,
             [...values, id],
         );
-        if (!result.rowCount) return NextResponse.json({ error: 'Not found' }, { status: 404 });
+        if (!result.rowCount) return NextResponse.json({ error: 'Nicht gefunden' }, { status: 404 });
         return NextResponse.json(result.rows[0]);
     } catch (error) {
         console.error('Error updating share link:', error);
-        return NextResponse.json({ error: 'Failed to update the link' }, { status: 500 });
+        return NextResponse.json({ error: 'Link konnte nicht aktualisiert werden' }, { status: 500 });
     }
 }
 
@@ -67,13 +67,13 @@ export async function DELETE(request: Request) {
         await ensureHoneymoonTables();
         const id = Math.trunc(Number(new URL(request.url).searchParams.get('id')));
         if (!Number.isFinite(id) || id <= 0) {
-            return NextResponse.json({ error: 'Valid id required' }, { status: 400 });
+            return NextResponse.json({ error: 'Gültige ID erforderlich' }, { status: 400 });
         }
         const result = await pool.query('DELETE FROM honeymoon_shares WHERE id = $1', [id]);
-        if (!result.rowCount) return NextResponse.json({ error: 'Not found' }, { status: 404 });
+        if (!result.rowCount) return NextResponse.json({ error: 'Nicht gefunden' }, { status: 404 });
         return NextResponse.json({ success: true });
     } catch (error) {
         console.error('Error deleting share link:', error);
-        return NextResponse.json({ error: 'Failed to delete the link' }, { status: 500 });
+        return NextResponse.json({ error: 'Link konnte nicht gelöscht werden' }, { status: 500 });
     }
 }

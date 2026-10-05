@@ -23,7 +23,7 @@ function bearingOf(from: LatLng, to: LatLng): string {
     const x = Math.cos(toRad(from.lat)) * Math.sin(toRad(to.lat))
         - Math.sin(toRad(from.lat)) * Math.cos(toRad(to.lat)) * Math.cos(dLng);
     const degrees = ((Math.atan2(y, x) * 180) / Math.PI + 360) % 360;
-    const points = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
+    const points = ['N', 'NO', 'O', 'SO', 'S', 'SW', 'W', 'NW'];
     return points[Math.round(degrees / 45) % 8];
 }
 
@@ -89,28 +89,28 @@ export interface TravelArc {
 export const MAP_LAYERS = [
     {
         key: 'streets',
-        label: 'Streets',
+        label: 'Straßen',
         url: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
         attribution: '&copy; OpenStreetMap contributors',
         maxZoom: 19,
     },
     {
         key: 'satellite',
-        label: 'Satellite',
+        label: 'Satellit',
         url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
         attribution: 'Imagery &copy; Esri, Maxar, Earthstar Geographics',
         maxZoom: 19,
     },
     {
         key: 'terrain',
-        label: 'Terrain',
+        label: 'Gelände',
         url: 'https://tile.opentopomap.org/{z}/{x}/{y}.png',
         attribution: '&copy; OpenTopoMap (CC-BY-SA), &copy; OpenStreetMap contributors',
         maxZoom: 17,
     },
     {
         key: 'clean',
-        label: 'Clean',
+        label: 'Schlicht',
         url: 'https://basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png',
         attribution: '&copy; OpenStreetMap contributors, &copy; CARTO',
         maxZoom: 19,

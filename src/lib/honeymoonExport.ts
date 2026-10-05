@@ -11,7 +11,7 @@
  * already holds, so there is no route to protect and nothing to keep in step.
  */
 import {
-    BOOKING_KINDS, DOCUMENT_KINDS, categoryMeta, formatDate, formatDayDate, formatTime,
+    BOOKING_KINDS, COST_PER_LABELS, DOCUMENT_KINDS, categoryMeta, formatDate, formatDayDate, formatTime,
     hasCoords, travelModeMeta,
     type Booking, type Day, type HoneymoonPayload, type Place, type TravelLeg,
 } from './honeymoon';
@@ -101,14 +101,14 @@ export function buildOfflineHtml(payload: HoneymoonPayload, options: OfflineExpo
     const kindLabel = (key: string) => BOOKING_KINDS.find((k) => k.key === key)?.label ?? key;
     const money = (amount: number | null, currency: string | null) => (amount == null
         ? '' : formatMoney(amount, (currency || trip.home_currency || 'USD').toUpperCase()));
-    const mapsLink = (place: Place) => link(navUrl(place), 'Directions');
+    const mapsLink = (place: Place) => link(navUrl(place), 'Route');
 
     /** What a booking is for, in words. */
     const bookingTarget = (booking: Booking): string => {
         if (booking.place_id != null) return placeName(booking.place_id);
         if (booking.travel_id != null) {
             const leg = payload.days.flatMap((d) => d.travel).find((l) => l.id === booking.travel_id);
-            if (leg) return [leg.from_text, leg.to_text].filter(Boolean).join(' → ') || 'Travel leg';
+            if (leg) return [leg.from_text, leg.to_text].filter(Boolean).join(' → ') || 'Teilstrecke';
         }
         if (booking.journey_id != null) {
             const journey = payload.journeys.find((j) => j.id === booking.journey_id);
@@ -117,48 +117,48 @@ export function buildOfflineHtml(payload: HoneymoonPayload, options: OfflineExpo
         if (booking.stop_id != null) {
             const day = dayOfStop.get(booking.stop_id);
             const stop = day?.stops.find((s) => s.id === booking.stop_id);
-            if (stop) return stop.custom_label || placeName(stop.place_id) || 'Stop';
+            if (stop) return stop.custom_label || placeName(stop.place_id) || 'Stopp';
         }
-        return booking.provider || 'Booking';
+        return booking.provider || 'Buchung';
     };
 
     const bookingHtml = (booking: Booking, withTarget: boolean): string => `
         <div class="booking">
             <div class="bh">${escapeHtml(kindLabel(booking.kind))}${withTarget ? ` — ${escapeHtml(bookingTarget(booking))}` : ''}
-                ${booking.paid ? '<span class="tag good">Paid</span>' : ''}</div>
-            ${field('Confirmation', booking.confirmation ? `<strong class="ref">${escapeHtml(booking.confirmation)}</strong>` : '', true)}
-            ${field('Provider', booking.provider)}
-            ${field('Contact', booking.contact)}
-            ${field('Check in', [formatDate(booking.check_in), time(booking.check_in_time)].filter(Boolean).join(' '))}
-            ${field('Check out', [formatDate(booking.check_out), time(booking.check_out_time)].filter(Boolean).join(' '))}
-            ${field('Party', booking.party_size != null ? String(booking.party_size) : '')}
-            ${field('Dress code', booking.dress_code)}
-            ${field('Cost', [money(booking.cost, booking.cost_currency),
-                booking.cost_paid != null ? `${money(booking.cost_paid, booking.cost_currency)} paid` : ''].filter(Boolean).join(' · '))}
-            ${field('Deposit due', formatDate(booking.deposit_due_on))}
-            ${field('Cancel by', formatDate(booking.cancel_by))}
+                ${booking.paid ? '<span class="tag good">Bezahlt</span>' : ''}</div>
+            ${field('Bestätigung', booking.confirmation ? `<strong class="ref">${escapeHtml(booking.confirmation)}</strong>` : '', true)}
+            ${field('Anbieter', booking.provider)}
+            ${field('Kontakt', booking.contact)}
+            ${field('Check-in', [formatDate(booking.check_in), time(booking.check_in_time)].filter(Boolean).join(' '))}
+            ${field('Check-out', [formatDate(booking.check_out), time(booking.check_out_time)].filter(Boolean).join(' '))}
+            ${field('Personen', booking.party_size != null ? String(booking.party_size) : '')}
+            ${field('Kleiderordnung', booking.dress_code)}
+            ${field('Kosten', [money(booking.cost, booking.cost_currency),
+                booking.cost_paid != null ? `${money(booking.cost_paid, booking.cost_currency)} bezahlt` : ''].filter(Boolean).join(' · '))}
+            ${field('Anzahlung fällig', formatDate(booking.deposit_due_on))}
+            ${field('Stornieren bis', formatDate(booking.cancel_by))}
             ${field('Link', booking.url ? link(booking.url, booking.url) : '', true)}
-            ${field('Notes', booking.notes)}
+            ${field('Notizen', booking.notes)}
         </div>`;
 
     const legHtml = (leg: TravelLeg): string => {
         const mode = travelModeMeta(leg.mode);
         const depart = [time(leg.depart_time), leg.depart_tz ? `(${leg.depart_tz})` : ''].filter(Boolean).join(' ');
         const arrive = [time(leg.arrive_time), leg.arrive_tz ? `(${leg.arrive_tz})` : '',
-            leg.arrive_day_offset > 0 ? `+${leg.arrive_day_offset} day${leg.arrive_day_offset === 1 ? '' : 's'}` : '']
+            leg.arrive_day_offset > 0 ? `+${leg.arrive_day_offset} ${leg.arrive_day_offset === 1 ? 'Tag' : 'Tage'}` : '']
             .filter(Boolean).join(' ');
         const bookings = payload.bookings.filter((b) => b.travel_id === leg.id);
         return `
         <div class="leg">
             <div class="lh">${escapeHtml(mode.icon)} ${escapeHtml(leg.from_text || '?')} → ${escapeHtml(leg.to_text || '?')}
                 ${leg.flight_no ? `<span class="tag">${escapeHtml(leg.flight_no)}</span>` : ''}</div>
-            ${field('Departs', [formatDate(leg.depart_date), depart, leg.from_terminal ? `Terminal ${leg.from_terminal}` : ''].filter(Boolean).join(' · '))}
-            ${field('Arrives', [formatDate(leg.arrive_date), arrive, leg.to_terminal ? `Terminal ${leg.to_terminal}` : ''].filter(Boolean).join(' · '))}
-            ${field('Confirmation', leg.confirmation_ref ? `<strong class="ref">${escapeHtml(leg.confirmation_ref)}</strong>` : '', true)}
-            ${field('Aircraft', leg.aircraft)}
-            ${field('Booked by', leg.booked_by)}
-            ${field('Cost', money(leg.cost, leg.cost_currency))}
-            ${field('Notes', leg.notes)}
+            ${field('Abfahrt', [formatDate(leg.depart_date), depart, leg.from_terminal ? `Terminal ${leg.from_terminal}` : ''].filter(Boolean).join(' · '))}
+            ${field('Ankunft', [formatDate(leg.arrive_date), arrive, leg.to_terminal ? `Terminal ${leg.to_terminal}` : ''].filter(Boolean).join(' · '))}
+            ${field('Bestätigung', leg.confirmation_ref ? `<strong class="ref">${escapeHtml(leg.confirmation_ref)}</strong>` : '', true)}
+            ${field('Flugzeug', leg.aircraft)}
+            ${field('Gebucht von', leg.booked_by)}
+            ${field('Kosten', money(leg.cost, leg.cost_currency))}
+            ${field('Notizen', leg.notes)}
             ${bookings.map((b) => bookingHtml(b, false)).join('')}
         </div>`;
     };
@@ -171,21 +171,21 @@ export function buildOfflineHtml(payload: HoneymoonPayload, options: OfflineExpo
         <div class="item card" id="place-${place.id}">
             <div class="ch"><strong>${escapeHtml(place.name)}</strong>
                 <span class="tag">${escapeHtml(categoryMeta(place.category).label)}</span>
-                ${place.status === 'booked' ? '<span class="tag good">Booked</span>' : ''}
-                ${place.rating === 'yes' ? '<span class="tag">Interested</span>' : ''}
+                ${place.status === 'booked' ? '<span class="tag good">Gebucht</span>' : ''}
+                ${place.rating === 'yes' ? '<span class="tag">Interessant</span>' : ''}
                 ${extra}</div>
             ${field('Region', region ? [region.name, place.country || region.country].filter(Boolean).join(', ') : place.country)}
-            ${field('Address', place.address)}
-            ${field('Location', hasCoords(place)
+            ${field('Adresse', place.address)}
+            ${field('Standort', hasCoords(place)
                 ? `${place.lat.toFixed(5)}, ${place.lng.toFixed(5)} · ${mapsLink(place)}`
                 : place.address ? mapsLink(place) : '', true)}
-            ${field('Cost', place.cost != null ? `${money(place.cost, place.cost_currency)} ${place.cost_per === 'total' ? '' : `per ${place.cost_per}`}`.trim() : '')}
-            ${field('Price note', place.price_note)}
-            ${field('Opening hours', place.opening_hours)}
-            ${field('Best time', place.best_time)}
-            ${field('About', place.description)}
+            ${field('Kosten', place.cost != null ? `${money(place.cost, place.cost_currency)} ${place.cost_per === 'total' ? '' : COST_PER_LABELS[place.cost_per] ?? ''}`.trim() : '')}
+            ${field('Preisnotiz', place.price_note)}
+            ${field('Öffnungszeiten', place.opening_hours)}
+            ${field('Beste Zeit', place.best_time)}
+            ${field('Über den Ort', place.description)}
             ${place.links.length ? field('Links', place.links.map((l) => link(l.url, l.label || l.url)).join(' · '), true) : ''}
-            ${comments.length ? field('Comments', comments.map((c) => `<em>${escapeHtml(c.author)}:</em> ${lines(c.body)}`).join('<br>'), true) : ''}
+            ${comments.length ? field('Kommentare', comments.map((c) => `<em>${escapeHtml(c.author)}:</em> ${lines(c.body)}`).join('<br>'), true) : ''}
             ${bookings.map((b) => bookingHtml(b, false)).join('')}
         </div>`;
     };
@@ -204,7 +204,7 @@ export function buildOfflineHtml(payload: HoneymoonPayload, options: OfflineExpo
         .filter((section) => trip.info?.[section.key]?.trim())
         .map((section) => `<div class="item card"><div class="ch"><strong>${escapeHtml(section.label)}</strong></div>
             <p>${lines(trip.info[section.key])}</p></div>`).join('');
-    sections.push({ id: 'emergency', title: 'Emergency & essentials', body: emergency + infoBlocks });
+    sections.push({ id: 'emergency', title: 'Notfall & Wichtiges', body: emergency + infoBlocks });
 
     /* ---- Itinerary ---- */
     if (payload.days.length) {
@@ -212,7 +212,7 @@ export function buildOfflineHtml(payload: HoneymoonPayload, options: OfflineExpo
             const base = day.base_place_id != null ? placeById.get(day.base_place_id) : undefined;
             const stops = [...day.stops].sort((a, b) => a.sort_order - b.sort_order).map((stop) => {
                 const place = stop.place_id != null ? placeById.get(stop.place_id) : undefined;
-                const label = stop.custom_label || place?.name || 'Stop';
+                const label = stop.custom_label || place?.name || 'Stopp';
                 const bookings = payload.bookings.filter((b) => b.stop_id === stop.id);
                 return `<li><span class="t">${escapeHtml(time(stop.start_time))}${stop.duration_minutes
                     ? ` <small>(${escapeHtml(formatMinutes(stop.duration_minutes))})</small>` : ''}</span>
@@ -228,31 +228,31 @@ export function buildOfflineHtml(payload: HoneymoonPayload, options: OfflineExpo
             const date = formatDayDate(trip.start_date, day.day_number);
             return `
             <details class="item day" open id="day-${day.day_number}">
-                <summary><strong>Day ${day.day_number}</strong>${date ? ` · ${escapeHtml(date)}` : ''}${day.title ? ` — ${escapeHtml(day.title)}` : ''}</summary>
-                ${base ? field('Staying at', `<a href="#place-${base.id}">${escapeHtml(base.name)}</a>${base.address ? ` · ${escapeHtml(base.address)}` : ''}`, true) : ''}
+                <summary><strong>Tag ${day.day_number}</strong>${date ? ` · ${escapeHtml(date)}` : ''}${day.title ? ` – ${escapeHtml(day.title)}` : ''}</summary>
+                ${base ? field('Unterkunft', `<a href="#place-${base.id}">${escapeHtml(base.name)}</a>${base.address ? ` · ${escapeHtml(base.address)}` : ''}`, true) : ''}
                 ${day.notes ? `<p>${lines(day.notes)}</p>` : ''}
-                ${legs ? `<h4>Travel</h4>${legs}` : ''}
-                ${stops ? `<h4>Plan</h4><ol class="stops">${stops}</ol>` : '<p class="muted">Nothing planned.</p>'}
-                ${todos.length ? `<h4>To do</h4><ul>${todos.map((t) => `<li>${t.done ? '☑' : '☐'} ${escapeHtml(t.text)}</li>`).join('')}</ul>` : ''}
+                ${legs ? `<h4>Verbindungen</h4>${legs}` : ''}
+                ${stops ? `<h4>Plan</h4><ol class="stops">${stops}</ol>` : '<p class="muted">Nichts geplant.</p>'}
+                ${todos.length ? `<h4>Aufgaben</h4><ul>${todos.map((t) => `<li>${t.done ? '☑' : '☐'} ${escapeHtml(t.text)}</li>`).join('')}</ul>` : ''}
             </details>`;
         }).join('');
-        sections.push({ id: 'itinerary', title: 'Itinerary', body: days });
+        sections.push({ id: 'itinerary', title: 'Reiseplan', body: days });
     }
 
     /* ---- Journeys ---- */
     const journeys = journeysOf(payload).filter((group) => group.legs.length);
     if (journeys.length) {
         sections.push({
-            id: 'travel', title: 'Flights & travel',
+            id: 'travel', title: 'Flüge & Verbindungen',
             body: journeys.map((group) => {
                 const bookings = group.journey
                     ? payload.bookings.filter((b) => b.journey_id === group.journey?.id) : [];
                 const layovers = group.layovers.filter((l) => l.minutes != null)
-                    .map((l) => `${escapeHtml(l.at || 'Layover')}: ${escapeHtml(formatMinutes(l.minutes))}${l.changesAirport ? ' (change airport)' : ''}`);
+                    .map((l) => `${escapeHtml(l.at || 'Umstieg')}: ${escapeHtml(formatMinutes(l.minutes))}${l.changesAirport ? ' (Flughafenwechsel)' : ''}`);
                 return `<div class="item card"><div class="ch"><strong>${escapeHtml(journeyTitle(group))}</strong>
-                    ${group.totalMinutes != null ? `<span class="tag">${escapeHtml(formatMinutes(group.totalMinutes))} door to door</span>` : ''}</div>
-                    ${field('Dates', [formatDate(group.departDate), formatDate(group.arriveDate)].filter(Boolean).join(' → '))}
-                    ${layovers.length ? field('Layovers', layovers.join('<br>'), true) : ''}
+                    ${group.totalMinutes != null ? `<span class="tag">${escapeHtml(formatMinutes(group.totalMinutes))} von Tür zu Tür</span>` : ''}</div>
+                    ${field('Daten', [formatDate(group.departDate), formatDate(group.arriveDate)].filter(Boolean).join(' → '))}
+                    ${layovers.length ? field('Umstiege', layovers.join('<br>'), true) : ''}
                     ${group.journey?.notes ? `<p>${lines(group.journey.notes)}</p>` : ''}
                     ${group.legs.map(legHtml).join('')}
                     ${bookings.map((b) => bookingHtml(b, false)).join('')}</div>`;
@@ -264,7 +264,7 @@ export function buildOfflineHtml(payload: HoneymoonPayload, options: OfflineExpo
     if (payload.bookings.length) {
         const sorted = [...payload.bookings].sort((a, b) => (a.check_in ?? '9999').localeCompare(b.check_in ?? '9999'));
         sections.push({
-            id: 'bookings', title: 'All bookings & confirmations',
+            id: 'bookings', title: 'Alle Buchungen & Bestätigungen',
             body: sorted.map((b) => `<div class="item">${bookingHtml(b, true)}</div>`).join(''),
         });
     }
@@ -272,16 +272,16 @@ export function buildOfflineHtml(payload: HoneymoonPayload, options: OfflineExpo
     /* ---- Documents ---- */
     if (payload.documents.length) {
         sections.push({
-            id: 'documents', title: 'Documents',
-            body: `<p class="muted">The files themselves are not in this copy — only what each one is.</p>${
+            id: 'documents', title: 'Dokumente',
+            body: `<p class="muted">Die Dateien selbst sind nicht in dieser Kopie – nur, worum es sich jeweils handelt.</p>${
                 payload.documents.map((doc) => {
                     const kind = DOCUMENT_KINDS.find((k) => k.key === doc.kind);
                     return `<div class="item card"><div class="ch">${escapeHtml(kind?.icon ?? '')} <strong>${escapeHtml(doc.name)}</strong>
                         <span class="tag">${escapeHtml(kind?.label ?? doc.kind)}</span></div>
-                        ${field('Whose', doc.person)}
-                        ${field('Expires', formatDate(doc.expires_on))}
-                        ${field('For', doc.place_id != null ? placeName(doc.place_id) : '')}
-                        ${field('Notes', doc.notes)}</div>`;
+                        ${field('Von wem', doc.person)}
+                        ${field('Läuft ab', formatDate(doc.expires_on))}
+                        ${field('Für', doc.place_id != null ? placeName(doc.place_id) : '')}
+                        ${field('Notizen', doc.notes)}</div>`;
                 }).join('')}`,
         });
     }
@@ -292,27 +292,27 @@ export function buildOfflineHtml(payload: HoneymoonPayload, options: OfflineExpo
         .sort((a, b) => (a.rank ?? 999) - (b.rank ?? 999) || a.name.localeCompare(b.name));
     if (stays.length) {
         sections.push({
-            id: 'stays', title: 'Stays',
+            id: 'stays', title: 'Unterkünfte',
             body: stays.map((p) => {
                 const nights = payload.days.filter((d) => d.base_place_id === p.id).length;
-                return placeHtml(p, nights ? `<span class="tag">${nights} night${nights === 1 ? '' : 's'}</span>` : '');
+                return placeHtml(p, nights ? `<span class="tag">${nights} ${nights === 1 ? 'Nacht' : 'Nächte'}</span>` : '');
             }).join(''),
         });
     }
     const excursions = live.filter((p) => p.is_excursion && p.category !== 'stay');
     if (excursions.length) {
-        sections.push({ id: 'excursions', title: 'Excursions', body: excursions.map((p) => placeHtml(p)).join('') });
+        sections.push({ id: 'excursions', title: 'Ausflüge', body: excursions.map((p) => placeHtml(p)).join('') });
     }
     const others = live.filter((p) => p.category !== 'stay' && !p.is_excursion);
     if (others.length) {
         const groups = new Map<string, Place[]>();
         for (const place of others) {
             const region = place.region_id != null ? regionById.get(place.region_id)?.name : undefined;
-            const key = region || 'No region';
+            const key = region || 'Keine Region';
             groups.set(key, [...(groups.get(key) ?? []), place]);
         }
         sections.push({
-            id: 'places', title: 'Places',
+            id: 'places', title: 'Orte',
             body: [...groups.entries()].map(([region, places]) => `<h3 class="group">${escapeHtml(region)}</h3>${
                 places.sort((a, b) => a.name.localeCompare(b.name)).map((p) => placeHtml(p)).join('')}`).join(''),
         });
@@ -324,21 +324,21 @@ export function buildOfflineHtml(payload: HoneymoonPayload, options: OfflineExpo
             .sort((a, b) => a.sort_order - b.sort_order)
             .map((t) => `<li class="item">${t.done ? '☑' : '☐'} ${escapeHtml(t.text)}${
                 t.person ? ` <span class="tag">${escapeHtml(t.person)}</span>` : ''}${
-                t.due_on ? ` <span class="muted">due ${escapeHtml(formatDate(t.due_on))}</span>` : ''}${
+                t.due_on ? ` <span class="muted">fällig ${escapeHtml(formatDate(t.due_on))}</span>` : ''}${
                 t.result ? `<div class="muted">${lines(t.result)}</div>` : ''}</li>`).join('');
         const tasks = list('task');
         const packing = list('packing');
         sections.push({
-            id: 'checklist', title: 'Checklist & packing',
-            body: `${tasks ? `<h3 class="group">Checklist</h3><ul class="todos">${tasks}</ul>` : ''}${
-                packing ? `<h3 class="group">Packing</h3><ul class="todos">${packing}</ul>` : ''}`,
+            id: 'checklist', title: 'Checkliste & Packliste',
+            body: `${tasks ? `<h3 class="group">Checkliste</h3><ul class="todos">${tasks}</ul>` : ''}${
+                packing ? `<h3 class="group">Packliste</h3><ul class="todos">${packing}</ul>` : ''}`,
         });
     }
 
     /* ---- Guide notes ---- */
     if (payload.notes.length) {
         sections.push({
-            id: 'notes', title: 'Guide notes',
+            id: 'notes', title: 'Notizen aus dem Reiseführer',
             body: [...payload.notes].sort((a, b) => a.sort_order - b.sort_order).map((note) => `
                 <details class="item card"><summary><strong>${escapeHtml(note.title)}</strong>${
                     note.category ? ` <span class="tag">${escapeHtml(note.category)}</span>` : ''}</summary>
@@ -351,13 +351,13 @@ export function buildOfflineHtml(payload: HoneymoonPayload, options: OfflineExpo
     if (budget.total > 0) {
         const home = (trip.home_currency || 'USD').toUpperCase();
         sections.push({
-            id: 'money', title: 'Money',
+            id: 'money', title: 'Geld',
             body: `<div class="item card">
-                ${field('Trip total', formatMoney(budget.total, home))}
-                ${field('Paid', formatMoney(budget.paid, home))}
-                ${field('Still to pay', formatMoney(budget.outstanding, home))}
+                ${field('Gesamtkosten', formatMoney(budget.total, home))}
+                ${field('Bezahlt', formatMoney(budget.paid, home))}
+                ${field('Noch zu zahlen', formatMoney(budget.outstanding, home))}
                 ${budget.budget != null ? field('Budget', formatMoney(budget.budget, home)) : ''}
-                ${payload.rates.length ? field('Exchange rates', payload.rates.map((r) => `${r.pair}: ${r.rate}`).join(' · ')) : ''}
+                ${payload.rates.length ? field('Wechselkurse', payload.rates.map((r) => `${r.pair}: ${r.rate}`).join(' · ')) : ''}
             </div>`,
         });
     }
@@ -366,31 +366,31 @@ export function buildOfflineHtml(payload: HoneymoonPayload, options: OfflineExpo
     const dates = trip.start_date
         ? `${formatDayDate(trip.start_date, 1)}${lastDay > 1 ? ` – ${formatDayDate(trip.start_date, lastDay)}` : ''}`
         : '';
-    const stamp = generatedAt.toLocaleString('en-US', {
+    const stamp = generatedAt.toLocaleString('de-DE', {
         dateStyle: 'medium', timeStyle: 'short', timeZone: 'UTC',
     });
 
     return `<!doctype html>
-<html lang="en">
+<html lang="de">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>${escapeHtml(trip.title || 'Honeymoon')} — offline copy</title>
+<title>${escapeHtml(trip.title || 'Flitterwochen')} – Offline-Kopie</title>
 <style>${STYLES}</style>
 </head>
 <body>
 <header class="top">
-    <h1>${escapeHtml(trip.title || 'Honeymoon')}</h1>
+    <h1>${escapeHtml(trip.title || 'Flitterwochen')}</h1>
     <p>${escapeHtml([dates, trip.partner_names].filter(Boolean).join(' · '))}</p>
-    <p class="muted">Offline copy, saved ${escapeHtml(stamp)} UTC. A snapshot — changes made after this are not in it.</p>
+    <p class="muted">Offline-Kopie, gespeichert ${escapeHtml(stamp)} UTC. Eine Momentaufnahme – spätere Änderungen sind nicht enthalten.</p>
     ${trip.notes ? `<p>${lines(trip.notes)}</p>` : ''}
     <div class="tools">
-        <input id="q" type="search" placeholder="Search everything — a hotel, a booking ref, a phone number…" autocomplete="off">
-        <button type="button" id="expand">Expand all</button>
-        <button type="button" id="collapse">Collapse all</button>
+        <input id="q" type="search" placeholder="Alles durchsuchen – ein Hotel, eine Buchungsnummer, eine Telefonnummer …" autocomplete="off">
+        <button type="button" id="expand">Alle aufklappen</button>
+        <button type="button" id="collapse">Alle zuklappen</button>
     </div>
     <nav>${sections.map((s) => `<a href="#${s.id}">${escapeHtml(s.title)}</a>`).join('')}</nav>
-    <p id="none" class="muted" hidden>Nothing matches.</p>
+    <p id="none" class="muted" hidden>Keine Treffer.</p>
 </header>
 <main>
 ${sections.map((s) => `<section id="${s.id}"><h2>${escapeHtml(s.title)}</h2>${s.body}</section>`).join('\n')}

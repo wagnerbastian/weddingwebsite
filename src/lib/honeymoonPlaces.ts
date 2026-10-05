@@ -186,9 +186,9 @@ export function suggestDay(
 
     const liked = ordered.filter((place) => place.rating === 'yes').length;
     const why = [
-        liked ? `${liked} you rated yes` : null,
-        ordered.length - liked ? `${ordered.length - liked} unrated` : null,
-        `all within ${Math.ceil(withinKm)} km of ${base.name}`,
+        liked ? `${liked} mit Ja bewertet` : null,
+        ordered.length - liked ? `${ordered.length - liked} unbewertet` : null,
+        `alle im Umkreis von ${Math.ceil(withinKm)} km um ${base.name}`,
     ].filter(Boolean).join(', ');
 
     return { places: ordered, km, why };
@@ -270,7 +270,7 @@ export function placesToGeoJson(places: Place[], regionName: (id: number | null)
 }
 
 /** KML, for the phone's own map app and for Google My Maps' importer. */
-export function placesToKml(places: Place[], title = 'Honeymoon places'): string {
+export function placesToKml(places: Place[], title = 'Flitterwochen-Orte'): string {
     const escape = (value: string) => value
         .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
     const marks = places.filter(hasCoords).map((place) => [
@@ -378,7 +378,7 @@ export function parseDelimited(text: string): ImportReport {
         });
         const name = (row.name ?? '').trim();
         if (!name) {
-            report.skipped.push({ line: lineNumber, why: 'no name' });
+            report.skipped.push({ line: lineNumber, why: 'kein Name' });
             return;
         }
         const lat = Number(row.lat);
@@ -407,7 +407,7 @@ export function parseKml(text: string): ImportReport {
         const coords = /<coordinates>([\s\S]*?)<\/coordinates>/.exec(mark)?.[1]?.trim();
         const description = /<description>([\s\S]*?)<\/description>/.exec(mark)?.[1]?.trim();
         if (!name) {
-            report.skipped.push({ line: index + 1, why: 'placemark with no name' });
+            report.skipped.push({ line: index + 1, why: 'Placemark ohne Namen' });
             return;
         }
         const [lng, lat] = (coords ?? '').split(',').map(Number);
@@ -449,12 +449,12 @@ export function parseTakeout(text: string): ImportReport {
     try {
         body = JSON.parse(text);
     } catch {
-        report.skipped.push({ line: 0, why: 'not valid JSON' });
+        report.skipped.push({ line: 0, why: 'kein gültiges JSON' });
         return report;
     }
     const features = (body as { features?: unknown[] })?.features;
     if (!Array.isArray(features)) {
-        report.skipped.push({ line: 0, why: 'no features array — is this the right file?' });
+        report.skipped.push({ line: 0, why: 'kein features-Array – ist das die richtige Datei?' });
         return report;
     }
     features.forEach((raw, index) => {
@@ -470,7 +470,7 @@ export function parseTakeout(text: string): ImportReport {
             ?? feature.properties?.Title
             ?? '';
         if (!name) {
-            report.skipped.push({ line: index + 1, why: 'saved place with no name' });
+            report.skipped.push({ line: index + 1, why: 'gespeicherter Ort ohne Namen' });
             return;
         }
         const coordinates = feature.geometry?.coordinates;

@@ -86,7 +86,7 @@ console.log('\nWith the network cut');
 await goOffline(context, true);
 const bodyOf = async () => p.evaluate(() => ({
     text: document.body.innerText.trim(),
-    fallback: !!document.querySelector('h1') && /You.re offline/.test(document.querySelector('h1')?.textContent ?? ''),
+    fallback: !!document.querySelector('h1') && /Ihr seid offline/.test(document.querySelector('h1')?.textContent ?? ''),
 }));
 for (const path of [...PUBLIC_PAGES, ...ADMIN_PAGES]) {
     if (path === '/offline') continue;
@@ -107,7 +107,7 @@ await p.goto(`${BASE}/admin/honeymoon`, { waitUntil: 'load' });
 await p.waitForTimeout(1500);
 check('the offline bar shows', await p.locator('[data-offline-banner]').isVisible().catch(() => false));
 check('the honeymoon data is there, not an empty shell',
-    (await p.locator('text=/\\d+ places/').count()) > 0);
+    (await p.locator('text=/\\d+ Orte/').count()) > 0);
 
 await p.goto(`${BASE}/`, { waitUntil: 'load' });
 await p.waitForTimeout(1000);
@@ -121,19 +121,19 @@ if (await link.count()) {
 
 await p.goto(`${BASE}/admin/honeymoon/checklist`, { waitUntil: 'load' });
 await p.waitForTimeout(1500);
-const box = p.locator('input[placeholder^="Renew passports"]').first();
+const box = p.locator('input[placeholder^="Reisepässe verlängern"]').first();
 if (await box.count()) {
     await box.fill('Written offline — must not arrive');
-    await p.getByRole('button', { name: 'Add', exact: true }).first().click();
+    await p.getByRole('button', { name: 'Hinzufügen', exact: true }).first().click();
     await p.waitForTimeout(1200);
-    check('a save offline says it was not saved', (await p.locator("text=/offline — this wasn.t saved/").count()) > 0);
+    check('a save offline says it was not saved', (await p.locator("text=/Offline – das wurde nicht gespeichert/").count()) > 0);
 }
 
 console.log('\nSigning out');
 await goOffline(context, false);
 await p.goto(`${BASE}/admin`, { waitUntil: 'networkidle' });
 const left = await p.evaluate(async () => {
-    const button = [...document.querySelectorAll('button')].find((b) => b.textContent?.trim() === 'Logout');
+    const button = [...document.querySelectorAll('button')].find((b) => b.textContent?.trim() === 'Abmelden');
     button?.click();
     await new Promise((r) => setTimeout(r, 2500));
     const out: string[] = [];

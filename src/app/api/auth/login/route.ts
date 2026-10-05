@@ -17,7 +17,7 @@ export async function POST(request: Request) {
     if (!expected) {
         // No password means no way in — never a default one.
         console.error('ADMIN_PASSWORD is not set; refusing to sign anyone in.');
-        return NextResponse.json({ success: false, error: 'Admin login is not configured' }, { status: 500 });
+        return NextResponse.json({ success: false, error: 'Admin-Login ist nicht eingerichtet' }, { status: 500 });
     }
 
     let password: unknown;
@@ -33,7 +33,7 @@ export async function POST(request: Request) {
 
     const token = await signAdminToken();
     if (!token) {
-        return NextResponse.json({ success: false, error: 'Admin login is not configured' }, { status: 500 });
+        return NextResponse.json({ success: false, error: 'Admin-Login ist nicht eingerichtet' }, { status: 500 });
     }
 
     const response = NextResponse.json({ success: true });
