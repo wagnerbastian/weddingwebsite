@@ -263,7 +263,7 @@ export default function OverviewTab({ data }: { data: FinancePayload }) {
                                 </div>
                                 <Bar pct={category.paidPct} tone={overpaid ? 'rose' : 'accent'} />
                                 <div className="flex justify-between text-[11px] text-gray-400 mt-1">
-                                    <span>{category.paidPct.toFixed(0)}% bezahlt</span>
+                                    <span>{category.paidPct.toFixed(0)} % bezahlt</span>
                                     <span className={overpaid ? 'text-rose-600 font-medium' : ''}>
                                         {overpaid
                                             ? `${formatMoney(-category.remaining)} zu viel bezahlt`
@@ -295,7 +295,7 @@ export default function OverviewTab({ data }: { data: FinancePayload }) {
                                     )}
                                 </span>
                                 <span className="text-[11px] text-gray-400 tabular-nums w-12 text-right">
-                                    {item.pct.toFixed(1)}%
+                                    {item.pct.toFixed(1).replace('.', ',')} %
                                 </span>
                                 <span className="tabular-nums w-24 text-right font-medium">
                                     {formatMoney(item.total)}

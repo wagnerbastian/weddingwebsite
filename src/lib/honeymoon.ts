@@ -32,19 +32,21 @@ export type PlaceRating = 'yes' | 'mid' | 'no' | null;
 export const RATINGS: {
     key: Exclude<PlaceRating, null>; label: string; icon: string; color: string;
 }[] = [
-    { key: 'yes', label: 'Interested', icon: '👍', color: '#059669' },
-    { key: 'mid', label: 'Mid tier', icon: '😐', color: '#d97706' },
-    { key: 'no', label: 'Not interested', icon: '👎', color: '#be123c' },
+    { key: 'yes', label: 'Interessant', icon: '👍', color: '#059669' },
+    { key: 'mid', label: 'Mittelklasse', icon: '😐', color: '#d97706' },
+    { key: 'no', label: 'Nicht interessant', icon: '👎', color: '#be123c' },
 ];
 
 export const SOURCE_YOUTUBE = 'YouTube Travel Guide';
 export const SOURCE_AMY = "Amy's Suggestions";
-export const SOURCE_MANUAL = 'Added by me';
+export const SOURCE_MANUAL = 'Von mir hinzugefügt';
 
 /** Legacy values, still possible in a database seeded before sources existed. */
 const LEGACY_SOURCE_LABELS: Record<string, string> = {
     guide: SOURCE_YOUTUBE,
     manual: SOURCE_MANUAL,
+    // The English wording stored before the portal was translated.
+    'Added by me': SOURCE_MANUAL,
 };
 
 export function sourceLabel(source: string | null | undefined): string {
@@ -171,9 +173,9 @@ export interface Place {
 export type CostPer = 'night' | 'person' | 'total';
 
 export const COST_PER_LABELS: Record<CostPer, string> = {
-    night: 'per night',
-    person: 'per person',
-    total: 'total',
+    night: 'pro Nacht',
+    person: 'pro Person',
+    total: 'gesamt',
 };
 
 export interface Stop {
@@ -434,11 +436,11 @@ export interface Booking {
 export type BookingKind = 'stay' | 'excursion' | 'travel' | 'table' | 'other';
 
 export const BOOKING_KINDS: { key: BookingKind; label: string }[] = [
-    { key: 'stay', label: 'Stay' },
-    { key: 'excursion', label: 'Excursion' },
-    { key: 'travel', label: 'Travel' },
-    { key: 'table', label: 'Table' },
-    { key: 'other', label: 'Other' },
+    { key: 'stay', label: 'Unterkunft' },
+    { key: 'excursion', label: 'Ausflug' },
+    { key: 'travel', label: 'Verbindung' },
+    { key: 'table', label: 'Tisch' },
+    { key: 'other', label: 'Sonstiges' },
 ];
 
 /** A file you would be sorry to be without at a border. */
@@ -459,13 +461,13 @@ export type DocumentKind = 'passport' | 'visa' | 'insurance' | 'ticket'
     | 'vaccination' | 'reservation' | 'other';
 
 export const DOCUMENT_KINDS: { key: DocumentKind; label: string; icon: string }[] = [
-    { key: 'passport', label: 'Passport', icon: '🛂' },
-    { key: 'visa', label: 'Visa', icon: '📄' },
-    { key: 'insurance', label: 'Insurance', icon: '🩺' },
+    { key: 'passport', label: 'Reisepass', icon: '🛂' },
+    { key: 'visa', label: 'Visum', icon: '📄' },
+    { key: 'insurance', label: 'Versicherung', icon: '🩺' },
     { key: 'ticket', label: 'Ticket', icon: '🎫' },
-    { key: 'vaccination', label: 'Vaccination', icon: '💉' },
-    { key: 'reservation', label: 'Reservation', icon: '📌' },
-    { key: 'other', label: 'Other', icon: '📎' },
+    { key: 'vaccination', label: 'Impfung', icon: '💉' },
+    { key: 'reservation', label: 'Reservierung', icon: '📌' },
+    { key: 'other', label: 'Sonstiges', icon: '📎' },
 ];
 
 /** A short note on a place, from one of you to the other. */
@@ -562,26 +564,26 @@ export interface HoneymoonPayload {
  * raster tiles — nothing pale, nothing that reads as a road or a park.
  */
 export const CATEGORIES = [
-    { key: 'stay', label: 'Stay', color: '#7c3aed', icon: '🛏️' },
-    { key: 'beach_club', label: 'Beach Club', color: '#0891b2', icon: '🏖️' },
+    { key: 'stay', label: 'Unterkunft', color: '#7c3aed', icon: '🛏️' },
+    { key: 'beach_club', label: 'Beachclub', color: '#0891b2', icon: '🏖️' },
     { key: 'bar', label: 'Bar', color: '#be123c', icon: '🍸' },
-    { key: 'nightlife', label: 'Nightlife', color: '#9333ea', icon: '🎧' },
+    { key: 'nightlife', label: 'Nachtleben', color: '#9333ea', icon: '🎧' },
     { key: 'restaurant', label: 'Restaurant', color: '#ea580c', icon: '🍽️' },
-    { key: 'cafe', label: 'Cafe', color: '#a16207', icon: '☕' },
-    { key: 'waterfall', label: 'Waterfall', color: '#0284c7', icon: '💦' },
-    { key: 'beach', label: 'Beach', color: '#f59e0b', icon: '🏝️' },
-    { key: 'hiking', label: 'Hiking', color: '#65a30d', icon: '🥾' },
-    { key: 'nature', label: 'Nature', color: '#15803d', icon: '🌿' },
-    { key: 'temple', label: 'Temple', color: '#b45309', icon: '🛕' },
-    { key: 'attraction', label: 'Attraction', color: '#059669', icon: '📍' },
-    { key: 'activity', label: 'Activity', color: '#16a34a', icon: '🎯' },
+    { key: 'cafe', label: 'Café', color: '#a16207', icon: '☕' },
+    { key: 'waterfall', label: 'Wasserfall', color: '#0284c7', icon: '💦' },
+    { key: 'beach', label: 'Strand', color: '#f59e0b', icon: '🏝️' },
+    { key: 'hiking', label: 'Wandern', color: '#65a30d', icon: '🥾' },
+    { key: 'nature', label: 'Natur', color: '#15803d', icon: '🌿' },
+    { key: 'temple', label: 'Tempel', color: '#b45309', icon: '🛕' },
+    { key: 'attraction', label: 'Sehenswürdigkeit', color: '#059669', icon: '📍' },
+    { key: 'activity', label: 'Aktivität', color: '#16a34a', icon: '🎯' },
     { key: 'spa', label: 'Spa', color: '#db2777', icon: '💆' },
-    { key: 'beauty', label: 'Hair & Nails', color: '#e11d48', icon: '💅' },
-    { key: 'gym', label: 'Gym', color: '#4d7c0f', icon: '🏋️' },
-    { key: 'cowork', label: 'Cowork', color: '#475569', icon: '💻' },
+    { key: 'beauty', label: 'Haare & Nägel', color: '#e11d48', icon: '💅' },
+    { key: 'gym', label: 'Fitnessstudio', color: '#4d7c0f', icon: '🏋️' },
+    { key: 'cowork', label: 'Coworking', color: '#475569', icon: '💻' },
     { key: 'shop', label: 'Shopping', color: '#c026d3', icon: '🛍️' },
     { key: 'transport', label: 'Transport', color: '#334155', icon: '✈️' },
-    { key: 'misc', label: 'Other', color: '#6b7280', icon: '•' },
+    { key: 'misc', label: 'Sonstiges', color: '#6b7280', icon: '•' },
 ] as const;
 
 export type CategoryKey = typeof CATEGORIES[number]['key'];
@@ -694,9 +696,9 @@ export function categoriesOf(places: { category: string }[]): CategoryMeta[] {
 }
 
 export const STATUSES: { key: PlaceStatus; label: string; color: string }[] = [
-    { key: 'idea', label: 'Idea', color: '#94a3b8' },
-    { key: 'shortlisted', label: 'Shortlisted', color: '#f59e0b' },
-    { key: 'booked', label: 'Booked', color: '#059669' },
+    { key: 'idea', label: 'Idee', color: '#94a3b8' },
+    { key: 'shortlisted', label: 'In der Auswahl', color: '#f59e0b' },
+    { key: 'booked', label: 'Gebucht', color: '#059669' },
 ];
 
 /**
@@ -712,11 +714,11 @@ export const STATUSES: { key: PlaceStatus; label: string; color: string }[] = [
 export const TRAVEL_MODES: {
     key: TravelMode; label: string; icon: string; color: string; dash: string; curve: number;
 }[] = [
-    { key: 'flight', label: 'Flight', icon: '✈️', color: '#0369a1', dash: '2 8', curve: 0.28 },
-    { key: 'boat', label: 'Boat', icon: '⛴️', color: '#0891b2', dash: '6 6', curve: 0.2 },
-    { key: 'car', label: 'Car', icon: '🚗', color: '#b45309', dash: '10 6', curve: 0.10 },
-    { key: 'train', label: 'Train', icon: '🚆', color: '#6d28d9', dash: '12 4 2 4', curve: 0.10 },
-    { key: 'walk', label: 'Walk', icon: '🚶', color: '#4d7c0f', dash: '1 6', curve: 0.05 },
+    { key: 'flight', label: 'Flug', icon: '✈️', color: '#0369a1', dash: '2 8', curve: 0.28 },
+    { key: 'boat', label: 'Boot', icon: '⛴️', color: '#0891b2', dash: '6 6', curve: 0.2 },
+    { key: 'car', label: 'Auto', icon: '🚗', color: '#b45309', dash: '10 6', curve: 0.10 },
+    { key: 'train', label: 'Zug', icon: '🚆', color: '#6d28d9', dash: '12 4 2 4', curve: 0.10 },
+    { key: 'walk', label: 'Zu Fuß', icon: '🚶', color: '#4d7c0f', dash: '1 6', curve: 0.05 },
 ];
 
 /** The mode's drawing style, falling back to flight for anything unknown. */
@@ -850,7 +852,7 @@ export function reviewToggleFor(places: { needs_review: boolean }[]): {
         needsReview,
         unconfirmed,
         confirmed,
-        label: needsReview ? 'Mark unconfirmed' : 'Mark reviewed',
+        label: needsReview ? 'Als unbestätigt markieren' : 'Als geprüft markieren',
     };
 }
 
@@ -1063,6 +1065,35 @@ export function currencySymbol(code: string | null | undefined): string {
  * Re-running it on its own output is a no-op, which matters because the field
  * commits on blur as well as on Enter.
  */
+/**
+ * A typed amount as a plain `1234.5`, or null when it is not a bare number.
+ *
+ * Reads both conventions, because the output is German ("1.200,50") while older
+ * notes were typed the English way ("1,200.50"): when both separators appear the
+ * last one is the decimal point; a lone separator followed by exactly three
+ * digits is a thousands separator, anything else is a decimal point.
+ */
+function plainNumber(text: string): string | null {
+    if (!/^\d[\d.,]*$/.test(text)) return null;
+    const lastDot = text.lastIndexOf('.');
+    const lastComma = text.lastIndexOf(',');
+    let normal: string;
+    if (lastDot >= 0 && lastComma >= 0) {
+        const decimal = lastDot > lastComma ? '.' : ',';
+        const thousands = decimal === '.' ? ',' : '.';
+        normal = text.split(thousands).join('').replace(decimal, '.');
+    } else if (lastDot >= 0 || lastComma >= 0) {
+        const sep = lastDot >= 0 ? '.' : ',';
+        const parts = text.split(sep);
+        const grouped = parts.length > 1 && parts[0].length <= 3
+            && parts.slice(1).every((part) => part.length === 3);
+        normal = grouped ? parts.join('') : (parts.length === 2 ? `${parts[0]}.${parts[1]}` : '');
+    } else {
+        normal = text;
+    }
+    return /^\d+(\.\d+)?$/.test(normal) ? normal : null;
+}
+
 function formatAmount(raw: string, currency: string | null | undefined, suffix: string): string {
     const trimmed = raw.trim();
     if (!trimmed) return '';
@@ -1073,20 +1104,20 @@ function formatAmount(raw: string, currency: string | null | undefined, suffix: 
     // separators, and our own trailing suffix in its usual spellings. A foreign
     // symbol left behind means this isn't ours to reformat.
     const stripped = trimmed
-        .replace(/\s*(per\s*night|\/\s*night|p\/?n)\s*$/i, '')
+        .replace(/\s*(pro\s*nacht|per\s*night|\/\s*(night|nacht)|p\/?n)\s*$/i, '')
         .replace(new RegExp(`^${symbol.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`), '')
         .replace(/^\$/, '')
-        .replace(/,/g, '')
         .trim();
 
-    if (!/^\d+(\.\d+)?$/.test(stripped)) return trimmed;
+    const plain = plainNumber(stripped);
+    if (plain == null) return trimmed;
 
-    const value = Number(stripped);
+    const value = Number(plain);
     if (!Number.isFinite(value)) return trimmed;
 
     // Keep cents only when they were typed; "$250.00" reads worse.
-    const hasCents = stripped.includes('.') && !/\.0+$/.test(stripped);
-    const shown = value.toLocaleString('en-US', {
+    const hasCents = plain.includes('.') && !/\.0+$/.test(plain);
+    const shown = value.toLocaleString('de-DE', {
         minimumFractionDigits: hasCents ? 2 : 0,
         maximumFractionDigits: 2,
     });
@@ -1095,7 +1126,7 @@ function formatAmount(raw: string, currency: string | null | undefined, suffix: 
 }
 
 export function formatPerNight(raw: string, currency?: string | null): string {
-    return formatAmount(raw, currency, ' per night');
+    return formatAmount(raw, currency, ' pro Nacht');
 }
 
 /**
@@ -1223,7 +1254,7 @@ export function formatDate(date: string | null | undefined): string | null {
     if (!date) return null;
     const parsed = new Date(`${date}T00:00:00Z`);
     if (Number.isNaN(parsed.getTime())) return null;
-    return parsed.toLocaleDateString('en-US', {
+    return parsed.toLocaleDateString('de-DE', {
         weekday: 'short', month: 'short', day: 'numeric', timeZone: 'UTC',
     });
 }
@@ -1231,7 +1262,7 @@ export function formatDate(date: string | null | undefined): string | null {
 export function formatDayDate(startDate: string | null, dayNumber: number): string | null {
     const date = dateForDay(startDate, dayNumber);
     if (!date) return null;
-    return date.toLocaleDateString('en-US', {
+    return date.toLocaleDateString('de-DE', {
         weekday: 'short', month: 'short', day: 'numeric', timeZone: 'UTC',
     });
 }
@@ -1302,7 +1333,7 @@ export function monthMatrix(
 
     return {
         key: `${monthStart.getUTCFullYear()}-${String(monthStart.getUTCMonth() + 1).padStart(2, '0')}`,
-        label: monthStart.toLocaleDateString('en-US', {
+        label: monthStart.toLocaleDateString('de-DE', {
             month: 'long', year: 'numeric', timeZone: 'UTC',
         }),
         cells,
@@ -1557,7 +1588,7 @@ function icsFold(line: string): string {
  * `stamp` is passed in rather than read from the clock so the output is
  * reproducible and testable — the same trip always exports the same bytes.
  */
-export function buildIcs(events: IcsEvent[], stamp: string, calendarName = 'Honeymoon'): string {
+export function buildIcs(events: IcsEvent[], stamp: string, calendarName = 'Flitterwochen'): string {
     const lines = [
         'BEGIN:VCALENDAR',
         'VERSION:2.0',
@@ -1686,23 +1717,23 @@ export function tripEvents(
         if (!date) continue;
         const iso = isoOf(date);
         const label = (stop: Stop) =>
-            stop.custom_label || (stop.place_id != null ? placeName(stop.place_id) : '') || 'Stop';
+            stop.custom_label || (stop.place_id != null ? placeName(stop.place_id) : '') || 'Stopp';
 
         const lines = day.stops.map((stop) => {
-            const time = stop.start_time ? `${formatTime(stop.start_time)} — ` : '• ';
+            const time = stop.start_time ? `${stop.start_time} – ` : '• ';
             return `${time}${label(stop)}`;
         });
         if (day.notes) lines.push('', day.notes);
 
         events.push({
             uid: `honeymoon-day-${day.id}@wedding`,
-            summary: `Day ${day.day_number}${day.title ? ` — ${day.title}` : ''}`,
+            summary: `Tag ${day.day_number}${day.title ? ` – ${day.title}` : ''}`,
             description: lines.join('\n'),
             date: iso,
         });
 
         for (const leg of day.travel) {
-            const mode = TRAVEL_MODES.find((m) => m.key === leg.mode)?.label ?? 'Travel';
+            const mode = TRAVEL_MODES.find((m) => m.key === leg.mode)?.label ?? 'Verbindung';
             const route = [leg.from_text, leg.to_text].filter(Boolean).join(' → ');
             const arrivalDate = legIsOvernight(leg)
                 ? dateForDay(trip.start_date, legArrivalDay(leg, day.day_number))
@@ -1711,12 +1742,12 @@ export function tripEvents(
             events.push({
                 uid: `honeymoon-travel-${leg.id}@wedding`,
                 summary: `${mode}${route ? `: ${route}` : ''}`
-                    + (nights > 0 ? ` (+${nights} day${nights === 1 ? '' : 's'})` : ''),
+                    + (nights > 0 ? ` (+${nights} ${nights === 1 ? 'Tag' : 'Tage'})` : ''),
                 description: [
-                    leg.confirmation_ref ? `Ref ${leg.confirmation_ref}` : '',
+                    leg.confirmation_ref ? `Ref. ${leg.confirmation_ref}` : '',
                     leg.flight_no ?? '',
-                    leg.from_terminal ? `From terminal ${leg.from_terminal}` : '',
-                    leg.to_terminal ? `To terminal ${leg.to_terminal}` : '',
+                    leg.from_terminal ? `Von Terminal ${leg.from_terminal}` : '',
+                    leg.to_terminal ? `Nach Terminal ${leg.to_terminal}` : '',
                 ].filter(Boolean).join('\n') || undefined,
                 date: iso,
                 ...(arrivalDate ? { endDate: isoOf(arrivalDate) } : {}),
@@ -1873,7 +1904,7 @@ export function searchHoneymoon(
     for (const note of data.notes) {
         const score = scoreOf(needle, note.title, note.body);
         if (score != null) {
-            hits.push({ kind: 'note', id: note.id, label: note.title, detail: note.category || 'Guide', score });
+            hits.push({ kind: 'note', id: note.id, label: note.title, detail: note.category || 'Reiseführer', score });
         }
     }
     for (const todo of data.todos) {
@@ -1883,7 +1914,7 @@ export function searchHoneymoon(
                 kind: 'todo',
                 id: todo.id,
                 label: todo.text,
-                detail: todo.done ? 'Done' : (todo.category || 'To do'),
+                detail: todo.done ? 'Erledigt' : (todo.category || 'Aufgabe'),
                 score,
             });
         }
@@ -1893,13 +1924,13 @@ export function searchHoneymoon(
             .map((s) => `${s.custom_label ?? ''} ${s.notes ?? ''} `
                 + `${s.place_id != null ? placeNames.get(s.place_id) ?? '' : ''}`)
             .join(' ');
-        const score = scoreOf(needle, day.title || `Day ${day.day_number}`, `${day.notes ?? ''} ${stops}`);
+        const score = scoreOf(needle, day.title || `Tag ${day.day_number}`, `${day.notes ?? ''} ${stops}`);
         if (score != null) {
             hits.push({
                 kind: 'day',
                 id: day.id,
-                label: `Day ${day.day_number}${day.title ? ` — ${day.title}` : ''}`,
-                detail: `${day.stops.length} stop${day.stops.length === 1 ? '' : 's'}`,
+                label: `Tag ${day.day_number}${day.title ? ` – ${day.title}` : ''}`,
+                detail: `${day.stops.length} ${day.stops.length === 1 ? 'Stopp' : 'Stopps'}`,
                 score,
             });
         }
@@ -1922,7 +1953,7 @@ export function searchHoneymoon(
                     kind: 'travel',
                     id: leg.id,
                     label: `${travelModeMeta(leg.mode).icon} ${label}`,
-                    detail: `Day ${day.day_number}${leg.flight_no ? ` · ${leg.flight_no}` : ''}`,
+                    detail: `Tag ${day.day_number}${leg.flight_no ? ` · ${leg.flight_no}` : ''}`,
                     score: legScore,
                 });
             }
@@ -1931,8 +1962,8 @@ export function searchHoneymoon(
 
     for (const booking of data.bookings ?? []) {
         const name = booking.place_id != null
-            ? placeNames.get(booking.place_id) ?? 'Booking'
-            : booking.provider || 'Booking';
+            ? placeNames.get(booking.place_id) ?? 'Buchung'
+            : booking.provider || 'Buchung';
         const score = scoreOf(needle, `${name} ${booking.confirmation ?? ''}`, [
             booking.provider ?? '', booking.contact ?? '', booking.notes ?? '',
             booking.url ?? '',
@@ -1942,7 +1973,7 @@ export function searchHoneymoon(
                 kind: 'booking',
                 id: booking.id,
                 label: `${name}${booking.confirmation ? ` · ${booking.confirmation}` : ''}`,
-                detail: booking.provider || 'Booking',
+                detail: booking.provider || 'Buchung',
                 score,
             });
         }

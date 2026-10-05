@@ -53,7 +53,7 @@ export default function ContributionsTab({ data, api }: { data: FinancePayload; 
                     hint="Dankesnachrichten verschickt" />
                 <StatTile label="Deckt" value={
                     summary.budgetTotal > 0
-                        ? `${((summary.receivedTotal / summary.budgetTotal) * 100).toFixed(1)}%`
+                        ? `${((summary.receivedTotal / summary.budgetTotal) * 100).toFixed(1).replace('.', ',')} %`
                         : '—'
                 } hint="des Gesamtbudgets, in bar" />
             </div>
@@ -190,7 +190,7 @@ function ContributorCard({ contributor, targetGroups, api }: {
             <div className="px-4 py-2">
                 <Bar pct={pct} />
                 <div className="flex justify-between text-[11px] text-gray-400 mt-1">
-                    <span>{pct.toFixed(0)}% eingegangen</span>
+                    <span>{pct.toFixed(0)} % eingegangen</span>
                     {overDelivered ? (
                         <span className="text-emerald-600 font-medium">
                             {formatMoney(received - contributor.pledged)} mehr als zugesagt

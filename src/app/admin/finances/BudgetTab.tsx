@@ -291,7 +291,7 @@ function CategoryBlock({ category, data, api, expanded, onToggleExpanded, draggi
                 </div>
                 <div className="text-right shrink-0">
                     <div className="font-semibold tabular-nums text-sm">{formatMoney(stats?.total ?? 0)}</div>
-                    <div className="text-[11px] text-gray-400">{(stats?.pct ?? 0).toFixed(1)}% des Budgets</div>
+                    <div className="text-[11px] text-gray-400">{(stats?.pct ?? 0).toFixed(1).replace('.', ',')} % des Budgets</div>
                 </div>
                 <div className="flex shrink-0 items-center">
                     <GlyphButton onClick={() => move(-1)} label={`${category.name} nach oben`}
@@ -437,7 +437,7 @@ function SectionPayments({ category, data, api }: {
 
             <Bar pct={stats.paidPct} tone={overpaid ? 'rose' : 'accent'} />
             <div className="flex justify-between text-[11px] text-gray-400 mt-1 mb-3">
-                <span>{stats.paidPct.toFixed(1)}% bezahlt</span>
+                <span>{stats.paidPct.toFixed(1).replace('.', ',')} % bezahlt</span>
                 {stats.giftApplied > 0 && (
                     <span>
                         {formatMoney(stats.ownSpent)} von euch + {formatMoney(stats.giftApplied)} Geldgeschenke

@@ -1204,7 +1204,7 @@ console.log('\nDay timeline');
         ], places, hotel, () => ({ seconds: 100 * 60, meters: 90_000, source: 'road' as const }))
             .longDrive);
 
-    check('a drive reads as hours and minutes', formatDuration(6000) === '1 h 40 m');
+    check('a drive reads as hours and minutes', formatDuration(6000) === '1 h 40 min');
     check('a round hour drops the minutes', formatDuration(7200) === '2 h');
     check('and a short one is minutes', formatDuration(900) === '15 min');
 }
@@ -2620,7 +2620,7 @@ console.log('\nTimeline with travel');
     check('check-out and check-in show on the day of the move',
         marks.map((m) => `${m.kind}@${m.minutes}`).join() === 'check-out@660,check-in@900',
         marks.map((m) => `${m.kind}@${m.minutes}`).join());
-    check('and are named for the place', marks[0].label === 'Check out · Villa');
+    check('and are named for the place', marks[0].label === 'Check-out · Villa');
     check('a booking with no time gives no marker',
         dayMarkers('2026-09-14', [{ ...BOOKING_FIXTURE, kind: 'stay', check_out: '2026-09-14' }], () => '').length === 0);
     check('no date, no markers', dayMarkers(null, [{ ...BOOKING_FIXTURE, kind: 'stay', check_out: '2026-09-14', check_out_time: '11:00' }], () => '').length === 0);
