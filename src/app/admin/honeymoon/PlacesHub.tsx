@@ -41,13 +41,13 @@ export default function PlacesHub({ segment }: { segment: PlacesSegment }) {
 
     const segmentSwitch = (
         <Segmented<PlacesSegment>
-            ariaLabel="Which places"
+            ariaLabel="Welche Orte"
             value={segment}
             onChange={(next) => router.push(HREF[next])}
             options={[
-                { key: 'all', label: 'All', count: counts.all },
-                { key: 'stays', label: 'Stays', count: counts.stays },
-                { key: 'excursions', label: 'Excursions', count: counts.excursions },
+                { key: 'all', label: 'Alle', count: counts.all },
+                { key: 'stays', label: 'Unterkünfte', count: counts.stays },
+                { key: 'excursions', label: 'Ausflüge', count: counts.excursions },
             ]}
         />
     );

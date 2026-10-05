@@ -92,7 +92,7 @@ export function Modal({ open, onClose, title, children, wide = false, guard }: {
                     <button
                         onClick={() => { if (!guard || guard()) onClose(); }}
                         className="text-gray-400 hover:text-gray-700 text-2xl leading-none px-1"
-                        aria-label="Close"
+                        aria-label="Schließen"
                     >
                         &times;
                     </button>

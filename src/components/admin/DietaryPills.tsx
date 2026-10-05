@@ -47,7 +47,7 @@ export default function DietaryPills({ entry, onChange, codes = ALL_DIET_CODES }
             })}
             {isOn(entry, 'NOM') && (
                 <span className="w-full text-[10px] text-gray-400 leading-snug">
-                    Takes a chair, but no plate — they are left out of the meal counts.
+                    Belegt einen Platz, isst aber nicht mit – wird bei den Essenszahlen nicht mitgezählt.
                 </span>
             )}
             {isOn(entry, 'OTH') && (
@@ -55,7 +55,7 @@ export default function DietaryPills({ entry, onChange, codes = ALL_DIET_CODES }
                     type="text"
                     value={dietNote(entry)}
                     onChange={e => onChange(setNote(entry, e.target.value))}
-                    placeholder="What should the kitchen know?"
+                    placeholder="Was sollte die Küche wissen?"
                     className="flex-1 min-w-[12rem] px-3 py-1.5 border border-gray-200 rounded-full bg-gray-50 text-xs text-gray-900 placeholder-gray-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent transition-all"
                 />
             )}

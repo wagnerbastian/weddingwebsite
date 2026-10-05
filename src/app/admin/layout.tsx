@@ -27,7 +27,7 @@ export const metadata: Metadata = {
     // into it, so omitting a field would silently drop it.
     appleWebApp: {
         capable: true,
-        title: 'Wedding Admin',
+        title: 'Hochzeit Admin',
         statusBarStyle: 'default',
     },
 };

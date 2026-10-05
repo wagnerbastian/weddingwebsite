@@ -16,7 +16,7 @@ export function RatingPills({ value, onChange, size = 'sm', labels = true }: {
     labels?: boolean;
 }) {
     return (
-        <div className="flex flex-wrap items-center gap-1.5" role="group" aria-label="Rating">
+        <div className="flex flex-wrap items-center gap-1.5" role="group" aria-label="Bewertung">
             {RATINGS.map((rating) => {
                 const on = value === rating.key;
                 return (

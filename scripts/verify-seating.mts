@@ -769,7 +769,7 @@ console.log('\nExporting the chart');
             .filter(r => r[csvHeaders(withVendors).indexOf('Meal')] === 'yes').length
             === grandTotal(seatedPeople(data), data.vendors));
     check("a vendor's restriction reaches the spreadsheet",
-        vendorRows.find(r => r[2] === 'Wes Okafor')?.[csvHeaders(withVendors).indexOf('Nut allergy')] === 'yes');
+        vendorRows.find(r => r[2] === 'Wes Okafor')?.[csvHeaders(withVendors).indexOf('Nussallergie')] === 'yes');
     check('a vendor is filed as a vendor, not as an unseated guest',
         vendorRows.find(r => r[2] === 'Ivy Lund')?.[0] === 'Vendor');
 

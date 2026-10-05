@@ -158,7 +158,7 @@ export function Sheet({
                     onPointerUp={onHandleUp}
                     onPointerCancel={() => { drag.current = null; setPull(0); }}
                     onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setTall((v) => !v); } }}
-                    aria-label={tall ? 'Shrink the panel (drag down to close)' : 'Expand the panel (drag down to close)'}
+                    aria-label={tall ? 'Fenster verkleinern (zum Schließen nach unten ziehen)' : 'Fenster vergrößern (zum Schließen nach unten ziehen)'}
                     className="md:hidden mx-auto mt-1 flex h-8 w-24 touch-none items-center justify-center"
                 >
                     <span className="h-1.5 w-10 rounded-full bg-gray-300" />
@@ -169,7 +169,7 @@ export function Sheet({
                     <button
                         type="button"
                         onClick={() => { if (!guard || guard()) onClose(); }}
-                        aria-label="Close"
+                        aria-label="Schließen"
                         className="-mr-1 flex size-11 md:size-9 shrink-0 items-center justify-center
                             rounded-full text-2xl leading-none text-gray-400 hover:bg-gray-50 hover:text-gray-700"
                     >

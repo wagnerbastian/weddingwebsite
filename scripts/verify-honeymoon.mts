@@ -1126,7 +1126,7 @@ console.log('\nOpening hours');
     check('nor nothing at all', openAt(null, 3, 600) === 'unknown' && parseHours('') === null);
 
     check('a date knows its weekday', dayOfWeek('2026-09-15') === 2);
-    check('24/7 describes itself', describeHours('24/7') === 'Open all hours');
+    check('24/7 describes itself', describeHours('24/7') === 'Rund um die Uhr geöffnet');
     check('and a spec is tidied for reading',
         describeHours('Mo-Fr 09:00-17:00; Sa 10:00-14:00')
         === 'Mo-Fr 09:00-17:00 · Sa 10:00-14:00');

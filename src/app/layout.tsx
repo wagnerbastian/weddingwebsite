@@ -36,10 +36,10 @@ export async function generateMetadata(): Promise<Metadata> {
   const config = getSiteConfig();
   const couple = config.brideName && config.groomName
     ? `${config.brideName} & ${config.groomName}`
-    : 'Our Wedding';
+    : 'Unsere Hochzeit';
   return {
-    title: `${couple} | The Wedding`,
-    description: `Join us in celebrating our wedding on ${config.weddingDate}.`,
+    title: `${couple} | Die Hochzeit`,
+    description: `Feiert mit uns unsere Hochzeit am ${config.weddingDate}.`,
     // Linked explicitly because the manifest is a route handler now, not the
     // `app/manifest.ts` convention — that export gets no request and so could
     // only ever emit one variant. The admin layout overrides this.
@@ -95,7 +95,7 @@ export default async function RootLayout({
   // hydration — React logged a warning on every single admin page, which is
   // noise that hides real ones. The class is the only difference on this element.
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="de" suppressHydrationWarning>
       <head>
         {/*
           Next emits the standardised `mobile-web-app-capable`, but iOS before
