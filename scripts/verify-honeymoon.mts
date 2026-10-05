@@ -319,7 +319,7 @@ console.log('\nSeed data');
     check('two custom categories differ',
         categoryMeta('hot springs').color !== categoryMeta('night market').color);
     check('blank still falls back to Other', categoryMeta('').key === 'misc');
-    check('a built-in still wins', categoryMeta('waterfall').label === 'Waterfall');
+    check('a built-in still wins', categoryMeta('waterfall').label === 'Wasserfall');
 
     check('beach, hiking and nature exist',
         ['beach', 'hiking', 'nature'].every((k) => CATEGORIES.some((c) => c.key === k)));
@@ -422,23 +422,23 @@ console.log('\nNightly price formatting');
 {
     const f = (v: string, c?: string) => formatPerNight(v, c);
 
-    check('a bare number becomes a rate', f('250') === '$250 per night', f('250'));
-    check('thousands get separated', f('1200') === '$1,200 per night', f('1200'));
-    check('cents are kept when typed', f('250.5') === '$250.50 per night', f('250.5'));
-    check('trailing .00 is dropped', f('250.00') === '$250 per night', f('250.00'));
-    check('an existing dollar sign is not doubled', f('$250') === '$250 per night', f('$250'));
-    check('typed separators survive', f('1,200') === '$1,200 per night', f('1,200'));
+    check('a bare number becomes a rate', f('250') === '$250 pro Nacht', f('250'));
+    check('thousands get separated', f('1200') === '$1.200 pro Nacht', f('1200'));
+    check('cents are kept when typed', f('250.5') === '$250,50 pro Nacht', f('250.5'));
+    check('trailing .00 is dropped', f('250.00') === '$250 pro Nacht', f('250.00'));
+    check('an existing dollar sign is not doubled', f('$250') === '$250 pro Nacht', f('$250'));
+    check('typed separators survive', f('1,200') === '$1.200 pro Nacht', f('1,200'));
 
     // The field commits on blur as well as Enter, so running over its own output
-    // must not compound into "$$250 per night per night".
+    // must not compound into "$$250 pro Nacht pro Nacht".
     check('re-formatting its own output is a no-op',
-        f(f('250')) === '$250 per night', f(f('250')));
-    check('idempotent over three passes', f(f(f('1200'))) === '$1,200 per night');
+        f(f('250')) === '$250 pro Nacht', f(f('250')));
+    check('idempotent over three passes', f(f(f('1200'))) === '$1.200 pro Nacht');
 
     check('"per night" already typed is not repeated',
-        f('250 per night') === '$250 per night', f('250 per night'));
+        f('250 per night') === '$250 pro Nacht', f('250 per night'));
     check('slash-night spelling is understood',
-        f('180/night') === '$180 per night', f('180/night'));
+        f('180/night') === '$180 pro Nacht', f('180/night'));
 
     // Free text must survive untouched: the seeded library has notes like
     // "~500k IDR entry", and rewriting those as dollars would be plain wrong.
@@ -448,18 +448,18 @@ console.log('\nNightly price formatting');
     check('blank stays blank', f('') === '' && f('   ') === '');
 
     // The trip's own currency wins when it isn't dollars.
-    check('honours a non-USD trip currency', f('250', 'GBP') === '£250 per night', f('250','GBP'));
+    check('honours a non-USD trip currency', f('250', 'GBP') === '£250 pro Nacht', f('250','GBP'));
     check('unknown currency codes fall back to the code',
-        f('250', 'THB') === 'THB 250 per night', f('250','THB'));
-    check('rupiah has a symbol', f('250', 'IDR') === 'Rp250 per night', f('250','IDR'));
-    check('a GBP amount is not re-prefixed', f('£250 per night', 'GBP') === '£250 per night');
+        f('250', 'THB') === 'THB 250 pro Nacht', f('250','THB'));
+    check('rupiah has a symbol', f('250', 'IDR') === 'Rp250 pro Nacht', f('250','IDR'));
+    check('a GBP amount is not re-prefixed', f('£250 per night', 'GBP') === '£250 pro Nacht');
 }
 
 console.log('\nExcursion pricing and naming');
 {
     const g = (v: string, c?: string) => formatPrice(v, c);
     check('a bare number becomes a price', g('120') === '$120', g('120'));
-    check('thousands separate', g('1500') === '$1,500', g('1500'));
+    check('thousands separate', g('1500') === '$1.500', g('1500'));
     // No suffix is invented — an excursion might be per person, per couple or
     // per boat, and guessing would put words in the user's mouth.
     check('no unit is invented', g('120') === '$120');
@@ -557,7 +557,7 @@ console.log('\nCalendar grid');
     check('spans every month the trip touches', months.length === 2,
         months.map((m) => m.key).join(','));
     check('months are labelled', months[0].label === 'September 2026'
-        && months[1].label === 'October 2026', months[0].label);
+        && months[1].label === 'Oktober 2026', months[0].label);
 
     for (const month of months) {
         check(`${month.key} is whole weeks`, month.cells.length % 7 === 0,
@@ -843,7 +843,7 @@ console.log('\nCalendar export');
     const flight = overnightEvents.find((e) => e.uid.startsWith('honeymoon-travel'));
     check('an overnight leg starts on its departure day', flight?.date === '2026-09-30');
     check('and ends on the day it lands', flight?.endDate === '2026-10-01');
-    check('and says so in the summary', /\(\+1 day\)/.test(flight?.summary ?? ''), flight?.summary);
+    check('and says so in the summary', /\(\+1 Tag\)/.test(flight?.summary ?? ''), flight?.summary);
 
     const events = tripEvents({ start_date: '2026-09-28', title: 'T' }, [day],
         (id) => (id === 9 ? 'Monkey Forest' : undefined));
@@ -854,7 +854,7 @@ console.log('\nCalendar export');
         && (events[0].description ?? '').includes('Lunch'));
     check('and its notes', (events[0].description ?? '').includes('bring cash'));
     check('travel legs become timed events',
-        events.some((e) => e.summary.startsWith('Car') && e.start === '08:00'));
+        events.some((e) => e.summary.startsWith('Auto') && e.start === '08:00'));
     check('a timed stop gets its own event',
         events.some((e) => e.summary === 'Monkey Forest' && e.start === '09:30'));
     check('an untimed stop does not',
@@ -898,7 +898,7 @@ console.log('\nSearch');
     check('respects the limit', searchHoneymoon('ubud', all, 2).length === 2);
     check('finds a place by name', searchHoneymoon('lotus', all)[0].label === 'Cafe Lotus');
     check('a day hit is labelled with its number',
-        searchHoneymoon('ubud day', all).some((h) => h.kind === 'day' && h.label.includes('Day 3')));
+        searchHoneymoon('ubud day', all).some((h) => h.kind === 'day' && h.label.includes('Tag 3')));
 
     // Two hundred places must not bury the one to-do that matches.
     const crowded = {
@@ -2036,18 +2036,18 @@ console.log('\nConfirming a selection, and un-confirming it');
 
     const allConfirmed = of(false, false, false);
     check('a selection that is all confirmed offers to un-confirm it',
-        allConfirmed.needsReview === true && allConfirmed.label === 'Mark unconfirmed');
+        allConfirmed.needsReview === true && allConfirmed.label === 'Als unbestätigt markieren');
     check('and counts them', allConfirmed.confirmed === 3 && allConfirmed.unconfirmed === 0);
 
     const allUnconfirmed = of(true, true);
     check('a selection that is all unconfirmed offers to confirm it',
-        allUnconfirmed.needsReview === false && allUnconfirmed.label === 'Mark reviewed');
+        allUnconfirmed.needsReview === false && allUnconfirmed.label === 'Als geprüft markieren');
     check('and counts them', allUnconfirmed.unconfirmed === 2 && allUnconfirmed.confirmed === 0);
 
     // Mixed goes the way you are nearly always heading: confirm the lot.
     const mixed = of(true, false, false, true);
     check('a mixed selection confirms rather than un-confirming',
-        mixed.needsReview === false && mixed.label === 'Mark reviewed');
+        mixed.needsReview === false && mixed.label === 'Als geprüft markieren');
     check('and says how many are unconfirmed', mixed.unconfirmed === 2 && mixed.confirmed === 2);
 
     check('one unconfirmed in a big confirmed selection still confirms',
@@ -2055,7 +2055,7 @@ console.log('\nConfirming a selection, and un-confirming it');
 
     const none = reviewToggleFor([]);
     check('an empty selection rests on confirm rather than flipping',
-        none.needsReview === false && none.label === 'Mark reviewed');
+        none.needsReview === false && none.label === 'Als geprüft markieren');
     check('and counts nothing', none.confirmed === 0 && none.unconfirmed === 0);
 }
 
@@ -2495,9 +2495,9 @@ console.log('\nOffline copy');
     check('it is a whole HTML document', html.startsWith('<!doctype html>') && html.trimEnd().endsWith('</html>'));
     check('it loads nothing from anywhere — no external script, stylesheet or image',
         !/<script[^>]+src=/i.test(html) && !/<link[^>]+stylesheet/i.test(html) && !/<img\b/i.test(html));
-    check('the trip is named and dated', html.includes('Bali &amp; Singapore') && html.includes('Sat, Sep 12'));
+    check('the trip is named and dated', html.includes('Bali &amp; Singapore') && html.includes('Sa., 12. Sept.'));
     check('it says it is a snapshot, and when it was taken',
-        html.includes('snapshot') && html.includes('Oct 5, 2026'));
+        html.includes('Momentaufnahme') && html.includes('05.10.2026'));
     check('a place name cannot run script', !html.includes('<script>alert(1)')
         && html.includes('Villa &lt;script&gt;alert(1)&lt;/script&gt;'));
     check('a javascript: link stays text', !html.includes('href="javascript:'));
@@ -2519,7 +2519,7 @@ console.log('\nOffline copy');
     check('in 12-hour form when that is the setting',
         buildOfflineHtml({ ...payload, trip: { ...trip, time_format: '12h' } }).includes('8:30 AM'));
     check('an empty trip still exports', buildOfflineHtml({ ...payload, days: [], places: [], bookings: [],
-        notes: [], todos: [], documents: [], journeys: [] }).includes('Emergency'));
+        notes: [], todos: [], documents: [], journeys: [] }).includes('Notfall'));
     check('the filename is the trip and the date',
         offlineExportFilename(payload, new Date('2026-10-05T12:00:00Z')) === 'bali-singapore-offline-2026-10-05.html');
     check('escaping covers quotes too', escapeHtml(`"a'&`) === '&quot;a&#39;&amp;');
@@ -2558,7 +2558,7 @@ console.log('\nPlace sheet');
     check('words that are not a price stay words',
         JSON.stringify(pricePatch(bare, 'ask at the desk', 'USD')) === JSON.stringify({ cost: '', price_note: 'ask at the desk' }));
     check('a priced stay reads with what it is per',
-        priceText({ ...bare, cost: 250, cost_per: 'night', cost_currency: 'USD' }, 'USD') === '$250 per night');
+        priceText({ ...bare, cost: 250, cost_per: 'night', cost_currency: 'USD' }, 'USD') === '$250 pro Nacht');
     check('an unpriced place reads its note', priceText({ ...bare, price_note: 'free' }, 'USD') === 'free');
 }
 
