@@ -205,7 +205,7 @@ export default function SettingsTab({ data, api }: { data: FinancePayload; api: 
             </Card>
 
             <Card className="p-5">
-                <h3 className="font-semibold text-gray-900 mb-1">Zahlungsplan</h3>
+                <h3 className="font-semibold text-gray-900 mb-1">Ratenplanung</h3>
                 <p className="text-xs text-gray-400 mb-4">
                     Auf welchen Zeitraum der Rest verteilt wird. Bleibt das Feld leer, zählt es automatisch
                     bis zu eurem Hochzeitsdatum.

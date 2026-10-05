@@ -168,7 +168,7 @@ function ContributorCard({ contributor, targetGroups, api }: {
                             ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200'
                             : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}`}
                 >
-                    {contributor.thank_you_sent ? '✓ Bedankt' : 'Dank?'}
+                    {contributor.thank_you_sent ? '✓ Bedankt' : 'Bedanken'}
                 </button>
                 <GlyphButton
                     label={`${contributor.name} archivieren`}

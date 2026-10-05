@@ -44,64 +44,65 @@ await page.waitForTimeout(500);
 
 // --- overview ---
 await page.goto(`${BASE}/admin/finances`, { waitUntil: 'domcontentloaded' });
-await page.waitForSelector('text=Total budget', { timeout: 20_000 });
-const body = async () => (await page.textContent('body')) ?? '';
+await page.waitForSelector('text=Gesamtbudget', { timeout: 20_000 });
+// Money is formatted de-DE with a non-breaking space before the currency sign.
+const body = async () => ((await page.textContent('body')) ?? '').replace(/\u00a0/g, ' ');
 /** Editable names live in <input value=...>, which textContent never sees. */
 const inputValues = async () =>
     page.locator('input').evaluateAll((els) => els.map((e) => (e as HTMLInputElement).value));
 /** The grid row that owns a given delete button. */
 const rowFor = (name: string) =>
-    page.locator('div.grid').filter({ has: page.locator(`button[aria-label="Delete ${name}"]`) }).first();
+    page.locator('div.grid').filter({ has: page.locator(`button[aria-label="${name} löschen"]`) }).first();
 
 console.log('\n--- Overview ---');
 let text = await body();
-check('budget total shown', text.includes('$33,046.26'), 'expected seeded total');
-check('paid-toward-budget shown', text.includes('$20,893.00'), 'budgeted 14,693 + gift 6,200');
-check('own budgeted spend shown', text.includes('$14,693.00'));
-check('bill still owed shown', text.includes('$12,153.26'),
+check('budget total shown', text.includes('33.046,26 $'), 'expected seeded total');
+check('paid-toward-budget shown', text.includes('20.893,00 $'), 'budgeted 14,693 + gift 6,200');
+check('own budgeted spend shown', text.includes('14.693,00 $'));
+check('bill still owed shown', text.includes('12.153,26 $'),
     'must equal the sum of the section remainders');
-check('off-budget spending called out', text.includes("isn't attached to any"));
-check('gift money shown', text.includes('$6,880.00'));
+check('off-budget spending called out', text.includes('gehören zu keinem'));
+check('gift money shown', text.includes('6.880,00 $'));
 check('both payers listed', text.includes('Austin') && text.includes('Heaven'));
-check('category breakdown', text.includes('Venue Cost') && text.includes('Staff And Extras'));
-check('section progress shown', text.includes('Section progress') && text.includes('% paid'));
-check('venue section payments counted', text.includes('3 installments'), '2 own + Rob gift');
-check('gift money badged on section', text.includes('🎁 $5,000.00'));
-check('no bogus venue line overrun', !text.includes('+$5,180.00'),
+check('category breakdown', text.includes('Location-Kosten') && text.includes('Dienstleister & Extras'));
+check('section progress shown', text.includes('Fortschritt je Bereich') && text.includes('% bezahlt'));
+check('venue section payments counted', text.includes('3 Teilzahlungen'), '2 own + Rob gift');
+check('gift money badged on section', text.includes('🎁 5.000,00 $'));
+check('no bogus venue line overrun', !text.includes('+5.180,00 $'),
     'installments belong to the section, not the $4,500 line');
 
 // Scenario toggle must change the figures.
-await page.click('text=If pledges land');
+await page.click('text=Wenn Zusagen eintreffen');
 await page.waitForTimeout(200);
 const pledgedText = await body();
-check('scenario toggle changes numbers', pledgedText !== text && pledgedText.includes('$17,880.00'));
-await page.click('text=Cash in hand');
+check('scenario toggle changes numbers', pledgedText !== text && pledgedText.includes('17.880,00 $'));
+await page.click('text=Geld in der Hand');
 
 console.log('\n--- Budget tab ---');
 await page.click('button:has-text("Budget")');
-await page.waitForSelector('text=Add line item', { timeout: 10_000 });
+await page.waitForSelector('text=Posten hinzufügen', { timeout: 10_000 });
 text = await body();
 let values = await inputValues();
 check('all three sections render',
-    ['Venue Cost', 'Staff And Extras', 'Other'].every((s) => values.includes(s)),
-    `sections found: ${values.filter((v) => ['Venue Cost', 'Staff And Extras', 'Other'].includes(v)).join(', ')}`);
+    ['Location-Kosten', 'Dienstleister & Extras', 'Sonstiges'].every((s) => values.includes(s)),
+    `sections found: ${values.filter((v) => ['Location-Kosten', 'Dienstleister & Extras', 'Sonstiges'].includes(v)).join(', ')}`);
 check('line item names render',
-    ['Venue', 'Appetizers', 'Dinner', 'Photographer', 'Rehearsal Dinner'].every((n) => values.includes(n)));
-check('27 line items present', (await page.locator('button[aria-label^="Delete "]').count()) >= 27,
-    `${await page.locator('button[aria-label^="Delete "]').count()} delete buttons`);
-check('appetizers shows "from parts"', text.includes('from parts'));
+    ['Location', 'Vorspeisen', 'Abendessen', 'Fotografie', 'Probeessen'].every((n) => values.includes(n)));
+check('27 line items present', (await page.locator('button[aria-label$=" löschen"]').count()) >= 27,
+    `${await page.locator('button[aria-label$=" löschen"]').count()} delete buttons`);
+check('appetizers shows "from parts"', text.includes('aus Teilen'));
 check('derived qty renders 124', text.includes('124'));
 
 // Section-level paid-vs-budgeted controls.
-check('section footer present', text.includes('Paid toward this section'));
-check('section budgeted figure', text.includes('$18,358.90'));
-check('section paid includes gift money', text.includes('$14,680.00'), 'Rob 5,000 counted');
-check('section still owed', text.includes('$3,678.90'));
-check('own vs gift split shown', text.includes('$9,680.00 yours + $5,000.00 gift money'));
+check('section footer present', text.includes('Für diesen Bereich bezahlt'));
+check('section budgeted figure', text.includes('18.358,90 $'));
+check('section paid includes gift money', text.includes('14.680,00 $'), 'Rob 5,000 counted');
+check('section still owed', text.includes('3.678,90 $'));
+check('own vs gift split shown', text.includes('9.680,00 $ von euch + 5.000,00 $ Geldgeschenke'));
 check('installments listed', values.includes('Venue 2/4') && values.includes('Venue Payment'));
 check('gift payment listed in section', values.includes('Venue 1/4'));
-check('payments subtotal', text.includes('Payments subtotal'));
-check('log installment control', text.includes('Log an installment'));
+check('payments subtotal', text.includes('Zwischensumme Zahlungen'));
+check('log installment control', text.includes('Teilzahlung erfassen'));
 
 // --- drag and drop: the only way to reorder a line ---
 // Driven through real pointer events rather than a synthetic drop, because what
@@ -109,14 +110,14 @@ check('log installment control', text.includes('Log an installment'));
 // press-move-release is a handle that does not work, however correct the
 // arithmetic behind it.
 {
-    const handles = page.locator('button[aria-label^="Reorder "]');
+    const handles = page.locator('button[aria-label$=" verschieben"]');
     check('every line has a drag handle', (await handles.count()) >= 27,
         `${await handles.count()} handles`);
 
     /** The line names of the first section, in the order they are drawn. */
     const firstSectionNames = async () =>
-        (await page.locator('button[aria-label^="Reorder "]').evaluateAll(
-            (els) => els.map((e) => (e.getAttribute('aria-label') ?? '').replace('Reorder ', '')),
+        (await page.locator('button[aria-label$=" verschieben"]').evaluateAll(
+            (els) => els.map((e) => (e.getAttribute('aria-label') ?? '').replace(/ verschieben$/, '')),
         )).slice(0, 7);
 
     const before = await firstSectionNames();
@@ -149,7 +150,7 @@ check('log installment control', text.includes('Log an installment'));
         // And it must survive a reload, or the optimistic redraw is lying.
         await page.reload({ waitUntil: 'domcontentloaded' });
         await page.click('button:has-text("Budget")');
-        await page.waitForSelector('text=Add line item', { timeout: 20_000 });
+        await page.waitForSelector('text=Posten hinzufügen', { timeout: 20_000 });
         const reloaded = await firstSectionNames();
         check('the new order was actually saved', reloaded.join() === after.join(),
             `after ${after.slice(0, 3).join(', ')} / reloaded ${reloaded.slice(0, 3).join(', ')}`);
@@ -157,7 +158,7 @@ check('log installment control', text.includes('Log an installment'));
         // Put the section back the way it was found. Everything below this reads
         // rows by position, and a suite whose later checks depend on which test
         // ran first is a suite that reports the wrong thing.
-        const back = page.locator('button[aria-label^="Reorder "]');
+        const back = page.locator('button[aria-label$=" verschieben"]');
         const c = await back.nth(2).boundingBox();
         const d = await back.nth(0).boundingBox();
         if (c && d) {
@@ -177,22 +178,22 @@ check('log installment control', text.includes('Log an installment'));
 }
 
 // A new installment must move the section's paid total.
-const beforeInstall = await page.locator('button:has-text("+ Log an installment")').count();
+const beforeInstall = await page.locator('button:has-text("+ Teilzahlung erfassen")').count();
 check('an installment control per section', beforeInstall === 3, `${beforeInstall} controls`);
-await page.locator('button:has-text("+ Log an installment")').first().click();
+await page.locator('button:has-text("+ Teilzahlung erfassen")').first().click();
 await page.waitForTimeout(1400);
-const newRow = rowFor('Venue Cost payment');
+const newRow = rowFor('Location-Kosten Zahlung');
 check('new installment row appeared', await newRow.count() > 0);
 const newAmt = newRow.locator('input[inputmode="decimal"]').first();
 await newAmt.fill('1320');
 await newAmt.blur();
 await page.waitForTimeout(1400);
 text = await body();
-check('section paid total moved', text.includes('$16,000.00'), '14,680 + 1,320');
-check('section still owed moved', text.includes('$2,358.90'));
-await page.locator('button[aria-label="Delete Venue Cost payment"]').first().click();
+check('section paid total moved', text.includes('16.000,00 $'), '14,680 + 1,320');
+check('section still owed moved', text.includes('2.358,90 $'));
+await page.locator('button[aria-label="Location-Kosten Zahlung löschen"]').first().click();
 await page.waitForTimeout(1400);
-check('removing installment restored total', (await body()).includes('$14,680.00'));
+check('removing installment restored total', (await body()).includes('14.680,00 $'));
 
 // Inline edit: change Dessert's unit cost and confirm the grand total moves.
 const dessertRow = rowFor('Dessert');
@@ -201,53 +202,53 @@ await costInput.fill('500');
 await costInput.blur();
 await page.waitForTimeout(1200);
 text = await body();
-check('inline cost edit updated grand total', text.includes('$33,246.26'),
+check('inline cost edit updated grand total', text.includes('33.246,26 $'),
     'dessert 300 -> 500 should add 200');
 
 // Put it back.
 await costInput.fill('300');
 await costInput.blur();
 await page.waitForTimeout(1200);
-check('revert restored total', (await body()).includes('$33,046.26'));
+check('revert restored total', (await body()).includes('33.046,26 $'));
 
 // Paid toggle persists.
-await page.locator('button[aria-label="Mark Dessert paid"]').first().click();
+await page.locator('button[aria-label="Dessert als bezahlt markieren"]').first().click();
 await page.waitForTimeout(1000);
 await page.reload({ waitUntil: 'domcontentloaded' });
-await page.waitForSelector('text=Total budget', { timeout: 20_000 });
+await page.waitForSelector('text=Gesamtbudget', { timeout: 20_000 });
 await page.click('button:has-text("Budget")');
-await page.waitForSelector('text=Add line item', { timeout: 10_000 });
+await page.waitForSelector('text=Posten hinzufügen', { timeout: 10_000 });
 check('paid flag persisted across reload',
-    (await page.locator('button[aria-label="Mark Dessert paid"][aria-pressed="true"]').count()) === 1);
+    (await page.locator('button[aria-label="Dessert als bezahlt markieren"][aria-pressed="true"]').count()) === 1);
 
 console.log('\n--- Purchases tab ---');
-await page.click('button:has-text("Purchases")');
-await page.waitForSelector('text=Log purchase', { timeout: 10_000 });
+await page.click('button:has-text("Ausgaben")');
+await page.waitForSelector('text=Ausgabe erfassen', { timeout: 10_000 });
 text = await body();
 values = await inputValues();
 check('purchases listed', values.includes('Venue Payment') && values.includes('Aust Ring'));
-check('untracked spend flagged', text.includes('$1,957.00'));
+check('untracked spend flagged', text.includes('1.957,00 $'));
 // Earmarked gift money must appear here as a payment, badged, not hidden away.
 check('gift payments listed in purchases', values.includes('Venue 1/4') && values.includes('Dress'),
     'Rob and Kim earmarked payments');
-check('gift filter pill present', text.includes('🎁 Gift money'));
-check('gift total tile', text.includes('$6,200.00'));
-check('unapplied gift called out', text.includes('$680.00'));
-await page.click('button:has-text("🎁 Gift money")');
+check('gift filter pill present', text.includes('🎁 Geldgeschenke'));
+check('gift total tile', text.includes('6.200,00 $'));
+check('unapplied gift called out', text.includes('680,00 $'));
+await page.click('button:has-text("🎁 Geldgeschenke")');
 await page.waitForTimeout(400);
 const giftOnly = await inputValues();
 check('gift filter shows only gift rows',
     giftOnly.includes('Venue 1/4') && !giftOnly.includes('Venue Payment'));
-await page.click('button:has-text("Everyone")');
+await page.click('button:text-is("Alle")');
 await page.waitForTimeout(300);
 values = await inputValues();
 const options = await page.locator('select option').evaluateAll(
     (els) => els.map((e) => (e as HTMLOptionElement).textContent ?? ''));
 check('section option offered in dropdown',
-    options.some((o) => o.includes('Venue Cost — whole section')),
-    options.filter((o) => o.includes('whole section')).join(' | '));
-check('per-payer cash totals shown', text.includes('$5,756.00') && text.includes('$10,894.00'));
-check('off-budget flagged as not in the budget', text.includes('Not in the budget'));
+    options.some((o) => o.includes('Location-Kosten – ganzer Bereich')),
+    options.filter((o) => o.includes('ganzer Bereich')).join(' | '));
+check('per-payer cash totals shown', text.includes('5.756,00 $') && text.includes('10.894,00 $'));
+check('off-budget flagged as not in the budget', text.includes('Nicht im Budget'));
 
 // Filter by payer.
 await page.click('button:has-text("Austin")');
@@ -255,187 +256,187 @@ await page.waitForTimeout(300);
 const filteredValues = await inputValues();
 check('payer filter narrows list', !filteredValues.includes('Venue Payment'),
     "Heaven's purchase should be hidden");
-await page.click('button:has-text("Everyone")');
+await page.click('button:text-is("Alle")');
 
 console.log('\n--- Gift Money tab ---');
-await page.click('button:has-text("Gift Money")');
-await page.waitForSelector('text=Add contributor', { timeout: 10_000 });
+await page.click('button:has-text("Geldgeschenke")');
+await page.waitForSelector('text=Person hinzufügen', { timeout: 10_000 });
 text = await body();
 values = await inputValues();
 check('contributors listed',
     ['Karie & Dave', 'Kim', 'Rob', 'A Gram'].every((n) => values.includes(n)),
     `found: ${values.filter((v) => ['Karie & Dave', 'Kim', 'Rob', 'A Gram'].includes(v)).join(', ')}`);
-check('pledged total', text.includes('$17,880.00'));
-check('received total', text.includes('$6,880.00'));
-check('over-delivery called out', text.includes('over the pledge'));
-check('links to registry for guest gifts', text.includes('Registry'));
+check('pledged total', text.includes('17.880,00 $'));
+check('received total', text.includes('6.880,00 $'));
+check('over-delivery called out', text.includes('mehr als zugesagt'));
+check('links to registry for guest gifts', text.includes('Wunschliste'));
 
 console.log('\n--- Settings tab ---');
-await page.click('button:has-text("Settings")');
-await page.waitForSelector('text=Who pays', { timeout: 10_000 });
+await page.click('button:has-text("Einstellungen")');
+await page.waitForSelector('text=Wer zahlt', { timeout: 10_000 });
 text = await body();
-check('headcount fields', text.includes('Headcount') && text.includes('135 guests'));
-check('payers with shares', text.includes('Who pays'));
-check('payment plan section', text.includes('Payment plan'));
-check('paycheck interval hint', text.includes('paychecks left'));
+check('headcount fields', text.includes('Personenzahl') && text.includes('135 Gäste'));
+check('payers with shares', text.includes('Wer zahlt'));
+check('payment plan section', text.includes('Ratenplanung'));
+check('paycheck interval hint', text.includes('Gehaltszahlungen'));
 
 // Changing the split must flow through to the overview.
 const shareInputs = page.locator('input[inputmode="decimal"]');
 await shareInputs.nth(2).fill('75');
 await shareInputs.nth(2).blur();
 await page.waitForTimeout(1200);
-await page.click('button:has-text("Overview")');
-await page.waitForSelector('text=Total budget', { timeout: 10_000 });
-check('split change reached overview', (await body()).includes('75% share'));
+await page.click('button:has-text("Überblick")');
+await page.waitForSelector('text=Gesamtbudget', { timeout: 10_000 });
+check('split change reached overview', (await body()).includes('75 % Anteil'));
 
 // Restore 50/50.
-await page.click('button:has-text("Settings")');
-await page.waitForSelector('text=Who pays', { timeout: 10_000 });
+await page.click('button:has-text("Einstellungen")');
+await page.waitForSelector('text=Wer zahlt', { timeout: 10_000 });
 await shareInputs.nth(2).fill('50');
 await shareInputs.nth(2).blur();
 await page.waitForTimeout(1200);
 
 console.log('\n--- Cost per guest + mistake detection ---');
-await page.click('button:has-text("Overview")');
-await page.waitForSelector('text=Total budget', { timeout: 20_000 });
+await page.click('button:has-text("Überblick")');
+await page.waitForSelector('text=Gesamtbudget', { timeout: 20_000 });
 text = await body();
-check('per-guest cost shown', text.includes('$244.79'), '33,046.26 / 135');
-check('marginal guest cost shown', text.includes('$72.00'), 'dinner 35 + bar 37');
-check('table of ten shown', text.includes('$720.00'));
-check('duplicate suit flagged', text.includes('are both $300.00'));
-check('ring overrun flagged', /Austin.s Ring: \$1,284\.00 paid/.test(text));
+check('per-guest cost shown', text.includes('244,79 $'), '33,046.26 / 135');
+check('marginal guest cost shown', text.includes('72,00 $'), 'dinner 35 + bar 37');
+check('table of ten shown', text.includes('720,00 $'));
+check('duplicate suit flagged', text.includes('betragen beide 300,00 $'));
+check('ring overrun flagged', /Ring von Austin: 1\.284,00\s\$ bezahlt/.test(text));
 
 console.log('\n--- Trend + what-if ---');
-check('trend card present', text.includes('Trend'));
-check('what-if present', text.includes('What if'));
+check('trend card present', text.includes('Verlauf'));
+check('what-if present', text.includes('Was wäre, wenn'));
 const guestInput = page.locator('input[type="number"]').first();
 await guestInput.fill('160');
 await page.waitForTimeout(500);
 const whatIfText = await body();
 // 36 more adults x (35 dinner + 37 bar) = 2,592 on top of 33,046.26.
-check('what-if recomputes the budget', whatIfText.includes('$35,638.26'),
+check('what-if recomputes the budget', whatIfText.includes('35.638,26 $'),
     '160 adults instead of 124');
-check('what-if shows the delta', whatIfText.includes('+$2,592.00'));
+check('what-if shows the delta', whatIfText.includes('+2.592,00 $'));
 await guestInput.fill('124');
 await page.waitForTimeout(400);
 check('what-if never wrote to the database',
-    (await body()).includes('$33,046.26'), 'real total untouched');
+    (await body()).includes('33.046,26 $'), 'real total untouched');
 
 console.log('\n--- Derived paid state ---');
 await page.click('button:has-text("Budget")');
-await page.waitForSelector('text=Add line item', { timeout: 10_000 });
+await page.waitForSelector('text=Posten hinzufügen', { timeout: 10_000 });
 text = await body();
-check('paid states rendered', text.includes('Part paid') && text.includes('Overpaid'));
-check('conflict hint shown', text.includes('Fully covered by payments'));
-check('fully-paid count shown', /\d+ fully paid/.test(text));
+check('paid states rendered', text.includes('Teilweise') && text.includes('Zu viel'));
+check('conflict hint shown', text.includes('Durch Zahlungen vollständig gedeckt'));
+check('fully-paid count shown', /\d+ vollständig bezahlt/.test(text));
 
 console.log('\n--- Schedule: split a bill ---');
-await page.click('button:has-text("Schedule")');
-await page.waitForSelector('text=Split into payments', { timeout: 10_000 });
-check('empty schedule explains itself', (await body()).includes('Nothing scheduled yet'));
-await page.click('button:has-text("Split into payments")');
-await page.waitForSelector('text=Which bill', { timeout: 10_000 });
+await page.click('button:has-text("Zahlungsplan")');
+await page.waitForSelector('text=In Zahlungen aufteilen', { timeout: 10_000 });
+check('empty schedule explains itself', (await body()).includes('Noch nichts geplant'));
+await page.click('button:has-text("In Zahlungen aufteilen")');
+await page.waitForSelector('text=Welche Rechnung', { timeout: 10_000 });
 const numbers = page.locator('input[type="number"]');
 await numbers.nth(0).fill('5000');   // deposit
 await numbers.nth(1).fill('3');      // instalments
 await page.waitForTimeout(300);
 const preview = await body();
-check('split preview totals the whole bill', preview.includes('Totals $18,358.90'),
+check('split preview totals the whole bill', preview.includes('Summe 18.358,90 $'),
     'deposit + instalments must add back up');
-check('split preview absorbs rounding', preview.includes('to absorb the rounding'));
-await page.click('button:has-text("Create schedule")');
+check('split preview absorbs rounding', preview.includes('um die Rundung auszugleichen'));
+await page.click('button:has-text("Plan erstellen")');
 await page.waitForTimeout(2500);
 text = await body();
 values = await inputValues();
 check('schedule rows created',
-    values.includes('Venue Cost deposit') && values.includes('Venue Cost 3/3'),
-    values.filter((v) => v.startsWith('Venue Cost')).join(', '));
-check('scheduled total matches the bill', text.includes('$18,358.90'),
+    values.includes('Location-Kosten Anzahlung') && values.includes('Location-Kosten 3/3'),
+    values.filter((v) => v.startsWith('Location-Kosten')).join(', '));
+check('scheduled total matches the bill', text.includes('18.358,90 $'),
     'deposit + 3 instalments == the section budget');
-// The stat tile is always labelled "Overdue", so assert its value rather than
+// The stat tile is always labelled "Überfällig", so assert its value rather than
 // looking for the word anywhere on the page.
-const overdueBadges = await page.locator('span:text-is("Overdue")').count();
+const overdueBadges = await page.locator('span:text-is("Überfällig")').count();
 check('nothing overdue yet', overdueBadges === 0, `${overdueBadges} overdue badges`);
 check('rounding lands on the final payment', values.includes('4452.98'),
     values.filter((v) => v.startsWith('4452')).join(', '));
 
 console.log('\n--- Untracked spend can be adopted ---');
-await page.click('button:has-text("Purchases")');
-await page.waitForSelector('text=Log purchase', { timeout: 10_000 });
-check('untracked payment called out', (await body()).includes('not in the budget'));
-await page.click('button:has-text("+ Add to budget")');
+await page.click('button:has-text("Ausgaben")');
+await page.waitForSelector('text=Ausgabe erfassen', { timeout: 10_000 });
+check('untracked payment called out', (await body()).includes('nicht im Budget'));
+await page.click('button:has-text("+ Zum Budget hinzufügen")');
 await page.waitForTimeout(3000);
 text = await body();
-check('adopting clears the untracked warning', !text.includes('1 payment not in the budget'),
+check('adopting clears the untracked warning', !text.includes('1 Zahlung nicht im Budget'),
     'AirBnb should now have a line');
-check('budget grew by the adopted amount', text.includes('$35,003.26'),
+check('budget grew by the adopted amount', text.includes('35.003,26 $'),
     '33,046.26 + 1,957');
 
 console.log('\n--- Bulk edit ---');
 // Bulk selection has to work on desktop too, not just the mobile layout.
-const rowBoxes = page.locator('input[type="checkbox"][aria-label^="Select "]');
+const rowBoxes = page.locator('input[type="checkbox"][aria-label$=" auswählen"]');
 check('per-row checkboxes are reachable', await rowBoxes.first().isVisible(),
     'they were md:hidden, making bulk edit desktop-only broken');
 await rowBoxes.first().check();
 await page.waitForTimeout(300);
-check('bulk bar appears on selection', (await body()).includes('1 selected'));
-await page.click('button:has-text("Edit selected")');
-await page.waitForSelector('text=Leave unchanged', { timeout: 10_000 });
+check('bulk bar appears on selection', (await body()).includes('1 ausgewählt'));
+await page.click('button:has-text("Auswahl bearbeiten")');
+await page.waitForSelector('text=Unverändert lassen', { timeout: 10_000 });
 check('bulk modal defaults to leaving fields alone',
-    (await body()).includes('stays as it is'));
-await page.click('button:has-text("Cancel")');
+    (await body()).includes('bleibt, wie es ist'));
+await page.click('button:has-text("Abbrechen")');
 await page.waitForTimeout(300);
 
 console.log('\n--- Undo a delete, archive a contributor ---');
-await page.click('button:has-text("Gift Money")');
-await page.waitForSelector('text=Add contributor', { timeout: 10_000 });
+await page.click('button:has-text("Geldgeschenke")');
+await page.waitForSelector('text=Person hinzufügen', { timeout: 10_000 });
 
 // A receipt is a leaf row, so deleting it can genuinely be undone.
 const beforeReceipts = (await inputValues()).filter((v) => v === 'Venue 1/4').length;
 check('receipt present before delete', beforeReceipts === 1);
-await page.locator('button[aria-label^="Delete payment Venue 1/4"]').first().click();
+await page.locator('button[aria-label^="Zahlung Venue 1/4"]').first().click();
 await page.waitForTimeout(1800);
-check('undo bar offered after delete', (await body()).includes('Undo'));
-await page.click('button:has-text("Undo")');
+check('undo bar offered after delete', (await body()).includes('Rückgängig'));
+await page.click('button:has-text("Rückgängig")');
 await page.waitForTimeout(2500);
 check('undo restored the receipt',
     (await inputValues()).filter((v) => v === 'Venue 1/4').length === 1);
 
 // A contributor cascades its receipts, so it archives instead — undo couldn't
 // rebuild the history.
-await page.locator('button[aria-label="Archive A Gram"]').first().click();
+await page.locator('button[aria-label="A Gram archivieren"]').first().click();
 await page.waitForTimeout(2000);
 check('archived contributor leaves the list',
     !(await inputValues()).includes('A Gram'));
 
 console.log('\n--- Thank-you tracking ---');
 text = await body();
-check('thank-you control present', text.includes('Thank you?'));
-check('thanked counter present', /\d+\/\d+/.test(text) && text.includes('thank-you notes sent'));
-await page.locator('button:has-text("Thank you?")').first().click();
+check('thank-you control present', text.includes('Bedanken'));
+check('thanked counter present', /\d+\/\d+/.test(text) && text.includes('Dankesnachrichten verschickt'));
+await page.locator('button:has-text("Bedanken")').first().click();
 await page.waitForTimeout(1600);
-check('thank-you marks as sent', (await body()).includes('✓ Thanked'));
+check('thank-you marks as sent', (await body()).includes('✓ Bedankt'));
 
 console.log('\n--- Templates + archive ---');
 await page.click('button:has-text("Budget")');
-await page.waitForSelector('text=Add common line items', { timeout: 10_000 });
-await page.click('button:has-text("Add common line items")');
-await page.waitForSelector('text=Add to section', { timeout: 10_000 });
-check('template lists line items', (await body()).includes('Bridal bouquet')
-    || (await body()).includes('Venue hire'));
-await page.click('button:has-text("Cancel")');
+await page.waitForSelector('text=Häufige Posten hinzufügen', { timeout: 10_000 });
+await page.click('button:has-text("Häufige Posten hinzufügen")');
+await page.waitForSelector('text=Zum Bereich hinzufügen', { timeout: 10_000 });
+check('template lists line items', (await body()).includes('Brautstrauß')
+    || (await body()).includes('Location-Miete'));
+await page.click('button:has-text("Abbrechen")');
 await page.waitForTimeout(400);
-await page.click('button:has-text("Settings")');
-await page.waitForSelector('text=Who pays', { timeout: 10_000 });
-check('archive count reported', (await body()).includes('archived row'));
-await page.click('button:has-text("Show archived")');
+await page.click('button:has-text("Einstellungen")');
+await page.waitForSelector('text=Wer zahlt', { timeout: 10_000 });
+check('archive count reported', (await body()).includes('archivierte'));
+await page.click('button:has-text("Archiv anzeigen")');
 await page.waitForTimeout(1200);
 check('archived contributor listed with a way back',
-    (await body()).includes('A Gram') && (await body()).includes('Restore'));
-await page.click('button:has-text("Restore")');
+    (await body()).includes('A Gram') && (await body()).includes('Wiederherstellen'));
+await page.click('button:has-text("Wiederherstellen")');
 await page.waitForTimeout(2000);
-await page.click('button:has-text("Gift Money")');
-await page.waitForSelector('text=Add contributor', { timeout: 10_000 });
+await page.click('button:has-text("Geldgeschenke")');
+await page.waitForSelector('text=Person hinzufügen', { timeout: 10_000 });
 check('restored contributor is back', (await inputValues()).includes('A Gram'));
 
 console.log('\n--- Mobile layout (390px) ---');
@@ -449,7 +450,7 @@ check('no horizontal overflow at 390px', overflowX <= 1, `${overflowX}px overflo
 // Rows collapse to name + total so a 27-line budget stays scannable; the
 // editable fields are behind the expander.
 const collapsedText = await body();
-check('collapsed row shows the line total', collapsedText.includes('$4,500.00'));
+check('collapsed row shows the line total', collapsedText.includes('4.500,00 $'));
 // textContent includes display:none nodes (the desktop header row), so this has
 // to test what is actually rendered.
 const visibleLabels = async (label: string) => page.evaluate((text) => {
@@ -458,14 +459,14 @@ const visibleLabels = async (label: string) => page.evaluate((text) => {
         .filter((el) => el.textContent?.trim() === text
             && (el as HTMLElement).offsetParent !== null).length;
 }, label);
-check('collapsed rows hide the editing labels', (await visibleLabels('Unit cost')) === 0,
+check('collapsed rows hide the editing labels', (await visibleLabels('Einzelpreis')) === 0,
     'unit cost should only be visible once a row is expanded');
-await page.locator('button[aria-label^="Expand Venue"]').first().click();
+await page.locator('button[aria-label="Location ausklappen"]').first().click();
 await page.waitForTimeout(500);
-check('expanding reveals labelled fields', (await visibleLabels('Unit cost')) === 1,
+check('expanding reveals labelled fields', (await visibleLabels('Einzelpreis')) === 1,
     'every field needs a label once the header row is hidden');
-check('expanded row labels the quantity source', (await visibleLabels('Qty from')) === 1);
-await page.locator('button[aria-label^="Collapse Venue"]').first().click();
+check('expanded row labels the quantity source', (await visibleLabels('Menge nach')) === 1);
+await page.locator('button[aria-label="Location einklappen"]').first().click();
 await page.waitForTimeout(400);
 
 // iOS Safari zooms the viewport on focusing any input under 16px.
@@ -497,7 +498,7 @@ const tinyTargets = await page.evaluate(() => {
 });
 check('no under-32px touch targets', tinyTargets.length === 0, tinyTargets.slice(0, 4).join(' | '));
 
-for (const tab of ['Schedule', 'Purchases', 'Gift Money', 'Settings', 'Overview']) {
+for (const tab of ['Zahlungsplan', 'Ausgaben', 'Geldgeschenke', 'Einstellungen', 'Überblick']) {
     await page.click(`button:has-text("${tab}")`);
     await page.waitForTimeout(600);
     const ov = await page.evaluate(() =>
@@ -507,7 +508,7 @@ for (const tab of ['Schedule', 'Purchases', 'Gift Money', 'Settings', 'Overview'
 
 // A narrow Android viewport is the real floor, not the iPhone width.
 await page.setViewportSize({ width: 360, height: 800 });
-for (const tab of ['Budget', 'Schedule', 'Purchases', 'Gift Money']) {
+for (const tab of ['Budget', 'Zahlungsplan', 'Ausgaben', 'Geldgeschenke']) {
     await page.click(`button:has-text("${tab}")`);
     await page.waitForTimeout(600);
     const ov = await page.evaluate(() =>
