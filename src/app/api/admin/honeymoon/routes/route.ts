@@ -55,6 +55,6 @@ export async function POST(request: Request) {
         return NextResponse.json({ results });
     } catch (error) {
         console.error('Error routing:', error);
-        return NextResponse.json({ error: 'Could not work out driving times' }, { status: 500 });
+        return NextResponse.json({ error: 'Fahrzeiten konnten nicht berechnet werden' }, { status: 500 });
     }
 }

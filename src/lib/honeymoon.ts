@@ -1149,14 +1149,17 @@ export function formatPrice(raw: string, currency?: string | null): string {
  */
 export function priceValue(note: string | null | undefined): number | null {
     if (!note) return null;
-    const text = note.replace(/,/g, '');
+    // A figure may carry separators in either convention ("1,200" or "1.200,50");
+    // `plainNumber` reads both, so the German output of `formatAmount` round-trips.
+    const figure = '(\\d+(?:[.,]\\d+)*)';
     // Prefer the figure that is visibly money — "2 bed villa $300" is 300, not
     // 2 — and fall back to the first number when nothing is marked.
-    const marked = text.match(/(?:[$€£]|Rp|A\$|C\$|S\$|NZ\$)\s*(\d+(?:\.\d+)?)/i)
-        ?? text.match(/(\d+(?:\.\d+)?)\s*(?:USD|EUR|GBP|AUD|CAD|SGD|NZD|IDR|k\b)/i);
-    const match = marked ? marked[1] : text.match(/-?\d+(\.\d+)?/)?.[0];
-    if (!match) return null;
-    const value = Number(match);
+    const marked = note.match(new RegExp(`(?:[$€£]|Rp|A\\$|C\\$|S\\$|NZ\\$)\\s*${figure}`, 'i'))
+        ?? note.match(new RegExp(`${figure}\\s*(?:USD|EUR|GBP|AUD|CAD|SGD|NZD|IDR|k\\b)`, 'i'));
+    const raw = marked ? marked[1] : note.match(/-?\d+(?:[.,]\d+)*/)?.[0];
+    if (!raw) return null;
+    const match = plainNumber(raw.replace(/^-/, '')) ?? raw.replace(/[.,]/g, '');
+    const value = Number(raw.startsWith('-') ? `-${match}` : match);
     return Number.isFinite(value) && value >= 0 ? value : null;
 }
 

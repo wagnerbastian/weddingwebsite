@@ -38,6 +38,6 @@ export async function POST(request: Request) {
         return NextResponse.json({ results });
     } catch (error) {
         console.error('Error fetching weather:', error);
-        return NextResponse.json({ error: 'Could not fetch the weather' }, { status: 500 });
+        return NextResponse.json({ error: 'Wetter konnte nicht abgerufen werden' }, { status: 500 });
     }
 }

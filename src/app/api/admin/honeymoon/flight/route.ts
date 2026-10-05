@@ -12,14 +12,14 @@ export async function GET(request: Request) {
     const params = new URL(request.url).searchParams;
     const number = (params.get('no') ?? '').trim();
     const date = (params.get('date') ?? '').trim();
-    if (!number) return NextResponse.json({ error: 'A flight number is required' }, { status: 400 });
+    if (!number) return NextResponse.json({ error: 'Eine Flugnummer ist erforderlich' }, { status: 400 });
     if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
-        return NextResponse.json({ error: 'A date (YYYY-MM-DD) is required' }, { status: 400 });
+        return NextResponse.json({ error: 'Ein Datum (JJJJ-MM-TT) ist erforderlich' }, { status: 400 });
     }
     try {
         return NextResponse.json(await flightLookup(number, date));
     } catch (error) {
         console.error('Error looking up flight:', error);
-        return NextResponse.json({ error: 'Could not look that flight up' }, { status: 500 });
+        return NextResponse.json({ error: 'Der Flug konnte nicht abgefragt werden' }, { status: 500 });
     }
 }

@@ -140,14 +140,14 @@ console.log('\nOne place panel, from every entry point');
 
     console.log('\nItinerary toolbar and timeline');
     await go(p, '/itinerary');
-    await p.getByRole('button', { name: /Timeline/ }).first().click().catch(() => undefined);
+    await p.getByRole('button', { name: /Zeitplan/ }).first().click().catch(() => undefined);
     await p.waitForTimeout(500);
-    const shape = await p.locator('[data-segmented="Timeline shape"]').boundingBox({ timeout: 3000 }).catch(() => null);
-    const view = await p.locator('[data-segmented="Itinerary view"]').boundingBox({ timeout: 3000 }).catch(() => null);
+    const shape = await p.locator('[data-segmented="Zeitplan-Form"]').boundingBox({ timeout: 3000 }).catch(() => null);
+    const view = await p.locator('[data-segmented="Reiseplan-Ansicht"]').boundingBox({ timeout: 3000 }).catch(() => null);
     check('Stacked / Clock sits to the left of Days / Timeline / Calendar',
         shape != null && view != null && shape.x < view.x);
     check('the stacked bar draws travel', (await p.locator('[data-leg-slice]').count()) > 0);
-    await p.getByRole('button', { name: /Clock/ }).first().click().catch(() => undefined);
+    await p.getByRole('button', { name: /Uhr/ }).first().click().catch(() => undefined);
     await p.waitForTimeout(500);
     check('the clock draws travel', (await p.locator('[data-leg-slice]').count()) > 0);
     await p.evaluate(() => {
@@ -227,7 +227,7 @@ console.log('\nPhone (390×844)');
     await go(p, '/itinerary');
     check('the phone itinerary shows one day, with a day strip',
         (await p.locator('[data-strip-day]').count()) > 1 && (await p.locator('[data-day-id]').count()) === 1);
-    await p.getByRole('button', { name: /Timeline/ }).first().click().catch(() => undefined);
+    await p.getByRole('button', { name: /Zeitplan/ }).first().click().catch(() => undefined);
     await p.waitForTimeout(400);
     check('the phone timeline is a vertical agenda', (await p.locator('[data-day-agenda]').count()) === 1);
     check('the bottom tab bar is there', await p.locator('[data-mobile-tabbar]').isVisible().catch(() => false));
@@ -267,7 +267,7 @@ console.log('\nPhone (390×844)');
     check('and Done locks them again', (await range.getAttribute('data-date-range')) === 'locked');
 
     await go(p, '/itinerary');
-    await p.getByRole('button', { name: /Calendar/ }).first().click().catch(() => undefined);
+    await p.getByRole('button', { name: /Kalender/ }).first().click().catch(() => undefined);
     await p.waitForTimeout(500);
     const cells = await p.locator('[data-calendar-day]').evaluateAll((els) => els.map((el) => el.getBoundingClientRect().right <= innerWidth));
     check('the phone calendar fits the screen', cells.length > 0 && cells.every(Boolean), `${cells.length} days`);

@@ -244,8 +244,8 @@ async function searchNominatim(term: string): Promise<
             // 403 is their policy talking, not a fault: an unidentifiable
             // User-Agent or an IP they have decided is using too much.
             return { hits: [], refused: res.status === 403 || res.status === 429
-                ? `OpenStreetMap's geocoder turned us away (${res.status})`
-                : `OpenStreetMap's geocoder said ${res.status}` };
+                ? `Der Geocoder von OpenStreetMap hat uns abgewiesen (${res.status})`
+                : `Der Geocoder von OpenStreetMap antwortete mit ${res.status}` };
         }
         const body = await res.json();
         const rows: NominatimRow[] = Array.isArray(body) ? body : [];
@@ -263,7 +263,7 @@ async function searchNominatim(term: string): Promise<
             })).filter((hit) => valid(hit.lat, hit.lng)),
         };
     } catch {
-        return { hits: [], refused: "OpenStreetMap's geocoder did not answer in time" };
+        return { hits: [], refused: 'Der Geocoder von OpenStreetMap hat nicht rechtzeitig geantwortet' };
     }
 }
 
@@ -294,7 +294,7 @@ async function searchPhoton(term: string): Promise<{ hits: GeocodeHit[]; refused
             headers: { 'User-Agent': USER_AGENT },
             signal: AbortSignal.timeout(10000),
         });
-        if (!res.ok) return { hits: [], refused: `The fallback geocoder said ${res.status}` };
+        if (!res.ok) return { hits: [], refused: `Der Ersatz-Geocoder antwortete mit ${res.status}` };
         const body = await res.json();
         const features: PhotonFeature[] = Array.isArray(body?.features) ? body.features : [];
         return {
@@ -320,7 +320,7 @@ async function searchPhoton(term: string): Promise<{ hits: GeocodeHit[]; refused
             }).filter((hit) => valid(hit.lat, hit.lng)),
         };
     } catch {
-        return { hits: [], refused: 'The fallback geocoder did not answer in time' };
+        return { hits: [], refused: 'Der Ersatz-Geocoder hat nicht rechtzeitig geantwortet' };
     }
 }
 
@@ -350,8 +350,8 @@ async function geocodeName(query: string, raw: string): Promise<{
     return {
         results: [],
         error: refused
-            ? `${refused}. Nothing was found for "${raw}" — paste a Google Maps link or `
-                + 'right-click the pin there and copy the "lat, lng" numbers instead.'
+            ? `${refused}. Für „${raw}“ wurde nichts gefunden – füge stattdessen einen Google-Maps-Link ein `
+                + 'oder klicke dort mit rechts auf den Pin und kopiere die Zahlen „Breite, Länge“.'
             : undefined,
     };
 }
@@ -381,7 +381,7 @@ export async function GET(request: Request) {
                 const address = await reverseGeocode(fromUrl.lat, fromUrl.lng);
                 return NextResponse.json({
                     results: [{
-                        label: name ?? address ?? 'Pasted location',
+                        label: name ?? address ?? 'Eingefügter Standort',
                         ...fromUrl,
                         precision: 'exact',
                         ...(name ? { name } : {}),
@@ -393,8 +393,8 @@ export async function GET(request: Request) {
             }
             return NextResponse.json({
                 results: [],
-                error: 'No coordinates in that link. Open the place in Google Maps, right-click the pin, '
-                    + 'and copy the "lat, lng" numbers instead.',
+                error: 'Dieser Link enthält keine Koordinaten. Öffne den Ort in Google Maps, klicke mit rechts auf den Pin '
+                    + 'und kopiere stattdessen die Zahlen „Breite, Länge“.',
             });
         }
 
@@ -462,6 +462,6 @@ export async function GET(request: Request) {
         return NextResponse.json({ results });
     } catch (error) {
         console.error('Geocode failed:', error);
-        return NextResponse.json({ results: [], error: 'Lookup failed' }, { status: 500 });
+        return NextResponse.json({ results: [], error: 'Suche fehlgeschlagen' }, { status: 500 });
     }
 }
