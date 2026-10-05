@@ -35,7 +35,7 @@ function colourOf(stop: Stop, placeById: Map<number, Place>): string {
 
 function labelFor(stop: Stop, placeById: Map<number, Place>): string {
     const place = stop.place_id == null ? null : placeById.get(stop.place_id);
-    return stop.custom_label || place?.name || 'Untitled stop';
+    return stop.custom_label || place?.name || 'Stopp ohne Titel';
 }
 
 /** Travel is striped in its mode's colour, so it never reads as a stop. */
@@ -84,7 +84,7 @@ export function DayBar({ api, stops, legs = [], onOpenStop, onOpenLeg }: {
     };
 
     if (!slices.length) {
-        return <p className="text-xs text-gray-400 py-2">Nothing planned yet.</p>;
+        return <p className="text-xs text-gray-400 py-2">Noch nichts geplant.</p>;
     }
 
     const when = (start: string | null, end: string | null, minutes: number) => (start
@@ -117,7 +117,7 @@ export function DayBar({ api, stops, legs = [], onOpenStop, onOpenLeg }: {
                                 data-leg-slice={slice.kind === 'leg' ? slice.id : undefined}
                                 onClick={() => (stop ? onOpenStop(stop) : onOpenLeg?.(slice.id))}
                                 title={`${slice.label} · ${when(slice.start, slice.end, slice.minutes)}${
-                                    slice.assumed ? ' (assumed length)' : ''}`}
+                                    slice.assumed ? ' (angenommene Dauer)' : ''}`}
                                 className="h-full w-full min-w-0 px-2 text-left text-[11px] font-medium
                                     text-white/95 transition hover:brightness-110"
                                 style={stop
@@ -132,10 +132,10 @@ export function DayBar({ api, stops, legs = [], onOpenStop, onOpenLeg }: {
                             {resizable && (
                                 <div
                                     role="separator"
-                                    aria-label={`Time at ${slice.label}`}
+                                    aria-label={`Zeit bei ${slice.label}`}
                                     aria-orientation="vertical"
                                     tabIndex={0}
-                                    title="Drag to give this stop more or less of the day"
+                                    title="Ziehen, um diesem Stopp mehr oder weniger vom Tag zu geben"
                                     onPointerDown={(event) => {
                                         event.preventDefault();
                                         event.currentTarget.setPointerCapture(event.pointerId);
@@ -185,9 +185,9 @@ export function DayBar({ api, stops, legs = [], onOpenStop, onOpenLeg }: {
                 })}
             </div>
             <p className="mt-1 text-[10px] text-gray-400">
-                {asLength(total)} planned
-                {legs.length > 0 && ' · striped slices are travel'}
-                {slices.some((slice) => slice.assumed) && ' · faded slices are assumed lengths'}
+                {asLength(total)} geplant
+                {legs.length > 0 && ' · gestreifte Abschnitte sind Fahrten'}
+                {slices.some((slice) => slice.assumed) && ' · blasse Abschnitte haben angenommene Dauer'}
             </p>
         </div>
     );
@@ -210,7 +210,7 @@ export function DayClock({ api, stops, legs = [], markers = [], onOpenStop, onOp
     const fmt = useTimeFormat();
     const layout = clockLayout(stops, (stop) => labelFor(stop, api.placeById), { legs, markers });
     if (!layout.items.length && !layout.legs.length) {
-        return <p className="text-xs text-gray-400 py-2">Nothing planned yet.</p>;
+        return <p className="text-xs text-gray-400 py-2">Noch nichts geplant.</p>;
     }
     const stopById = new Map(stops.map((stop) => [stop.id, stop]));
     const untimed = layout.untimedStopIds
@@ -270,7 +270,7 @@ export function DayClock({ api, stops, legs = [], markers = [], onOpenStop, onOp
                             key={item.stopId}
                             type="button"
                             onClick={() => stop && onOpenStop(stop)}
-                            title={`${item.label} · ${range(item.start, item.end)}${item.assumed ? ' (not timed yet)' : ''}`}
+                            title={`${item.label} · ${range(item.start, item.end)}${item.assumed ? ' (noch ohne Uhrzeit)' : ''}`}
                             className="absolute top-2 h-3 -translate-y-1/2 rounded-full border border-white transition
                                 hover:brightness-110"
                             style={{
@@ -314,7 +314,7 @@ export function DayClock({ api, stops, legs = [], markers = [], onOpenStop, onOp
                     ))}
                     {(untimed.length > 0 || layout.untimedLegs.length > 0) && (
                         <span className="text-amber-700">
-                            Not timed yet: {[
+                            Noch ohne Uhrzeit: {[
                                 ...untimed.map((stop) => labelFor(stop, api.placeById)),
                                 ...layout.untimedLegs.map((leg) => leg.label),
                             ].join(', ')}
@@ -408,7 +408,7 @@ export function DayAgenda({ api, stops, legs = [], markers = [], onOpenStop, onO
     const later = stops.filter((stop) => untimed.has(stop.id));
 
     if (!rows.length && !later.length && !layout.untimedLegs.length) {
-        return <p className="py-2 text-sm text-gray-400">Nothing planned yet.</p>;
+        return <p className="py-2 text-sm text-gray-400">Noch nichts geplant.</p>;
     }
 
     return (
@@ -435,7 +435,7 @@ export function DayAgenda({ api, stops, legs = [], markers = [], onOpenStop, onO
                             >
                                 <span className="w-16 shrink-0 pt-2 text-right text-xs tabular-nums text-gray-500">
                                     {leg.fromPrevDay ? '' : fmt(leg.start)}
-                                    <span className="block text-gray-400">{leg.toNextDay ? '→ next day' : fmt(leg.end)}</span>
+                                    <span className="block text-gray-400">{leg.toNextDay ? '→ nächster Tag' : fmt(leg.end)}</span>
                                 </span>
                                 <span className="flex min-w-0 flex-1 items-center rounded-2xl px-3 py-2 text-sm font-medium text-white"
                                     style={legBackground(leg.mode)}>
@@ -467,7 +467,7 @@ export function DayAgenda({ api, stops, legs = [], markers = [], onOpenStop, onO
             })}
             {(later.length > 0 || layout.untimedLegs.length > 0) && (
                 <li className="pt-1 text-xs text-amber-700">
-                    Not timed yet:{' '}
+                    Noch ohne Uhrzeit:{' '}
                     {[...later.map((stop) => labelFor(stop, api.placeById)), ...layout.untimedLegs.map((leg) => leg.label)].join(', ')}
                 </li>
             )}

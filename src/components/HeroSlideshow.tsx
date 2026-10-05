@@ -103,7 +103,7 @@ export default function HeroSlideshow({ images, interval = 5000, fallbackImage }
             src={photoSrc(src, 'xl')}
             srcSet={photoSrcSet(src)}
             sizes="100vw"
-            alt="Hero"
+            alt="Titelbild"
             fetchPriority={i === 0 ? 'high' : 'low'}
             className="absolute inset-0 h-full w-full object-cover"
             style={{
@@ -122,7 +122,7 @@ export default function HeroSlideshow({ images, interval = 5000, fallbackImage }
             <button
               key={i}
               onClick={() => goTo(i)}
-              aria-label={`Go to slide ${i + 1}`}
+              aria-label={`Zu Bild ${i + 1}`}
               className="rounded-full focus:outline-none transition-all duration-300"
               style={{
                 width: i === current ? '24px' : '10px',

@@ -84,11 +84,11 @@ function ok(label: string, condition: boolean, detail = '') {
 
 console.log('\n--- Budget (vs spreadsheet) ---');
 check('grand total', budgetTotal(categories, settings), 33046.26);
-const appetizers = categories[0].items.find(i => i.name === 'Appetizers')!;
+const appetizers = categories[0].items.find(i => i.name === 'Vorspeisen')!;
 check('appetizers from sub-items', itemTotal(appetizers, settings), 1700);
-const dinner = categories[0].items.find(i => i.name === 'Dinner')!;
+const dinner = categories[0].items.find(i => i.name === 'Abendessen')!;
 check('dinner (35 x 124 adults)', itemTotal(dinner, settings), 4340);
-const kids = categories[0].items.find(i => i.name === 'Dinner Kids')!;
+const kids = categories[0].items.find(i => i.name === 'Abendessen Kinder')!;
 check('dinner kids (12 x 11 minors)', itemTotal(kids, settings), 132);
 const bar = categories[0].items.find(i => i.name === 'Bar')!;
 check('bar (37 x 124 adults)', itemTotal(bar, settings), 4588);
@@ -110,7 +110,7 @@ const sheetContributors = contributors.map(c => ({
     ...c, receipts: c.receipts.filter(r => r.note !== 'Veil'),
 }));
 const sheetPurchases = purchases.map(p => p.description.startsWith('AirBnb')
-    ? { ...p, item_id: nameToId.get('Rehearsal Dinner')! }
+    ? { ...p, item_id: nameToId.get('Probeessen')! }
     : p);
 const sheet = buildSummary({ categories, payers, purchases: sheetPurchases, contributors: sheetContributors, settings, weddingDate: 'October 16, 2026', now: new Date('2026-08-03') });
 check('pledged total', sheet.pledgedTotal, 17200);
@@ -135,7 +135,7 @@ check('Heaven remaining, corrected', s.payers[1].remainingCash, 4146.13);
 const airbnbAttributed = buildSummary({
     categories, payers, contributors, settings,
     purchases: purchases.map(p => p.description.startsWith('AirBnb')
-        ? { ...p, item_id: nameToId.get('Rehearsal Dinner')! } : p),
+        ? { ...p, item_id: nameToId.get('Probeessen')! } : p),
     weddingDate: 'October 16, 2026', now: new Date('2026-08-03'),
 });
 check('AirBnb alone moves Heaven by its full amount',
@@ -148,7 +148,7 @@ check('Veil receipt alone moves each share by half of it',
 console.log('\n--- Section-level (lump-sum) payments ---');
 // The venue bill covers the whole section and is paid in installments, so the
 // installments must land on the section, not on the single Venue line.
-const venueSection = s.categories.find(c => c.name === 'Venue Cost')!;
+const venueSection = s.categories.find(c => c.name === 'Location-Kosten')!;
 check('section budgeted', venueSection.total, 18358.9);
 check('own-pocket installments', venueSection.directSpent, 9680);
 // Rob's $5,000 went to the venue, so the bill is that much further down.
@@ -159,7 +159,7 @@ check('payment count includes the gift', venueSection.installmentCount, 3);
 check('section still owed', venueSection.remaining, 3678.9);
 check('section paid %', venueSection.paidPct, 79.96);
 
-const venue = s.items.find(i => i.name === 'Venue')!;
+const venue = s.items.find(i => i.name === 'Location')!;
 check('venue LINE no longer overruns', venue.variance, -4500);
 check('venue line spend is zero', venue.paid, 0);
 check('venue % of budget', venue.pct, 13.62);
@@ -186,15 +186,15 @@ check('still-to-spend uses budgeted spend only', s.stillToSpendCash, 11473.26);
 check('payer remainders sum to still-to-spend',
     s.payers.reduce((a, p) => a + p.remainingCash, 0), s.stillToSpendCash);
 
-const dress = s.items.find(i => i.name === 'Dress')!;
+const dress = s.items.find(i => i.name === 'Brautkleid')!;
 check('dress paid entirely by gift money', dress.paid, 1200);
 check('dress own-pocket is zero', dress.ownSpent, 0);
 check('dress fully covered', dress.variance, 0);
 
 console.log('\n--- Line-level tracking still works ---');
-const tux = s.items.find(i => i.name === 'Tux')!;
+const tux = s.items.find(i => i.name === 'Anzug')!;
 check('tux double-paid overrun', tux.variance, 300);
-const other = s.categories.find(c => c.name === 'Other')!;
+const other = s.categories.find(c => c.name === 'Sonstiges')!;
 // 70 stamps + 250 + 136 decor + 300 + 300 suits + 20 vases + 53 invites + 1284 ring
 check('other section rolls up line spend', other.itemSpent, 2413);
 check('other section has no installments', other.directSpent, 0);

@@ -5,6 +5,7 @@ import {
     TRAVEL_MODES, arrivalsOn, formatDayDate, legIsOvernight, travelModeMeta,
     type Booking, type Day, type TravelLeg,
 } from '@/lib/honeymoon';
+import { INFO_SECTIONS } from '@/lib/honeymoonToday';
 import { useTimeFormat } from './kit/useTimeFormat';
 import type { HoneymoonApi } from './useHoneymoon';
 
@@ -57,9 +58,9 @@ export default function PrintSheet({ api, options = DEFAULT_PRINT_OPTIONS }: {
                 <p className="text-sm">
                     {trip.start_date
                         ? `${formatDayDate(trip.start_date, 1)}${days.length > 1
-                            ? ` — ${formatDayDate(trip.start_date, Math.max(...days.map((d) => d.day_number)))}`
+                            ? ` – ${formatDayDate(trip.start_date, Math.max(...days.map((d) => d.day_number)))}`
                             : ''}`
-                        : `${days.length} day${days.length === 1 ? '' : 's'}`}
+                        : `${days.length} ${days.length === 1 ? 'Tag' : 'Tage'}`}
                 </p>
                 {trip.notes && <p className="text-sm mt-1">{trip.notes}</p>}
             </header>
@@ -87,13 +88,13 @@ export default function PrintSheet({ api, options = DEFAULT_PRINT_OPTIONS }: {
                 order you would need them. */}
             {options.info && Object.values(trip.info ?? {}).some((value) => (value ?? '').trim()) && (
                 <section className="mt-6 border-t border-black/20 pt-3">
-                    <h2 className="mb-2 text-base font-semibold">If something goes wrong</h2>
+                    <h2 className="mb-2 text-base font-semibold">Falls etwas schiefgeht</h2>
                     <dl className="grid grid-cols-2 gap-x-6 gap-y-2">
                         {Object.entries(trip.info ?? {})
                             .filter(([, value]) => (value ?? '').trim())
                             .map(([key, value]) => (
                                 <div key={key} className="print-day">
-                                    <dt className="text-sm font-semibold capitalize">{key}</dt>
+                                    <dt className="text-sm font-semibold">{INFO_SECTIONS.find((s) => s.key === key)?.label ?? key}</dt>
                                     <dd className="whitespace-pre-line text-xs">{value}</dd>
                                 </div>
                             ))}
@@ -103,7 +104,7 @@ export default function PrintSheet({ api, options = DEFAULT_PRINT_OPTIONS }: {
 
             {options.notes && data.notes.length > 0 && (
                 <section className="mt-6 pt-3 border-t border-black/20">
-                    <h2 className="text-base font-semibold mb-2">Know before you go</h2>
+                    <h2 className="text-base font-semibold mb-2">Gut zu wissen vor der Reise</h2>
                     <dl className="grid grid-cols-2 gap-x-6 gap-y-2">
                         {data.notes.map((note) => (
                             <div key={note.id} className="print-day">
@@ -134,12 +135,12 @@ function DaySheet({ day, startDate, name, arrivals, bookings }: {
     return (
         <section className="print-day mb-5">
             <h2 className="text-base font-semibold border-b border-black/10 pb-1 mb-1.5">
-                Day {day.day_number}
+                Tag {day.day_number}
                 {date && <span className="font-normal"> · {date}</span>}
                 {day.title && <span className="font-normal"> · {day.title}</span>}
             </h2>
 
-            {base && <p className="text-xs mb-1">Staying at {base}</p>}
+            {base && <p className="text-xs mb-1">Unterkunft: {base}</p>}
             {day.notes && <p className="text-xs mb-1 italic">{day.notes}</p>}
 
             {/* What lands today, from an earlier day, printed before today's own
@@ -147,19 +148,19 @@ function DaySheet({ day, startDate, name, arrivals, bookings }: {
             {arrivals.map(({ leg, fromDay }) => (
                 <p key={`in-${leg.id}`} className="text-sm">
                     <span className="font-semibold">
-                        Arrives{leg.arrive_time && ` ${fmt(leg.arrive_time)}`}
+                        Ankunft{leg.arrive_time && ` ${fmt(leg.arrive_time)}`}
                     </span>
                     {leg.to_text && ` · ${leg.to_text}`}
-                    {` · ${travelModeMeta(leg.mode).label.toLowerCase()} from day ${fromDay.day_number}`}
-                    {leg.confirmation_ref && ` · ref ${leg.confirmation_ref}`}
+                    {` · ${travelModeMeta(leg.mode).label} von Tag ${fromDay.day_number}`}
+                    {leg.confirmation_ref && ` · Ref. ${leg.confirmation_ref}`}
                 </p>
             ))}
 
             {bookings.length > 0 && (
                 <p className="mt-1 text-xs">
-                    <span className="font-semibold">Confirmations: </span>
+                    <span className="font-semibold">Bestätigungen: </span>
                     {bookings.map((booking) => [
-                        name(booking.place_id) || booking.provider || 'Booking',
+                        name(booking.place_id) || booking.provider || 'Buchung',
                         booking.confirmation,
                         booking.contact,
                     ].filter(Boolean).join(' ')).join(' · ')}
@@ -167,7 +168,7 @@ function DaySheet({ day, startDate, name, arrivals, bookings }: {
             )}
 
             {day.travel.map((leg) => {
-                const mode = TRAVEL_MODES.find((m) => m.key === leg.mode)?.label ?? 'Travel';
+                const mode = TRAVEL_MODES.find((m) => m.key === leg.mode)?.label ?? 'Verbindung';
                 return (
                     <p key={leg.id} className="text-sm">
                         <span className="font-semibold">{mode}</span>
@@ -177,16 +178,16 @@ function DaySheet({ day, startDate, name, arrivals, bookings }: {
                             that lands at 06:20 tomorrow and one that reads as
                             impossible. */}
                         {legIsOvernight(leg)
-                            && ` (+${leg.arrive_day_offset} day${leg.arrive_day_offset === 1 ? '' : 's'})`}
+                            && ` (+${leg.arrive_day_offset} ${leg.arrive_day_offset === 1 ? 'Tag' : 'Tage'})`}
                         {(leg.from_text || leg.to_text)
                             && ` · ${[leg.from_text, leg.to_text].filter(Boolean).join(' → ')}`}
-                        {leg.confirmation_ref && ` · ref ${leg.confirmation_ref}`}
+                        {leg.confirmation_ref && ` · Ref. ${leg.confirmation_ref}`}
                     </p>
                 );
             })}
 
             {day.stops.length === 0 ? (
-                <p className="text-xs italic">Nothing planned.</p>
+                <p className="text-xs italic">Nichts geplant.</p>
             ) : (
                 <ol className="text-sm">
                     {day.stops.map((stop) => (
@@ -195,8 +196,8 @@ function DaySheet({ day, startDate, name, arrivals, bookings }: {
                                 {stop.start_time ? fmt(stop.start_time) : ''}
                             </span>
                             <span>
-                                {stop.custom_label || name(stop.place_id) || 'Stop'}
-                                {stop.notes && <span className="text-xs"> — {stop.notes}</span>}
+                                {stop.custom_label || name(stop.place_id) || 'Stopp'}
+                                {stop.notes && <span className="text-xs"> – {stop.notes}</span>}
                             </span>
                         </li>
                     ))}

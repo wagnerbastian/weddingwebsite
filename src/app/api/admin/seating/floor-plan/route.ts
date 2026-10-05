@@ -144,7 +144,7 @@ export async function GET() {
   } catch (error) {
     console.error('Error fetching floor plan:', error);
     return NextResponse.json(
-      { error: 'Failed to fetch floor plan' },
+      { error: 'Raumplan konnte nicht geladen werden' },
       { status: 500 }
     );
   } finally {
@@ -188,7 +188,7 @@ export async function POST(request: Request) {
   } catch (error) {
     console.error('Error upserting floor plan:', error);
     return NextResponse.json(
-      { error: 'Failed to upsert floor plan' },
+      { error: 'Raumplan konnte nicht gespeichert werden' },
       { status: 500 }
     );
   } finally {

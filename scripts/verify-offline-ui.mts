@@ -86,7 +86,7 @@ console.log('\nWith the network cut');
 await goOffline(context, true);
 const bodyOf = async () => p.evaluate(() => ({
     text: document.body.innerText.trim(),
-    fallback: !!document.querySelector('h1') && /You.re offline/.test(document.querySelector('h1')?.textContent ?? ''),
+    fallback: !!document.querySelector('h1') && /Ihr seid offline/.test(document.querySelector('h1')?.textContent ?? ''),
 }));
 for (const path of [...PUBLIC_PAGES, ...ADMIN_PAGES]) {
     if (path === '/offline') continue;
@@ -126,7 +126,7 @@ if (await box.count()) {
     await box.fill('Written offline — must not arrive');
     await p.getByRole('button', { name: 'Add', exact: true }).first().click();
     await p.waitForTimeout(1200);
-    check('a save offline says it was not saved', (await p.locator("text=/offline — this wasn.t saved/").count()) > 0);
+    check('a save offline says it was not saved', (await p.locator("text=/Offline – das wurde nicht gespeichert/").count()) > 0);
 }
 
 console.log('\nSigning out');

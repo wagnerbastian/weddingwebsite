@@ -132,20 +132,21 @@ function ev(title: string, time = '', isPublic?: boolean): ScheduleEvent {
 
     // The whole point: nobody types "8:00 AM" when "8am" will do, and the
     // timeline should not then show three notations for one day.
-    check('8am becomes 8:00 AM', normalizeEventTime('8am') === '8:00 AM', normalizeEventTime('8am'));
-    check('8 AM becomes 8:00 AM', normalizeEventTime('8 AM') === '8:00 AM');
-    check('4pm becomes 4:00 PM', normalizeEventTime('4pm') === '4:00 PM');
-    check('16:00 becomes 4:00 PM', normalizeEventTime('16:00') === '4:00 PM', normalizeEventTime('16:00'));
-    check('9.30am becomes 9:30 AM', normalizeEventTime('9.30am') === '9:30 AM');
-    check('1230 becomes 12:30 PM', normalizeEventTime('1230') === '12:30 PM', normalizeEventTime('1230'));
-    check('830 becomes 8:30 AM', normalizeEventTime('830') === '8:30 AM');
-    check('0800 becomes 8:00 AM', normalizeEventTime('0800') === '8:00 AM');
-    check('4:00 p.m. becomes 4:00 PM', normalizeEventTime('4:00 p.m.') === '4:00 PM');
-    check('noon becomes 12:00 PM', normalizeEventTime('noon') === '12:00 PM');
-    check('midnight becomes 12:00 AM', normalizeEventTime('midnight') === '12:00 AM');
-    check('00:30 becomes 12:30 AM', normalizeEventTime('00:30') === '12:30 AM');
-    check('already tidy is left alone', normalizeEventTime('4:00 PM') === '4:00 PM');
-    check('tidying twice changes nothing', normalizeEventTime(normalizeEventTime('8am')) === '8:00 AM');
+    check('8am becomes 08:00 Uhr', normalizeEventTime('8am') === '08:00 Uhr', normalizeEventTime('8am'));
+    check('8 AM becomes 08:00 Uhr', normalizeEventTime('8 AM') === '08:00 Uhr');
+    check('4pm becomes 16:00 Uhr', normalizeEventTime('4pm') === '16:00 Uhr');
+    check('16:00 becomes 16:00 Uhr', normalizeEventTime('16:00') === '16:00 Uhr', normalizeEventTime('16:00'));
+    check('9.30am becomes 09:30 Uhr', normalizeEventTime('9.30am') === '09:30 Uhr');
+    check('1230 becomes 12:30 Uhr', normalizeEventTime('1230') === '12:30 Uhr', normalizeEventTime('1230'));
+    check('830 becomes 08:30 Uhr', normalizeEventTime('830') === '08:30 Uhr');
+    check('0800 becomes 08:00 Uhr', normalizeEventTime('0800') === '08:00 Uhr');
+    check('4:00 p.m. becomes 16:00 Uhr', normalizeEventTime('4:00 p.m.') === '16:00 Uhr');
+    check('noon becomes 12:00 Uhr', normalizeEventTime('noon') === '12:00 Uhr');
+    check('midnight becomes 00:00 Uhr', normalizeEventTime('midnight') === '00:00 Uhr');
+    check('00:30 becomes 00:30 Uhr', normalizeEventTime('00:30') === '00:30 Uhr');
+    check('already tidy is left alone', normalizeEventTime('16:00 Uhr') === '16:00 Uhr')
+    check('a time with Uhr is read', parseEventTime('16:00 Uhr') === 16 * 60 && parseEventTime('mittag') === 12 * 60);
+    check('tidying twice changes nothing', normalizeEventTime(normalizeEventTime('8am')) === '08:00 Uhr');
 
     // A row can legitimately say when it happens in words. Rewriting that would
     // be worse than leaving it.
@@ -154,10 +155,10 @@ function ev(title: string, time = '', isPublic?: boolean): ScheduleEvent {
     check('an empty time stays empty', normalizeEventTime('') === '');
     check('only the surrounding spaces go', normalizeEventTime('  TBD  ') === 'TBD');
 
-    check('formatting the top of the hour', formatEventTime(8 * 60) === '8:00 AM');
-    check('formatting noon', formatEventTime(12 * 60) === '12:00 PM');
-    check('formatting midnight', formatEventTime(0) === '12:00 AM');
-    check('formatting pads the minutes', formatEventTime(9 * 60 + 5) === '9:05 AM');
+    check('formatting the top of the hour', formatEventTime(8 * 60) === '08:00 Uhr');
+    check('formatting noon', formatEventTime(12 * 60) === '12:00 Uhr');
+    check('formatting midnight', formatEventTime(0) === '00:00 Uhr');
+    check('formatting pads the minutes', formatEventTime(9 * 60 + 5) === '09:05 Uhr');
 }
 
 /* ---- the order is the times ---- */
@@ -217,17 +218,17 @@ function ev(title: string, time = '', isPublic?: boolean): ScheduleEvent {
         rows.map(r => r[1]).join(',') === 'Hair and makeup,Ceremony,Reception');
     check('the columns are in header order',
         rows[0].slice(0, 4).join('|') === '8:00 AM|Hair and makeup|Suite 12|Both trailers', rows[0].join('|'));
-    check('a private row says No', rows[0][4] === 'No');
-    check('a public row says Yes', rows[1][4] === 'Yes');
-    check('a row with no flag says Yes', rows[2][4] === 'Yes');
+    check('a private row says Nein', rows[0][4] === 'Nein');
+    check('a public row says Ja', rows[1][4] === 'Ja');
+    check('a row with no flag says Ja', rows[2][4] === 'Ja');
     check('a missing field is an empty cell, not "undefined"',
-        scheduleRows([{ time: '', title: 'x' } as ScheduleEvent])[0].join('|') === '|x|||Yes');
+        scheduleRows([{ time: '', title: 'x' } as ScheduleEvent])[0].join('|') === '|x|||Ja');
     check('an empty day exports no rows', scheduleRows([]).length === 0);
 
     // The header row has to survive the trip into a spreadsheet.
     const csv = toCsv([...SCHEDULE_HEADERS], rows);
     check('the file starts with the headers',
-        csv.includes('"Time","Event","Location","Description","Public"'), csv.slice(0, 80));
+        csv.includes('"Zeit","Programmpunkt","Ort","Beschreibung","Öffentlich"'), csv.slice(0, 80));
     check('a private row is in the file', csv.includes('"Hair and makeup"'));
     check('rows are CRLF separated for Excel', csv.includes('\r\n'));
 }

@@ -5,7 +5,7 @@ import { contributorExpected, contributorReceived, type Contributor } from '@/li
 import type { FinanceApi, FinancePayload } from './useFinances';
 import {
     AddButton, Bar, Card, DeleteButton, EmptyState, GlyphButton, InlineNumber, InlineText,
-    Money, PillButton, RowDate, RowField, RowSelect, StatTile, formatMoney, todayLocal,
+    Money, PillButton, RowDate, RowField, RowSelect, StatTile, formatDate, formatMoney, todayLocal,
 } from './ui';
 
 /**
@@ -40,30 +40,31 @@ export default function ContributionsTab({ data, api }: { data: FinancePayload; 
     return (
         <div className="space-y-6">
             <div className="grid grid-cols-2 gap-3 lg:grid-cols-5">
-                <StatTile label="Pledged" value={formatMoney(summary.pledgedTotal)}
-                    hint={`${contributors.length} contributor${contributors.length === 1 ? '' : 's'}`} />
-                <StatTile label="Received" value={formatMoney(summary.receivedTotal)} tone="good" />
-                <StatTile label="Still expected" value={formatMoney(summary.outstandingPledges)}
+                <StatTile label="Zugesagt" value={formatMoney(summary.pledgedTotal)}
+                    hint={`${contributors.length} Beitragende`} />
+                <StatTile label="Erhalten" value={formatMoney(summary.receivedTotal)} tone="good" />
+                <StatTile label="Noch erwartet" value={formatMoney(summary.outstandingPledges)}
                     tone={summary.outstandingPledges > 0 ? 'warn' : 'good'}
-                    hint={summary.outstandingPledges > 0 ? 'Promised but not in hand' : 'All pledges collected'} />
-                <StatTile label="Thanked" value={
+                    hint={summary.outstandingPledges > 0 ? 'Zugesagt, aber noch nicht erhalten' : 'Alle Zusagen eingegangen'} />
+                <StatTile label="Bedankt" value={
                     `${contributors.filter((c) => c.thank_you_sent).length}/${contributors.length}`
                 } tone={contributors.length > 0
                     && contributors.every((c) => c.thank_you_sent) ? 'good' : 'warn'}
-                    hint="thank-you notes sent" />
-                <StatTile label="Covers" value={
+                    hint="Dankesnachrichten verschickt" />
+                <StatTile label="Deckt" value={
                     summary.budgetTotal > 0
                         ? `${((summary.receivedTotal / summary.budgetTotal) * 100).toFixed(1)}%`
                         : '—'
-                } hint="of the total budget, in cash" />
+                } hint="des Gesamtbudgets, in bar" />
             </div>
 
             <Card className="p-4 bg-amber-50/50 border-amber-100">
                 <p className="text-xs text-amber-800 leading-relaxed">
-                    <strong>This is money toward the wedding bill</strong> — your parents&apos; $5,000, family
-                    chipping in. Wedding and shower <em>gifts</em> from guests live on the{' '}
-                    <a href="/admin/registry" className="underline font-medium">Registry</a> page instead,
-                    where they stay tied to a guest for thank-you notes.
+                    <strong>Hier geht es um Geld für die Hochzeitsrechnung</strong> – die 5.000 $ der Eltern,
+                    Familie, die etwas dazugibt. Hochzeits- und Polterabendgeschenke von Gästen findest du
+                    stattdessen auf der{' '}
+                    <a href="/admin/registry" className="underline font-medium">Wunschliste</a>, wo sie
+                    für die Dankesnachrichten einem Gast zugeordnet bleiben.
                 </p>
             </Card>
 
@@ -79,7 +80,7 @@ export default function ContributionsTab({ data, api }: { data: FinancePayload; 
             </div>
 
             {!contributors.length && (
-                <Card className="p-6"><EmptyState>No contributors yet.</EmptyState></Card>
+                <Card className="p-6"><EmptyState>Noch keine Beitragenden.</EmptyState></Card>
             )}
 
             <Card className="p-4">
@@ -88,12 +89,12 @@ export default function ContributionsTab({ data, api }: { data: FinancePayload; 
                         value={newName}
                         onChange={(e) => setNewName(e.target.value)}
                         onKeyDown={(e) => { if (e.key === 'Enter') addContributor(); }}
-                        placeholder="Who's contributing? (e.g. Karie & Dave)"
+                        placeholder="Wer unterstützt euch? (z. B. Karin & Dirk)"
                         className="flex-1 bg-gray-50 border border-gray-200 rounded-2xl px-3 py-2 text-base md:text-sm
                             focus:outline-none focus:ring-2 focus:ring-accent/30"
                     />
                     <PillButton tone="accent" onClick={addContributor} disabled={!newName.trim()}>
-                        Add contributor
+                        Person hinzufügen
                     </PillButton>
                 </div>
             </Card>
@@ -140,7 +141,7 @@ function ContributorCard({ contributor, targetGroups, api }: {
                 </div>
                 <div className="flex items-center gap-4 text-right">
                     <div>
-                        <div className="text-[10px] uppercase tracking-wide text-gray-400 font-semibold">Pledged</div>
+                        <div className="text-[10px] uppercase tracking-wide text-gray-400 font-semibold">Zugesagt</div>
                         <div className="w-24">
                             <InlineNumber
                                 value={contributor.pledged} prefix="$"
@@ -149,7 +150,7 @@ function ContributorCard({ contributor, targetGroups, api }: {
                         </div>
                     </div>
                     <div>
-                        <div className="text-[10px] uppercase tracking-wide text-gray-400 font-semibold">Received</div>
+                        <div className="text-[10px] uppercase tracking-wide text-gray-400 font-semibold">Erhalten</div>
                         <div className="text-sm font-semibold tabular-nums px-2 py-1">
                             <Money value={received} />
                         </div>
@@ -160,25 +161,25 @@ function ContributorCard({ contributor, targetGroups, api }: {
                         id: contributor.id, thank_you_sent: !contributor.thank_you_sent,
                     })}
                     title={contributor.thank_you_sent_at
-                        ? `Sent ${contributor.thank_you_sent_at.slice(0, 10)}`
-                        : 'Not sent yet'}
+                        ? `Verschickt am ${formatDate(contributor.thank_you_sent_at)}`
+                        : 'Noch nicht verschickt'}
                     className={`shrink-0 rounded-full px-3 py-1.5 text-[11px] font-medium transition-colors
                         ${contributor.thank_you_sent
                             ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200'
                             : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}`}
                 >
-                    {contributor.thank_you_sent ? '✓ Thanked' : 'Thank you?'}
+                    {contributor.thank_you_sent ? '✓ Bedankt' : 'Dank?'}
                 </button>
                 <GlyphButton
-                    label={`Archive ${contributor.name}`}
+                    label={`${contributor.name} archivieren`}
                     className="text-lg leading-none hover:text-rose-500"
                     onClick={() => {
                         // Archived rather than deleted: removing a contributor would
                         // cascade their payment history, which an undo can't rebuild.
                         const count = contributor.receipts.length;
                         const message = count
-                            ? `Archive ${contributor.name} and their ${count} logged payment${count === 1 ? '' : 's'}? Nothing is lost — they stop counting toward your totals and you can restore them from Settings.`
-                            : `Archive ${contributor.name}?`;
+                            ? `${contributor.name} und ${count === 1 ? 'die 1 erfasste Zahlung' : `die ${count} erfassten Zahlungen`} archivieren? Nichts geht verloren – sie zählen nicht mehr zu den Summen und können in den Einstellungen wiederhergestellt werden.`
+                            : `${contributor.name} archivieren?`;
                         if (confirm(message)) api.update('contributors', { id: contributor.id, archived: true });
                     }}
                 >
@@ -189,15 +190,15 @@ function ContributorCard({ contributor, targetGroups, api }: {
             <div className="px-4 py-2">
                 <Bar pct={pct} />
                 <div className="flex justify-between text-[11px] text-gray-400 mt-1">
-                    <span>{pct.toFixed(0)}% collected</span>
+                    <span>{pct.toFixed(0)}% eingegangen</span>
                     {overDelivered ? (
                         <span className="text-emerald-600 font-medium">
-                            Gave {formatMoney(received - contributor.pledged)} over the pledge
+                            {formatMoney(received - contributor.pledged)} mehr als zugesagt
                         </span>
                     ) : outstanding > 0 ? (
-                        <span>{formatMoney(outstanding)} still expected</span>
+                        <span>{formatMoney(outstanding)} noch erwartet</span>
                     ) : (
-                        <span className="text-emerald-600 font-medium">Fully collected</span>
+                        <span className="text-emerald-600 font-medium">Vollständig eingegangen</span>
                     )}
                 </div>
             </div>
@@ -212,34 +213,34 @@ function ContributorCard({ contributor, targetGroups, api }: {
                                     md:px-2 md:py-1.5">
                                 <InlineText
                                     value={receipt.note ?? ''}
-                                    placeholder="What it's for…"
+                                    placeholder="Wofür es ist …"
                                     onCommit={(note) => api.update('receipts', { id: receipt.id, note })}
                                     className="md:text-xs"
                                 />
-                                <RowField label="Received">
+                                <RowField label="Erhalten">
                                     <RowDate
                                         value={(receipt.received_on ?? '').slice(0, 10)}
-                                        aria-label="Date received"
+                                        aria-label="Eingangsdatum"
                                         onChange={(e) => api.update('receipts', {
                                             id: receipt.id, received_on: e.target.value,
                                         })}
                                         className="md:text-[11px]"
                                     />
                                 </RowField>
-                                <RowField label="Earmarked to">
+                                <RowField label="Zweckgebunden für">
                                     <RowSelect
                                         value={targetValue(receipt)}
-                                        aria-label="What this payment is earmarked to"
+                                        aria-label="Wofür diese Zahlung zweckgebunden ist"
                                         onChange={(e) => api.update('receipts', {
                                             id: receipt.id, ...targetPatch(e.target.value),
                                         })}
                                         className="md:text-[11px]"
                                     >
-                                        <option value="">— not earmarked —</option>
+                                        <option value="">– nicht zweckgebunden –</option>
                                         {targetGroups.map((group) => (
                                             <optgroup key={group.name} label={group.name}>
                                                 <option value={group.sectionValue}>
-                                                    {group.name} — whole section
+                                                    {group.name} – ganzer Bereich
                                                 </option>
                                                 {group.items.map((i) => (
                                                     <option key={i.value} value={i.value}>{i.name}</option>
@@ -248,17 +249,17 @@ function ContributorCard({ contributor, targetGroups, api }: {
                                         ))}
                                     </RowSelect>
                                 </RowField>
-                                <RowField label="Amount">
+                                <RowField label="Betrag">
                                     <InlineNumber
                                         value={receipt.amount} prefix="$"
                                         onCommit={(amount) => api.update('receipts', { id: receipt.id, amount })}
                                     />
                                 </RowField>
                                 <DeleteButton
-                                    label={`Delete payment ${receipt.note ?? ''}`.trim()}
+                                    label={`Zahlung ${receipt.note ?? ''} löschen`.replace('  ', ' ')}
                                     onClick={() => api.removeWithUndo(
                                         'receipts', receipt.id,
-                                        `${contributor.name}'s ${receipt.note || 'payment'}`,
+                                        `${receipt.note || 'Zahlung'} von ${contributor.name}`,
                                         {
                                             contributor_id: contributor.id, amount: receipt.amount,
                                             received_on: receipt.received_on, note: receipt.note,
@@ -270,9 +271,9 @@ function ContributorCard({ contributor, targetGroups, api }: {
                         ))}
                     </div>
                 )}
-                <AddButton onClick={addReceipt}>+ Log a payment received</AddButton>
+                <AddButton onClick={addReceipt}>+ Eingegangene Zahlung erfassen</AddButton>
                 <p className="text-[11px] text-gray-400">
-                    A refund or a returned gift goes in as a negative amount.
+                    Eine Rückerstattung oder ein zurückgegebenes Geschenk wird als negativer Betrag erfasst.
                 </p>
             </div>
         </Card>

@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { addDays, daysBetween, monthMatrix, todayIso } from '@/lib/honeymoon';
 import { Button } from './ui';
 
-const WEEKDAYS = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+const WEEKDAYS = ['S', 'M', 'D', 'M', 'D', 'F', 'S'];
 
 /**
  * Pick a trip by dragging across a calendar.
@@ -132,25 +132,25 @@ export default function DateRangePicker({ start, end, onChange, months = 2 }: {
             {coarse && (
                 <div className="mb-2 flex items-center justify-between gap-2 rounded-2xl bg-gray-50 px-3 py-2">
                     <p className="text-xs text-gray-600">
-                        {locked ? 'Dates are locked so the page scrolls.' : 'Drag across the days you are away.'}
+                        {locked ? 'Die Daten sind gesperrt, damit die Seite scrollt.' : 'Ziehe über die Tage, an denen ihr weg seid.'}
                     </p>
                     <Button
                         tone={locked ? 'primary' : 'default'}
                         className="shrink-0 whitespace-nowrap"
                         onClick={() => { setUnlocked(locked); setDragging(null); }}
                     >
-                        {locked ? 'Change dates' : 'Done'}
+                        {locked ? 'Daten ändern' : 'Fertig'}
                     </Button>
                 </div>
             )}
             <div className="flex items-center justify-between gap-2 mb-2">
-                <Button className="!px-2.5 min-w-11 md:min-w-0" onClick={() => step(-1)} aria-label="Previous month">‹</Button>
+                <Button className="!px-2.5 min-w-11 md:min-w-0" onClick={() => step(-1)} aria-label="Voriger Monat">‹</Button>
                 <div className="flex-1 text-center text-xs text-gray-500">
                     {preview
-                        ? `${label(preview.start)} → ${label(preview.end)} · ${nights + 1} days, ${nights} night${nights === 1 ? '' : 's'}`
-                        : 'Drag across the days you are away'}
+                        ? `${label(preview.start)} → ${label(preview.end)} · ${nights + 1} Tage, ${nights} ${nights === 1 ? 'Nacht' : 'Nächte'}`
+                        : 'Über die Tage ziehen, an denen ihr weg seid'}
                 </div>
-                <Button className="!px-2.5 min-w-11 md:min-w-0" onClick={() => step(1)} aria-label="Next month">›</Button>
+                <Button className="!px-2.5 min-w-11 md:min-w-0" onClick={() => step(1)} aria-label="Nächster Monat">›</Button>
             </div>
 
             <div className={`grid grid-cols-1 sm:grid-cols-2 gap-3 rounded-2xl transition
@@ -214,7 +214,7 @@ export default function DateRangePicker({ start, end, onChange, months = 2 }: {
 
             {/* Round numbers, because "a week" is how people actually decide. */}
             <div className={`flex flex-wrap items-center gap-1.5 mt-3 ${locked ? 'hidden' : ''}`}>
-                <span className="text-[11px] text-gray-400 mr-1">Quick set:</span>
+                <span className="text-[11px] text-gray-400 mr-1">Schnellwahl:</span>
                 {[7, 10, 14].map((n) => (
                     <Button
                         key={n}
@@ -225,7 +225,7 @@ export default function DateRangePicker({ start, end, onChange, months = 2 }: {
                             setUnlocked(false);
                         }}
                     >
-                        {n} days
+                        {n} Tage
                     </Button>
                 ))}
             </div>
@@ -238,7 +238,7 @@ function normalise(a: string, b: string) {
 }
 
 function label(iso: string) {
-    return new Date(`${iso}T00:00:00Z`).toLocaleDateString('en-US', {
+    return new Date(`${iso}T00:00:00Z`).toLocaleDateString('de-DE', {
         weekday: 'short', month: 'short', day: 'numeric', timeZone: 'UTC',
     });
 }

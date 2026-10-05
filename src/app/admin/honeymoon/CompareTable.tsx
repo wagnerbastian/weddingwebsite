@@ -61,7 +61,7 @@ export default function CompareTable({ api, stays, onPick }: {
     if (!stays.length) {
         return (
             <p className="px-1 py-4 text-sm text-gray-500">
-                Nothing to compare in this bucket.
+                In dieser Gruppe gibt es nichts zu vergleichen.
             </p>
         );
     }
@@ -99,7 +99,7 @@ export default function CompareTable({ api, stays, onPick }: {
                                 {stay.cost_per !== 'night' && (
                                     <span className="text-[11px] text-gray-400">
                                         {stay.cost_per === 'person'
-                                            ? ' pp' : ' total'}
+                                            ? ' p. P.' : ' gesamt'}
                                     </span>
                                 )}
                             </span>
@@ -117,7 +117,7 @@ export default function CompareTable({ api, stays, onPick }: {
                 <>
                     {stay.region_id != null
                         ? api.regionById.get(stay.region_id) ?? '—'
-                        : <span className="text-gray-300">no area</span>}
+                        : <span className="text-gray-300">keine Region</span>}
                 </>
             ),
             distance: (
@@ -129,7 +129,7 @@ export default function CompareTable({ api, stays, onPick }: {
                             </span>
                             {nearest != null && (
                                 <span className="text-[11px] text-gray-400">
-                                    {' '}· nearest {formatDistance(nearest)}
+                                    {' '}· nächste {formatDistance(nearest)}
                                 </span>
                             )}
                         </>
@@ -191,8 +191,8 @@ export default function CompareTable({ api, stays, onPick }: {
                         <div key={row.stay.id} className="w-[82%] shrink-0 snap-center rounded-2xl border border-gray-100 bg-white p-4 shadow-sm">
                             <div className="text-base">{cell.name}</div>
                             <dl className="mt-2 space-y-1.5 text-sm">
-                                {([['Rank', cell.rank], ['Per night', cell.price], ['Area', cell.area],
-                                    ['To your excursions', cell.distance], ['Verdict', cell.verdict], ['Links', cell.links]] as const)
+                                {([['Rang', cell.rank], ['Pro Nacht', cell.price], ['Region', cell.area],
+                                    ['Zu euren Ausflügen', cell.distance], ['Urteil', cell.verdict], ['Links', cell.links]] as const)
                                     .map(([label, value]) => (
                                         <div key={label} className="flex items-baseline justify-between gap-3">
                                             <dt className="shrink-0 text-xs text-gray-400">{label}</dt>
@@ -212,19 +212,19 @@ export default function CompareTable({ api, stays, onPick }: {
             <table className="w-full min-w-[46rem] text-sm">
                 <thead>
                     <tr className="border-b border-gray-200 text-left">
-                        <Th>Stay</Th>
-                        <Th>Rank</Th>
-                        <Th>Per night</Th>
-                        <Th>Area</Th>
+                        <Th>Unterkunft</Th>
+                        <Th>Rang</Th>
+                        <Th>Pro Nacht</Th>
+                        <Th>Region</Th>
                         <Th>
-                            To your excursions
+                            Zu euren Ausflügen
                             <span className="block text-[10px] font-normal text-gray-400">
                                 {wanted.length
-                                    ? `average of ${wanted.length} rated 👍`
-                                    : 'rate some excursions first'}
+                                    ? `Durchschnitt von ${wanted.length} mit 👍`
+                                    : 'bewerte zuerst ein paar Ausflüge'}
                             </span>
                         </Th>
-                        <Th>Verdict</Th>
+                        <Th>Urteil</Th>
                         <Th>Links</Th>
                     </tr>
                 </thead>

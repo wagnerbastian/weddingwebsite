@@ -123,10 +123,10 @@ export function ColumnResizer({
         <span
             role="separator"
             aria-orientation="vertical"
-            aria-label={`Resize the ${label} column`}
+            aria-label={`Spalte „${label}“ in der Breite ändern`}
             onPointerDown={onPointerDown}
             onDoubleClick={onReset}
-            title={`Drag to resize ${label} · double-click to reset`}
+            title={`Ziehen, um die Breite von „${label}“ zu ändern · Doppelklick zum Zurücksetzen`}
             className="absolute top-0 right-0 h-full w-2 cursor-col-resize select-none
                 touch-none group flex justify-center"
         >

@@ -18,12 +18,12 @@ interface SitePhoto {
 }
 
 const PAGE_DEFS: Omit<PageConfig, 'image'>[] = [
-  { slug: 'our-story',     label: 'Timeline',      href: '/our-story' },
-  { slug: 'wedding-party', label: 'Wedding Party', href: '/wedding-party' },
-  { slug: 'schedule',      label: 'Schedule',      href: '/schedule' },
-  { slug: 'photos',        label: 'Photos',        href: '/photos' },
-  { slug: 'registry',      label: 'Registry',      href: '/registry' },
-  { slug: 'rsvp',          label: 'RSVP',          href: '/rsvp' },
+  { slug: 'our-story',     label: 'Unsere Geschichte', href: '/our-story' },
+  { slug: 'wedding-party', label: 'Trauzeugen & Team', href: '/wedding-party' },
+  { slug: 'schedule',      label: 'Ablauf',      href: '/schedule' },
+  { slug: 'photos',        label: 'Fotos',        href: '/photos' },
+  { slug: 'registry',      label: 'Wunschliste',      href: '/registry' },
+  { slug: 'rsvp',          label: 'Rückmeldung',          href: '/rsvp' },
 ];
 
 export default function AdminNavCards() {
@@ -63,9 +63,9 @@ export default function AdminNavCards() {
     const data = await res.json();
     if (data.success) {
       setPages(prev => prev.map(p => p.slug === slug ? { ...p, image: data.filename } : p));
-      showMessage('Image updated!');
+      showMessage('Bild aktualisiert!');
     } else {
-      showMessage('Upload failed.');
+      showMessage('Hochladen fehlgeschlagen.');
     }
     setUploading(null);
   };
@@ -79,7 +79,7 @@ export default function AdminNavCards() {
     });
     if ((await res.json()).success) {
       setPages(prev => prev.map(p => p.slug === slug ? { ...p, image: null } : p));
-      showMessage('Photo removed — card now shows a solid color.');
+      showMessage('Foto entfernt – die Karte zeigt jetzt eine einfarbige Fläche.');
     }
     setUploading(null);
   };
@@ -106,25 +106,25 @@ export default function AdminNavCards() {
     const data = await res.json();
     if (data.success) {
       setPages(prev => prev.map(p => p.slug === slug ? { ...p, image: data.filename } : p));
-      showMessage('Image set from gallery!');
+      showMessage('Bild aus der Galerie übernommen!');
     } else {
-      showMessage('Failed to set image.');
+      showMessage('Bild konnte nicht übernommen werden – fehlgeschlagen.');
     }
     setUploading(null);
   };
 
   return (
     <div className="max-w-3xl">
-      <h1 className="text-3xl font-bold text-gray-900 mb-2">Nav Cards</h1>
+      <h1 className="text-3xl font-bold text-gray-900 mb-2">Navigationskarten</h1>
       <p className="text-gray-600 mb-8">
-        Set background images for the navigation cards that appear in the Explore section at the
-        bottom of the home page. Use <strong>Remove</strong> to drop the photo entirely — the card
-        then shows a solid accent color instead. Cards only show for pages that are active in Work in
-        Progress settings.
+        Legt Hintergrundbilder für die Navigationskarten im Bereich „Entdecken“ unten auf der
+        Startseite fest. Mit <strong>Entfernen</strong> löschst du das Foto ganz – die Karte
+        zeigt dann stattdessen eine einfarbige Fläche in der Akzentfarbe. Karten erscheinen nur für Seiten, die
+        in den Einstellungen unter „Bald verfügbar“ aktiv sind.
       </p>
 
       {message && (
-        <div className={`p-4 rounded-xl mb-6 ${message.includes('fail') || message.includes('Failed') ? 'bg-red-50 text-red-800' : 'bg-green-50 text-green-800'}`}>
+        <div className={`p-4 rounded-xl mb-6 ${message.includes('fehlgeschlagen') ? 'bg-red-50 text-red-800' : 'bg-green-50 text-green-800'}`}>
           {message}
         </div>
       )}
@@ -144,7 +144,7 @@ export default function AdminNavCards() {
                 />
               ) : (
                 <div className="absolute inset-0 bg-accent flex items-center justify-center">
-                  <span className="text-[9px] text-white/80 font-sans uppercase tracking-wider">No photo</span>
+                  <span className="text-[9px] text-white/80 font-sans uppercase tracking-wider">Kein Foto</span>
                 </div>
               )}
             </div>
@@ -173,14 +173,14 @@ export default function AdminNavCards() {
                 disabled={uploading === page.slug}
                 className="px-3 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200 transition-colors disabled:opacity-50"
               >
-                Gallery
+                Galerie
               </button>
               <button
                 onClick={() => fileInputRefs.current[page.slug]?.click()}
                 disabled={uploading === page.slug}
                 className="px-4 py-2 bg-accent text-white rounded-lg text-sm font-medium hover:bg-accent-dark transition-colors disabled:opacity-50"
               >
-                {uploading === page.slug ? 'Saving…' : page.image ? 'Replace' : 'Upload'}
+                {uploading === page.slug ? 'Wird gespeichert …' : page.image ? 'Ersetzen' : 'Hochladen'}
               </button>
               {page.image && (
                 <button
@@ -188,7 +188,7 @@ export default function AdminNavCards() {
                   disabled={uploading === page.slug}
                   className="px-4 py-2 bg-red-50 text-red-600 rounded-lg text-sm font-medium hover:bg-red-100 transition-colors disabled:opacity-50"
                 >
-                  Remove
+                  Entfernen
                 </button>
               )}
             </div>
@@ -202,7 +202,7 @@ export default function AdminNavCards() {
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[80vh] flex flex-col">
             <div className="flex items-center justify-between p-6 border-b border-gray-100">
               <h2 className="text-lg font-bold text-gray-900">
-                Pick from site photos — {PAGE_DEFS.find(p => p.slug === pickerSlug)?.label}
+                Aus Website-Fotos wählen – {PAGE_DEFS.find(p => p.slug === pickerSlug)?.label}
               </h2>
               <button
                 onClick={() => setPickerSlug(null)}
@@ -213,10 +213,10 @@ export default function AdminNavCards() {
             </div>
             <div className="overflow-y-auto flex-1 p-6">
               {photosLoading ? (
-                <div className="text-center text-gray-400 py-12">Loading photos…</div>
+                <div className="text-center text-gray-400 py-12">Fotos werden geladen …</div>
               ) : sitePhotos.length === 0 ? (
                 <div className="text-center text-gray-400 py-12">
-                  No photos uploaded yet. Upload photos in the Photos section first.
+                  Noch keine Fotos hochgeladen. Lade zuerst Fotos im Bereich „Fotos“ hoch.
                 </div>
               ) : (
                 <div className="grid grid-cols-3 gap-3">

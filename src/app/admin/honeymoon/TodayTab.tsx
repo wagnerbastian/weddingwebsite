@@ -94,7 +94,7 @@ export default function TodayTab({ api }: { api: HoneymoonApi }) {
                                 className="min-h-11 rounded-full border border-gray-200 px-4
                                     text-sm text-gray-600"
                             >
-                                Back to today
+                                Zurück zu heute
                             </button>
                         )}
                         <Link
@@ -102,14 +102,14 @@ export default function TodayTab({ api }: { api: HoneymoonApi }) {
                             className="inline-flex min-h-11 items-center gap-1.5 rounded-full border border-gray-200
                                 bg-white px-4 text-sm text-gray-700 hover:bg-gray-50"
                         >
-                            🗂️ Travel documents
+                            🗂️ Reisedokumente
                         </Link>
                         <p>
                             {offline === 'ready'
-                                ? 'Saved for offline — this page opens without signal.'
+                                ? 'Offline gespeichert – diese Seite öffnet sich ohne Empfang.'
                                 : offline === 'failed'
-                                    ? 'Offline copy unavailable in this browser.'
-                                    : 'Preparing the offline copy…'}
+                                    ? 'Offline-Kopie in diesem Browser nicht verfügbar.'
+                                    : 'Offline-Kopie wird vorbereitet …'}
                         </p>
                     </div>
                 )}

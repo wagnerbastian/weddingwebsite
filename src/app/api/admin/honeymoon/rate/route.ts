@@ -12,16 +12,16 @@ export async function GET(request: Request) {
     const base = (params.get('base') ?? '').trim();
     const quote = (params.get('quote') ?? '').trim();
     if (!base || !quote) {
-        return NextResponse.json({ error: 'base and quote are required' }, { status: 400 });
+        return NextResponse.json({ error: 'base und quote sind erforderlich' }, { status: 400 });
     }
     try {
         const rate = await exchangeRate(base, quote);
         if (rate == null) {
-            return NextResponse.json({ error: 'No rate available for that pair' }, { status: 404 });
+            return NextResponse.json({ error: 'Für dieses Paar ist kein Kurs verfügbar' }, { status: 404 });
         }
         return NextResponse.json({ base: base.toUpperCase(), quote: quote.toUpperCase(), rate });
     } catch (error) {
         console.error('Error fetching rate:', error);
-        return NextResponse.json({ error: 'Could not fetch that rate' }, { status: 500 });
+        return NextResponse.json({ error: 'Der Kurs konnte nicht abgerufen werden' }, { status: 500 });
     }
 }

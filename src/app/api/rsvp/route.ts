@@ -40,16 +40,16 @@ interface RsvpInput {
  * attendance or a JSON-invalid string into the JSONB column.
  */
 function parseInput(body: unknown): RsvpInput | string {
-    if (!body || typeof body !== 'object') return 'Invalid request body';
+    if (!body || typeof body !== 'object') return 'Ungültige Anfrage';
     const b = body as Record<string, unknown>;
     const guestName = typeof b.guestName === 'string' ? b.guestName.trim() : '';
     const email = typeof b.email === 'string' ? b.email.trim() : '';
     const phone = typeof b.phone === 'string' ? b.phone.trim() : '';
     if (!guestName || !email || !phone || typeof b.attending !== 'boolean') {
-        return 'Missing required fields';
+        return 'Pflichtfelder fehlen';
     }
-    if (guestName.length > 255 || email.length > 255 || phone.length > 50) return 'A field is too long';
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return 'That email address does not look right';
+    if (guestName.length > 255 || email.length > 255 || phone.length > 50) return 'Ein Feld ist zu lang';
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return 'Diese E-Mail-Adresse scheint nicht zu stimmen';
 
     const rawCount = Number(b.guestCount);
     const guestCount = Number.isInteger(rawCount) && rawCount >= 0 ? rawCount : (b.attending ? 1 : 0);
@@ -106,7 +106,7 @@ async function saveRsvp(input: RsvpInput): Promise<{ id: number; isUpdate: boole
         const guest = guestRow.rows[0];
         const maxParty = Number(guest.party_size) || 1;
         if (input.attending && input.guestCount > maxParty) {
-            throw Object.assign(new Error(`Party size exceeds maximum of ${maxParty}`), { status: 400 });
+            throw Object.assign(new Error(`Die Personenzahl überschreitet das Maximum von ${maxParty}`), { status: 400 });
         }
         const count = input.attending ? Math.max(1, input.guestCount) : 0;
 
@@ -161,7 +161,7 @@ async function sendEmails(input: RsvpInput) {
     const config = getSiteConfig();
     const couple = config.brideName && config.groomName
         ? `${config.brideName} & ${config.groomName}`
-        : 'The Couple';
+        : 'Das Brautpaar';
     const port = parseInt(process.env.SMTP_PORT || '587', 10);
     try {
         const transporter = nodemailer.createTransport({
@@ -172,21 +172,21 @@ async function sendEmails(input: RsvpInput) {
             auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
         });
 
-        const status = input.attending ? 'Attending' : 'Not Attending';
+        const status = input.attending ? 'Zusage' : 'Absage';
         await transporter.sendMail({
             from: `"${couple.replace(/"/g, '')}" <${process.env.SMTP_USER}>`,
             to: input.email,
-            subject: 'We received your RSVP!',
-            text: `Hi ${input.guestName},\n\nThank you so much for RSVPing to our wedding. We have confirmed your response: ${status}.\n\nWe can't wait to celebrate with you!\n\nBest,\n${couple}`,
-            html: `<h1>RSVP Confirmation</h1><p>Hi ${escapeHtml(input.guestName)},</p><p>Thank you so much for RSVPing to our wedding. We have confirmed your response: <strong>${status}</strong>.</p><p>Best,<br>${escapeHtml(couple)}</p>`,
+            subject: 'Wir haben eure Rückmeldung erhalten!',
+            text: `Hallo ${input.guestName},\n\nvielen Dank für eure Rückmeldung zu unserer Hochzeit. Wir haben eure Antwort bestätigt: ${status}.\n\nWir können es kaum erwarten, mit euch zu feiern!\n\nHerzliche Grüße\n${couple}`,
+            html: `<h1>Bestätigung eurer Rückmeldung</h1><p>Hallo ${escapeHtml(input.guestName)},</p><p>vielen Dank für eure Rückmeldung zu unserer Hochzeit. Wir haben eure Antwort bestätigt: <strong>${status}</strong>.</p><p>Herzliche Grüße<br>${escapeHtml(couple)}</p>`,
         });
 
         if (process.env.NOTIFICATION_EMAIL) {
             await transporter.sendMail({
-                from: `"Wedding Bot" <${process.env.SMTP_USER}>`,
+                from: `"Hochzeits-Bot" <${process.env.SMTP_USER}>`,
                 to: process.env.NOTIFICATION_EMAIL,
-                subject: `New RSVP from ${input.guestName}`,
-                text: `Name: ${input.guestName}\nAttending: ${input.attending ? 'Yes' : 'No'}\nGuests: ${input.attending ? input.guestCount : 0}\nEmail: ${input.email}\nPhone: ${input.phone}\nMessage: ${input.message ?? ''}`,
+                subject: `Neue Rückmeldung von ${input.guestName}`,
+                text: `Name: ${input.guestName}\nZusage: ${input.attending ? 'Ja' : 'Nein'}\nPersonen: ${input.attending ? input.guestCount : 0}\nE-Mail: ${input.email}\nTelefon: ${input.phone}\nNachricht: ${input.message ?? ''}`,
             });
         }
     } catch (emailError) {
@@ -199,7 +199,7 @@ async function handle(request: Request) {
     try {
         body = await request.json();
     } catch {
-        return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
+        return NextResponse.json({ error: 'Ungültiges JSON' }, { status: 400 });
     }
     const input = parseInput(body);
     if (typeof input === 'string') return NextResponse.json({ error: input }, { status: 400 });
@@ -212,7 +212,7 @@ async function handle(request: Request) {
         const status = (error as { status?: number }).status;
         if (status === 404) {
             return NextResponse.json(
-                { error: 'We could not find that name on the guest list. Please go back and check the spelling.' },
+                { error: 'Wir konnten diesen Namen nicht auf der Gästeliste finden. Bitte geht zurück und prüft die Schreibweise.' },
                 { status: 404 },
             );
         }
@@ -220,7 +220,7 @@ async function handle(request: Request) {
             return NextResponse.json({ error: (error as Error).message }, { status: 400 });
         }
         console.error('RSVP API Error:', error);
-        return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+        return NextResponse.json({ error: 'Interner Serverfehler' }, { status: 500 });
     }
 }
 

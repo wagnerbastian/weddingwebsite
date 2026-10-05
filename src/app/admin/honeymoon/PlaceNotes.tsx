@@ -67,7 +67,7 @@ export function PersonRatings({ api, place }: { api: HoneymoonApi; place: Place 
             })}
             {disagree && (
                 <p className="rounded-xl bg-amber-50 px-2 py-1 text-[11px] text-amber-800">
-                    You two disagree about this one.
+                    Ihr seid euch bei diesem hier uneinig.
                 </p>
             )}
         </div>
@@ -108,18 +108,18 @@ export function PlaceComments({ api, place }: { api: HoneymoonApi; place: Place 
                         <li key={comment.id} className="rounded-xl bg-gray-50 px-2.5 py-1.5">
                             <div className="flex items-baseline gap-2">
                                 <span className="text-[11px] font-semibold text-gray-700">
-                                    {comment.author || 'Someone'}
+                                    {comment.author || 'Jemand'}
                                 </span>
                                 <span className="text-[10px] text-gray-400">
                                     {comment.created_at
-                                        ? new Date(comment.created_at).toLocaleDateString()
+                                        ? new Date(comment.created_at).toLocaleDateString('de-DE')
                                         : ''}
                                 </span>
                                 <div className="flex-1" />
                                 <button
                                     type="button"
                                     onClick={() => api.removeRow(
-                                        'comments', comment, 'Removed a comment',
+                                        'comments', comment, 'Kommentar entfernt',
                                     )}
                                     className="text-[10px] text-gray-400 hover:text-rose-600"
                                 >
@@ -149,10 +149,10 @@ export function PlaceComments({ api, place }: { api: HoneymoonApi; place: Place 
                 <TextArea
                     rows={2}
                     value={body}
-                    placeholder="Too far from the beach?"
+                    placeholder="Zu weit vom Strand?"
                     onChange={(e) => setBody(e.target.value)}
                 />
-                <Button onClick={add} disabled={!body.trim() || busy}>Add</Button>
+                <Button onClick={add} disabled={!body.trim() || busy}>Hinzufügen</Button>
             </div>
         </div>
     );

@@ -123,7 +123,7 @@ export default function PurchasesTab({ data, api }: { data: FinancePayload; api:
         if (!section) return;
         const created = await api.create('items', {
             category_id: section.id,
-            name: row.label || 'Unnamed',
+            name: row.label || 'Unbenannt',
             unit_cost: row.amount,
             quantity: 1,
             qty_source: 'manual',
@@ -134,7 +134,7 @@ export default function PurchasesTab({ data, api }: { data: FinancePayload; api:
         const fresh = await fetch('/api/admin/finances', { cache: 'no-store' }).then((r) => r.json());
         const match = (fresh.categories as typeof categories)
             .flatMap((c) => c.items)
-            .filter((i) => i.name === (row.label || 'Unnamed'))
+            .filter((i) => i.name === (row.label || 'Unbenannt'))
             .pop();
         if (match) {
             await api.update(row.kind === 'gift' ? 'receipts' : 'purchases',
@@ -144,7 +144,7 @@ export default function PurchasesTab({ data, api }: { data: FinancePayload; api:
 
     const addPurchase = () =>
         api.create('purchases', {
-            description: 'New purchase',
+            description: 'Neue Ausgabe',
             amount: 0,
             payer_id: typeof payerFilter === 'number' ? payerFilter : payers[0]?.id ?? null,
             purchased_on: todayLocal(),
@@ -153,29 +153,29 @@ export default function PurchasesTab({ data, api }: { data: FinancePayload; api:
     return (
         <div className="space-y-6">
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-                <StatTile label="Counted toward budget" value={formatMoney(summary.paidTotal)}
-                    hint={`${rows.length} payment${rows.length === 1 ? '' : 's'} logged`} />
+                <StatTile label="Aufs Budget angerechnet" value={formatMoney(summary.paidTotal)}
+                    hint={`${rows.length} ${rows.length === 1 ? 'Zahlung' : 'Zahlungen'} erfasst`} />
                 {summary.payers.map((p) => (
-                    <StatTile key={p.id} label={`${p.name} paid`} value={formatMoney(p.spent)} />
+                    <StatTile key={p.id} label={`${p.name} bezahlt`} value={formatMoney(p.spent)} />
                 ))}
-                <StatTile label="From gift money" value={formatMoney(summary.giftAppliedTotal)} tone="good"
+                <StatTile label="Aus Geldgeschenken" value={formatMoney(summary.giftAppliedTotal)} tone="good"
                     hint={summary.giftUnapplied > 0
-                        ? `${formatMoney(summary.giftUnapplied)} received, not applied`
+                        ? `${formatMoney(summary.giftUnapplied)} erhalten, nicht angerechnet`
                         : undefined} />
                 {summary.unlinkedSpend > 0 && (
-                    <StatTile label="Not in the budget" value={formatMoney(summary.unlinkedSpend)}
-                        tone="warn" hint="Doesn't count toward any total" />
+                    <StatTile label="Nicht im Budget" value={formatMoney(summary.unlinkedSpend)}
+                        tone="warn" hint="Zählt zu keiner Summe" />
                 )}
             </div>
 
             {untracked.length > 0 && (
                 <Card className="border-amber-200 bg-amber-50/40 p-4">
                     <h3 className="text-sm font-semibold text-amber-900">
-                        {untracked.length} payment{untracked.length === 1 ? '' : 's'} not in the budget
+                        {untracked.length} {untracked.length === 1 ? 'Zahlung' : 'Zahlungen'} nicht im Budget
                     </h3>
                     <p className="mt-0.5 mb-3 text-xs text-amber-700">
-                        These don&apos;t count toward any section, so they&apos;re missing from every
-                        total. Add a budget line for each and it will.
+                        Diese zählen zu keinem Bereich und fehlen deshalb in allen Summen. Lege für
+                        jede einen Budgetposten an, dann zählen sie mit.
                     </p>
                     <div className="space-y-1.5">
                         {untracked.map((row) => (
@@ -189,7 +189,7 @@ export default function PurchasesTab({ data, api }: { data: FinancePayload; api:
                                     className="rounded-full bg-accent px-3 py-1 text-xs font-medium text-white
                                         transition-opacity hover:opacity-90"
                                 >
-                                    + Add to budget
+                                    + Zum Budget hinzufügen
                                 </button>
                             </div>
                         ))}
@@ -201,7 +201,7 @@ export default function PurchasesTab({ data, api }: { data: FinancePayload; api:
                 <div className="flex flex-wrap items-center gap-2">
                     <div className="flex flex-wrap gap-1.5">
                         <FilterPill active={payerFilter === 'all'} onClick={() => setPayerFilter('all')}>
-                            Everyone
+                            Alle
                         </FilterPill>
                         {payers.map((p) => (
                             <FilterPill key={p.id} active={payerFilter === p.id} onClick={() => setPayerFilter(p.id)}>
@@ -209,18 +209,18 @@ export default function PurchasesTab({ data, api }: { data: FinancePayload; api:
                             </FilterPill>
                         ))}
                         <FilterPill active={payerFilter === 'gift'} onClick={() => setPayerFilter('gift')}>
-                            🎁 Gift money
+                            🎁 Geldgeschenke
                         </FilterPill>
                     </div>
                     <input
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
-                        placeholder="Search payments…"
+                        placeholder="Zahlungen suchen …"
                         className="w-full bg-gray-50 border border-gray-200 rounded-2xl px-3 py-2
                             text-base md:w-auto md:flex-1 md:min-w-[10rem] md:py-1.5 md:text-sm
                             focus:outline-none focus:ring-2 focus:ring-accent/30"
                     />
-                    <PillButton tone="accent" onClick={addPurchase}>+ Log purchase</PillButton>
+                    <PillButton tone="accent" onClick={addPurchase}>+ Ausgabe erfassen</PillButton>
                 </div>
 
                 {selectableIds.length > 0 && (
@@ -233,17 +233,17 @@ export default function PurchasesTab({ data, api }: { data: FinancePayload; api:
                                     ? new Set(selectableIds) : new Set())}
                                 className="h-4 w-4 rounded border-gray-300"
                             />
-                            Select all {selectableIds.length}
+                            Alle {selectableIds.length} auswählen
                         </label>
                         {selected.size > 0 && (
                             <>
-                                <span className="text-xs text-gray-400">{selected.size} selected</span>
-                                <PillButton onClick={() => setBulkOpen(true)}>Edit selected…</PillButton>
+                                <span className="text-xs text-gray-400">{selected.size} ausgewählt</span>
+                                <PillButton onClick={() => setBulkOpen(true)}>Auswahl bearbeiten …</PillButton>
                                 <PillButton tone="danger" onClick={async () => {
-                                    if (!confirm(`Archive ${selected.size} payment${selected.size === 1 ? '' : 's'}? They stop counting toward your totals but stay recoverable.`)) return;
+                                    if (!confirm(`${selected.size === 1 ? '1 Zahlung' : `${selected.size} Zahlungen`} archivieren? ${selected.size === 1 ? 'Sie zählt' : 'Sie zählen'} nicht mehr zu den Summen, ${selected.size === 1 ? 'bleibt' : 'bleiben'} aber wiederherstellbar.`)) return;
                                     await api.updateMany('purchases', [...selected], { archived: true });
                                     setSelected(new Set());
-                                }}>Archive</PillButton>
+                                }}>Archivieren</PillButton>
                             </>
                         )}
                     </div>
@@ -255,13 +255,13 @@ export default function PurchasesTab({ data, api }: { data: FinancePayload; api:
                     uppercase tracking-wide text-gray-400
                     md:grid md:grid-cols-[1.25rem_minmax(0,1.6fr)_6.75rem_6.5rem_minmax(0,1.5fr)_4.5rem_minmax(0,1.1fr)_6.5rem_1.5rem]">
                     <div />
-                    <div>What</div>
-                    <div>Date</div>
-                    <div>Paid by</div>
-                    <div>Counts toward</div>
-                    <div>Receipt</div>
-                    <div>Note</div>
-                    <div className="text-right">Amount</div>
+                    <div>Was</div>
+                    <div>Datum</div>
+                    <div>Bezahlt von</div>
+                    <div>Zählt für</div>
+                    <div>Beleg</div>
+                    <div>Notiz</div>
+                    <div className="text-right">Betrag</div>
                     <div />
                 </div>
 
@@ -285,13 +285,13 @@ export default function PurchasesTab({ data, api }: { data: FinancePayload; api:
                                         type="checkbox"
                                         checked={selected.has(row.id)}
                                         onChange={() => toggleSelected(row.id)}
-                                        aria-label={`Select ${row.label}`}
+                                        aria-label={`${row.label} auswählen`}
                                         className="h-4 w-4 shrink-0 rounded border-gray-300 md:justify-self-center"
                                     />
                                 )}
                                 <GlyphButton
                                     onClick={() => toggleExpanded(row.key)}
-                                    label={`${isOpen ? 'Collapse' : 'Expand'} ${row.label}`}
+                                    label={`${row.label} ${isOpen ? 'einklappen' : 'ausklappen'}`}
                                     className={`text-xs text-gray-400 transition-transform md:hidden
                                         ${isOpen ? 'rotate-90' : ''}`}
                                 >
@@ -299,7 +299,7 @@ export default function PurchasesTab({ data, api }: { data: FinancePayload; api:
                                 </GlyphButton>
                                 <InlineText
                                     value={row.label}
-                                    placeholder={row.kind === 'gift' ? "What it's for…" : 'What was bought'}
+                                    placeholder={row.kind === 'gift' ? 'Wofür es ist …' : 'Was gekauft wurde'}
                                     onCommit={(v) => patch({ [labelField]: v })}
                                     className="text-gray-800"
                                 />
@@ -312,42 +312,42 @@ export default function PurchasesTab({ data, api }: { data: FinancePayload; api:
                                 </div>
                             </div>
                             <div className={`${isOpen ? 'grid grid-cols-1 gap-2 pb-1 pl-7' : 'hidden'} md:contents`}>
-                            <RowField label="Date">
+                            <RowField label="Datum">
                                 <RowDate
                                     value={(row.date ?? '').slice(0, 10)}
-                                    aria-label={`Date for ${row.label}`}
+                                    aria-label={`Datum für ${row.label}`}
                                     onChange={(e) => patch({ [dateField]: e.target.value })}
                                 />
                             </RowField>
-                            <RowField label={row.kind === 'gift' ? 'Gift from' : 'Paid by'}>
+                            <RowField label={row.kind === 'gift' ? 'Geschenk von' : 'Bezahlt von'}>
                                 {row.kind === 'gift' ? (
                                     <span className="block truncate px-1 text-right text-xs font-medium
                                         text-emerald-700 md:text-left"
-                                        title={`Gift money from ${row.who}`}>
+                                        title={`Geldgeschenk von ${row.who}`}>
                                         🎁 {row.who}
                                     </span>
                                 ) : (
                                     <RowSelect
                                         value={row.payerId ?? ''}
-                                        aria-label={`Who paid for ${row.label}`}
+                                        aria-label={`Wer hat ${row.label} bezahlt`}
                                         onChange={(e) => patch({ payer_id: e.target.value || null })}
                                     >
-                                        <option value="">Unassigned</option>
+                                        <option value="">Nicht zugeordnet</option>
                                         {payers.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
                                     </RowSelect>
                                 )}
                             </RowField>
-                            <RowField label="Counts toward">
+                            <RowField label="Zählt für">
                                 <RowSelect
                                     value={targetValue(row)}
-                                    aria-label={`What ${row.label} counts toward`}
+                                    aria-label={`Wofür ${row.label} zählt`}
                                     onChange={(e) => patch(targetPatch(e.target.value))}
                                 >
-                                    <option value="">— nothing —</option>
+                                    <option value="">– nichts –</option>
                                     {targetGroups.map((group) => (
                                         <optgroup key={group.name} label={group.name}>
                                             <option value={group.sectionValue}>
-                                                {group.name} — whole section
+                                                {group.name} – ganzer Bereich
                                             </option>
                                             {group.items.map((i) => (
                                                 <option key={i.value} value={i.value}>{i.name}</option>
@@ -357,49 +357,49 @@ export default function PurchasesTab({ data, api }: { data: FinancePayload; api:
                                 </RowSelect>
                             </RowField>
                             {row.kind === 'purchase' && (
-                                <RowField label="Receipt">
+                                <RowField label="Beleg">
                                     <div className="flex items-center justify-end gap-2 md:justify-start">
                                         {row.receiptPath ? (
                                             <>
                                                 <a href={`/api/photos/${row.receiptPath}`} target="_blank"
                                                     rel="noreferrer"
                                                     className="text-xs font-medium text-accent underline">
-                                                    View
+                                                    Ansehen
                                                 </a>
                                                 <button onClick={() => api.removeReceipt(row.id)}
-                                                    aria-label={`Remove receipt for ${row.label}`}
+                                                    aria-label={`Beleg für ${row.label} entfernen`}
                                                     className="text-[11px] text-gray-400 hover:text-rose-500">
-                                                    remove
+                                                    entfernen
                                                 </button>
                                             </>
                                         ) : (
                                             <button onClick={() => setReceiptFor(row)}
                                                 className="text-xs text-gray-400 hover:text-gray-700">
-                                                📎 Attach
+                                                📎 Anhängen
                                             </button>
                                         )}
                                     </div>
                                 </RowField>
                             )}
-                            <RowField label="Note">
+                            <RowField label="Notiz">
                                 <InlineText
                                     value={row.notes ?? ''}
-                                    placeholder="Note…"
+                                    placeholder="Notiz …"
                                     onCommit={(notes) => patch({ notes })}
                                     className="md:text-xs"
                                 />
                             </RowField>
-                            <RowField label="Amount" className="hidden md:flex">
+                            <RowField label="Betrag" className="hidden md:flex">
                                 <InlineNumber
                                     value={row.amount} prefix="$"
                                     onCommit={(amount) => patch({ amount })}
                                 />
                             </RowField>
                             <DeleteButton
-                                label={`Delete ${row.label}`}
+                                label={`${row.label} löschen`}
                                 onClick={() => api.removeWithUndo(
                                     resource, row.id,
-                                    row.kind === 'gift' ? `${row.who}'s ${row.label}` : `"${row.label}"`,
+                                    row.kind === 'gift' ? `${row.label} von ${row.who}` : `„${row.label}“`,
                                     row.kind === 'gift'
                                         ? {
                                             contributor_id: row.contributorId, amount: row.amount,
@@ -421,15 +421,15 @@ export default function PurchasesTab({ data, api }: { data: FinancePayload; api:
 
                 {!visible.length && (
                     <EmptyState>
-                        {rows.length ? 'No payments match this filter.' : 'No payments logged yet.'}
+                        {rows.length ? 'Keine Zahlungen für diesen Filter.' : 'Noch keine Zahlungen erfasst.'}
                     </EmptyState>
                 )}
 
                 {visible.length > 0 && (
                     <div className="flex items-center justify-between px-4 py-3 bg-gray-50/60 border-t border-gray-100">
                         <span className="text-xs text-gray-500">
-                            {visible.length} shown
-                            {visible.length !== rows.length && ` of ${rows.length}`}
+                            {visible.length} angezeigt
+                            {visible.length !== rows.length && ` von ${rows.length}`}
                         </span>
                         <span className="font-semibold tabular-nums text-sm">{formatMoney(visibleTotal)}</span>
                     </div>
@@ -450,9 +450,9 @@ export default function PurchasesTab({ data, api }: { data: FinancePayload; api:
             )}
 
             <p className="text-[11px] text-gray-400 px-1">
-                Green rows are gift money earmarked to a bill — it counts toward the budget but not
-                toward either of your out-of-pocket totals. Gift money with no earmark is cash still in
-                hand and isn&apos;t listed here.
+                Grüne Zeilen sind Geldgeschenke, die einer Rechnung zugeordnet sind – sie zählen zum
+                Budget, aber nicht zu euren Ausgaben aus eigener Tasche. Geldgeschenke ohne Zuordnung
+                sind noch Bargeld in der Hand und werden hier nicht aufgeführt.
             </p>
         </div>
     );
@@ -490,40 +490,40 @@ function BulkEdit({ data, api, ids, onClose, onDone }: {
     };
 
     return (
-        <Modal title={`Edit ${ids.length} payment${ids.length === 1 ? '' : 's'}`} onClose={onClose}>
+        <Modal title={`${ids.length === 1 ? '1 Zahlung' : `${ids.length} Zahlungen`} bearbeiten`} onClose={onClose}>
             <div className="space-y-4">
                 <p className="text-xs text-gray-400">
-                    Anything left on <em>Leave unchanged</em> stays as it is.
+                    Alles, was auf <em>Unverändert lassen</em> steht, bleibt, wie es ist.
                 </p>
                 <label className="block">
-                    <span className="mb-1 block text-xs font-semibold text-gray-500">Paid by</span>
+                    <span className="mb-1 block text-xs font-semibold text-gray-500">Bezahlt von</span>
                     <SelectField value={payer} onChange={(e) => setPayer(e.target.value)}>
-                        <option value="">Leave unchanged</option>
-                        <option value="none">Unassigned</option>
+                        <option value="">Unverändert lassen</option>
+                        <option value="none">Nicht zugeordnet</option>
                         {data.payers.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
                     </SelectField>
                 </label>
                 <label className="block">
-                    <span className="mb-1 block text-xs font-semibold text-gray-500">Counts toward</span>
+                    <span className="mb-1 block text-xs font-semibold text-gray-500">Zählt für</span>
                     <SelectField value={target} onChange={(e) => setTarget(e.target.value)}>
-                        <option value="">Leave unchanged</option>
-                        <option value="none">— nothing —</option>
+                        <option value="">Unverändert lassen</option>
+                        <option value="none">– nichts –</option>
                         {data.categories.map((c) => (
                             <optgroup key={c.id} label={c.name}>
-                                <option value={`c:${c.id}`}>{c.name} — whole section</option>
+                                <option value={`c:${c.id}`}>{c.name} – ganzer Bereich</option>
                                 {c.items.map((i) => <option key={i.id} value={`i:${i.id}`}>{i.name}</option>)}
                             </optgroup>
                         ))}
                     </SelectField>
                 </label>
                 <label className="block">
-                    <span className="mb-1 block text-xs font-semibold text-gray-500">Date</span>
+                    <span className="mb-1 block text-xs font-semibold text-gray-500">Datum</span>
                     <TextField type="date" value={date} onChange={(e) => setDate(e.target.value)} />
                 </label>
                 <div className="flex justify-end gap-2">
-                    <PillButton onClick={onClose}>Cancel</PillButton>
+                    <PillButton onClick={onClose}>Abbrechen</PillButton>
                     <PillButton tone="accent" onClick={apply} disabled={busy}>
-                        {busy ? 'Saving…' : 'Apply'}
+                        {busy ? 'Wird gespeichert …' : 'Übernehmen'}
                     </PillButton>
                 </div>
             </div>
@@ -547,14 +547,14 @@ function ReceiptUpload({ api, row, onClose }: {
         const ok = await api.uploadReceipt(row.id, file);
         setBusy(false);
         if (ok) onClose();
-        else setProblem('That upload failed — try a JPG, PNG or PDF under 12MB.');
+        else setProblem('Das Hochladen ist fehlgeschlagen – versuche es mit einem JPG, PNG oder PDF unter 12 MB.');
     };
 
     return (
-        <Modal title={`Receipt for ${row.label}`} onClose={onClose}>
+        <Modal title={`Beleg für ${row.label}`} onClose={onClose}>
             <div className="space-y-4">
                 <p className="text-xs text-gray-400">
-                    Photograph the receipt or pick a PDF. On a phone this opens the camera.
+                    Fotografiere den Beleg oder wähle ein PDF. Auf dem Handy öffnet sich die Kamera.
                 </p>
                 <input
                     type="file"
@@ -563,10 +563,10 @@ function ReceiptUpload({ api, row, onClose }: {
                     onChange={(e) => pick(e.target.files?.[0] ?? null)}
                     className="w-full rounded-2xl border border-gray-200 bg-gray-50 p-3 text-sm"
                 />
-                {busy && <p className="text-xs text-gray-500">Uploading…</p>}
+                {busy && <p className="text-xs text-gray-500">Wird hochgeladen …</p>}
                 {problem && <p className="text-xs text-rose-600">{problem}</p>}
                 <div className="flex justify-end">
-                    <PillButton onClick={onClose}>Done</PillButton>
+                    <PillButton onClick={onClose}>Fertig</PillButton>
                 </div>
             </div>
         </Modal>

@@ -15,6 +15,9 @@ const MONTHS: Record<string, number> = {
     jan: 0, january: 0, feb: 1, february: 1, mar: 2, march: 2, apr: 3, april: 3,
     may: 4, jun: 5, june: 5, jul: 6, july: 6, aug: 7, august: 7, sep: 8, sept: 8,
     september: 8, oct: 9, october: 9, nov: 10, november: 10, dec: 11, december: 11,
+    // German
+    januar: 0, februar: 1, 'mär': 2, 'märz': 2, mai: 4, juni: 5, juli: 6,
+    okt: 9, oktober: 9, dez: 11, dezember: 11,
 };
 
 export interface DateParts { year: number; month: number; day: number }
@@ -28,13 +31,17 @@ export function parseDateParts(raw: string | undefined | null): DateParts | null
     const iso = text.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
     if (iso) return { year: +iso[1], month: +iso[2] - 1, day: +iso[3] };
 
+    // German numeric: 12.09.2026 or 12.9.2026
+    const de = text.match(/^(\d{1,2})\.(\d{1,2})\.(\d{4})/);
+    if (de) return { year: +de[3], month: +de[2] - 1, day: +de[1] };
+
     // US numeric: 9/12/2026 or 09-12-2026
     const us = text.match(/^(\d{1,2})[/-](\d{1,2})[/-](\d{4})/);
     if (us) return { year: +us[3], month: +us[1] - 1, day: +us[2] };
 
     // Month name anywhere: "June 15, 2024", "15 June 2026", "Sat, Sep 12 2026"
     const lower = text.toLowerCase();
-    const monthMatch = lower.match(/\b(january|february|march|april|may|june|july|august|september|october|november|december|jan|feb|mar|apr|jun|jul|aug|sept|sep|oct|nov|dec)\b/);
+    const monthMatch = lower.match(/(?<![a-zäöü])(january|february|march|april|may|june|july|august|september|october|november|december|januar|februar|märz|mär|mai|juni|juli|oktober|okt|dezember|dez|jan|feb|mar|apr|jun|jul|aug|sept|sep|oct|nov|dec)(?![a-zäöü])/);
     const yearMatch = lower.match(/\b(\d{4})\b/);
     if (monthMatch && yearMatch) {
         const month = MONTHS[monthMatch[1]];

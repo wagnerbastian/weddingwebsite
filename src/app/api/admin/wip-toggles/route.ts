@@ -10,7 +10,7 @@ export async function GET() {
   } catch (error) {
     console.error('Error fetching WIP toggles:', error);
     return NextResponse.json(
-      { error: 'Failed to fetch WIP toggles' },
+      { error: '„Bald verfügbar“-Schalter konnten nicht geladen werden' },
       { status: 500 }
     );
   }
@@ -38,7 +38,7 @@ export async function POST(request: Request) {
   } catch (error) {
     console.error('Error updating WIP toggle:', error);
     return NextResponse.json(
-      { error: 'Failed to update WIP toggle' },
+      { error: '„Bald verfügbar“-Schalter konnte nicht gespeichert werden' },
       { status: 500 }
     );
   }

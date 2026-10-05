@@ -52,11 +52,11 @@ const MIN_LIST = 360;
 const WIDE_QUERY = '(min-width: 1280px)';
 
 const SORTS: { key: SortKey; label: string }[] = [
-    { key: 'rank', label: 'My ranking' },
-    { key: 'added', label: 'Recently added' },
-    { key: 'price', label: 'Price: low first' },
+    { key: 'rank', label: 'Meine Rangliste' },
+    { key: 'added', label: 'Zuletzt hinzugefügt' },
+    { key: 'price', label: 'Preis: niedrigster zuerst' },
     { key: 'name', label: 'Name: A → Z' },
-    { key: 'status', label: 'Status: booked first' },
+    { key: 'status', label: 'Status: Gebucht zuerst' },
 ];
 
 const SORT_KEY = 'honeymoon.stays.sort';
@@ -323,7 +323,7 @@ export default function StaysTab({ api, segmentSwitch }: {
     const clearRanking = async () => {
         const ranked = stays.filter((s) => s.rank != null);
         if (!ranked.length) return;
-        if (!confirm(`Clear the ranking on ${ranked.length} stay(s)?`)) return;
+        if (!confirm(`Rangliste von ${ranked.length} ${ranked.length === 1 ? 'Unterkunft' : 'Unterkünften'} zurücksetzen?`)) return;
         await api.update('places', { ids: ranked.map((s) => s.id), rank: null });
     };
 
@@ -400,13 +400,13 @@ export default function StaysTab({ api, segmentSwitch }: {
         const named = [...byId.entries()]
             .map(([key, n]) => ({
                 key,
-                label: `${api.regionById.get(Number(key)) ?? 'Unknown area'} ${n}`,
+                label: `${api.regionById.get(Number(key)) ?? 'Unbekannte Region'} ${n}`,
             }))
             .sort((a, b) => a.label.localeCompare(b.label, undefined, { sensitivity: 'base' }));
         return [
-            { key: '', label: 'All areas' },
+            { key: '', label: 'Alle Regionen' },
             ...named,
-            ...(unset || area === 'none' ? [{ key: 'none', label: `No area set ${unset}` }] : []),
+            ...(unset || area === 'none' ? [{ key: 'none', label: `Ohne Region ${unset}` }] : []),
         ];
     }, [stays, removed, filter, area, api.regionById]);
 
@@ -478,7 +478,7 @@ export default function StaysTab({ api, segmentSwitch }: {
                 // "Hard Rock Hotel Bali" rather than "Hard Rock Bali".
                 const name = cleanListingTitle(meta.title ?? '')
                     ?? nameFromStayUrl(url)
-                    ?? 'Untitled stay';
+                    ?? 'Unbenannte Unterkunft';
                 await api.create('places', {
                     name,
                     category: 'stay',
@@ -594,17 +594,17 @@ export default function StaysTab({ api, segmentSwitch }: {
                     {segmentSwitch}
                     {view === 'cards' && (
                         <Segmented
-                            ariaLabel="Show which stays"
+                            ariaLabel="Welche Unterkünfte anzeigen"
                             size="sm"
                             value={filter}
                             onChange={setFilter}
                             options={[
-                                { key: 'all', label: 'All', count: counts.all },
-                                { key: 'yes', label: '👍', count: counts.yes, title: 'Interested' },
-                                { key: 'mid', label: '😐', count: counts.mid, title: 'Mid tier' },
-                                { key: 'no', label: '👎', count: counts.no, title: 'Not interested' },
-                                { key: 'unrated', label: 'Unrated', count: counts.unrated },
-                                ...(counts.removed ? [{ key: 'removed' as const, label: '🗑', count: counts.removed, title: 'Removed' }] : []),
+                                { key: 'all', label: 'Alle', count: counts.all },
+                                { key: 'yes', label: '👍', count: counts.yes, title: 'Interessiert' },
+                                { key: 'mid', label: '😐', count: counts.mid, title: 'Mittelklasse' },
+                                { key: 'no', label: '👎', count: counts.no, title: 'Nicht interessiert' },
+                                { key: 'unrated', label: 'Unbewertet', count: counts.unrated },
+                                ...(counts.removed ? [{ key: 'removed' as const, label: '🗑', count: counts.removed, title: 'Entfernt' }] : []),
                             ]}
                         />
                     )}
@@ -613,26 +613,26 @@ export default function StaysTab({ api, segmentSwitch }: {
             right={(
                 <>
                     <Segmented
-                        ariaLabel="Stays view"
+                        ariaLabel="Ansicht der Unterkünfte"
                         size="sm"
                         value={view}
                         onChange={chooseView}
                         options={[
-                            { key: 'cards', label: '▦ Cards' },
-                            { key: 'ranking', label: '① Ranking' },
-                            { key: 'compare', label: '⊞ Compare' },
+                            { key: 'cards', label: '▦ Karten' },
+                            { key: 'ranking', label: '① Rangliste' },
+                            { key: 'compare', label: '⊞ Vergleich' },
                         ]}
                     />
                     {view === 'cards' && areaOptions.length > 2 && (
                         <FilterButton
                             active={area ? [{
                                 key: 'area',
-                                label: areaOptions.find((o) => o.key === area)?.label ?? 'Area',
+                                label: areaOptions.find((o) => o.key === area)?.label ?? 'Region',
                                 clear: () => setArea(''),
                             }] : []}
                             onReset={() => setArea('')}
                         >
-                            <FilterField label="Area">
+                            <FilterField label="Region">
                                 <SelectField value={area} onChange={(e) => setArea(e.target.value)}>
                                     {areaOptions.map((o) => <option key={o.key} value={o.key}>{o.label}</option>)}
                                 </SelectField>
@@ -643,35 +643,35 @@ export default function StaysTab({ api, segmentSwitch }: {
                         <MiniSelect
                             value={sort}
                             onChange={(e) => chooseSort(e.target.value as SortKey)}
-                            aria-label="Sort the shortlist"
+                            aria-label="Auswahl sortieren"
                         >
                             {SORTS.map((option) => <option key={option.key} value={option.key}>{option.label}</option>)}
                         </MiniSelect>
                     )}
-                    <Button tone="primary" onClick={() => setPasting(true)}>+ Add stays</Button>
+                    <Button tone="primary" onClick={() => setPasting(true)}>+ Unterkünfte hinzufügen</Button>
                     <OverflowMenu items={[
-                        ...(stays.length > 0 ? [{ label: 'Watch the prices…', onClick: () => setWatching(true) }] : []),
-                        ...(counts.unrated > 0 ? [{ label: `⚡ Rate ${counts.unrated} unrated`, onClick: () => setTriaging(true) }] : []),
+                        ...(stays.length > 0 ? [{ label: 'Preise beobachten …', onClick: () => setWatching(true) }] : []),
+                        ...(counts.unrated > 0 ? [{ label: `⚡ ${counts.unrated} Unbewertete bewerten`, onClick: () => setTriaging(true) }] : []),
                         ...(missingLocation.length > 0 && locating === 0 ? [{
-                            label: `Get locations for ${missingLocation.length}`, onClick: fetchMissingLocations,
+                            label: `Standorte für ${missingLocation.length} holen`, onClick: fetchMissingLocations,
                         }] : []),
                         ...(missingImages.length > 0 && fetching === 0 ? [{
-                            label: `Get photos for ${missingImages.length}`, onClick: fetchMissingImages,
+                            label: `Fotos für ${missingImages.length} holen`, onClick: fetchMissingImages,
                         }] : []),
                         ...(view === 'ranking' && stays.some((st) => st.rank != null)
-                            ? [{ label: 'Clear the ranking', onClick: clearRanking }] : []),
+                            ? [{ label: 'Rangliste zurücksetzen', onClick: clearRanking }] : []),
                     ]} />
                 </>
             )}
             below={(locating > 0 || fetching > 0 || (located != null && locating === 0) || (area && view === 'cards')) ? (
                 <div className="flex flex-wrap items-center gap-2 text-[11px] text-gray-500">
-                    {locating > 0 && <span>Looking up locations… {locating} left</span>}
-                    {fetching > 0 && <span>Fetching photos… {fetching} left</span>}
+                    {locating > 0 && <span>Standorte werden gesucht … noch {locating}</span>}
+                    {fetching > 0 && <span>Fotos werden geholt … noch {fetching}</span>}
                     {located != null && locating === 0 && (
                         <span>
                             {located > 0
-                                ? `Found a location for ${located} stay${located === 1 ? '' : 's'}. They are on the map now.`
-                                : 'No new locations found — open a stay and use Find to pin it by hand.'}
+                                ? `Für ${located} ${located === 1 ? 'Unterkunft' : 'Unterkünfte'} wurde ein Standort gefunden. ${located === 1 ? 'Sie ist' : 'Sie sind'} jetzt auf der Karte.`
+                                : 'Keine neuen Standorte gefunden – öffne eine Unterkunft und nutze „Suchen“, um sie von Hand zu pinnen.'}
                         </span>
                     )}
                 </div>
@@ -687,7 +687,7 @@ export default function StaysTab({ api, segmentSwitch }: {
             {selected.size > 0 && (
                 <Card className="sticky top-2 z-10 flex flex-wrap items-center gap-2 p-3">
                     <span className="text-sm font-medium text-gray-700">
-                        {selected.size} selected
+                        {selected.size} ausgewählt
                     </span>
                     <div className="flex-1" />
                     <BulkFieldMenu
@@ -701,19 +701,19 @@ export default function StaysTab({ api, segmentSwitch }: {
                             },
                             {
                                 key: 'rating',
-                                label: 'Rating',
+                                label: 'Bewertung',
                                 options: [
                                     ...RATINGS.map((entry) => ({
                                         value: entry.key, label: `${entry.icon} ${entry.label}`,
                                     })),
-                                    { value: '', label: '— unrated —' },
+                                    { value: '', label: '— unbewertet —' },
                                 ],
                             },
                             {
                                 key: 'region_id',
-                                label: 'Area',
+                                label: 'Region',
                                 options: [
-                                    { value: null, label: '— no area —' },
+                                    { value: null, label: '— keine Region —' },
                                     ...(data?.regions ?? []).map((region) => ({
                                         value: region.id, label: region.name,
                                     })),
@@ -724,7 +724,7 @@ export default function StaysTab({ api, segmentSwitch }: {
                             await api.update('places', { ids: [...selected], [key]: value });
                             setSelected(new Set());
                         }}
-                        label="Change a field on all selected"
+                        label="Feld für alle Ausgewählten ändern"
                     />
                     <Button
                         onClick={async () => {
@@ -732,9 +732,9 @@ export default function StaysTab({ api, segmentSwitch }: {
                             setSelected(new Set());
                         }}
                     >
-                        Remove from shortlist
+                        Aus der Auswahl entfernen
                     </Button>
-                    <Button tone="ghost" onClick={() => setSelected(new Set())}>Clear</Button>
+                    <Button tone="ghost" onClick={() => setSelected(new Set())}>Aufheben</Button>
                 </Card>
             )}
 
@@ -756,15 +756,15 @@ export default function StaysTab({ api, segmentSwitch }: {
                 <Card>
                     <EmptyState
                         title={stays.length || removed.length
-                            ? 'Nothing matches that filter'
-                            : 'No places to stay yet'}
+                            ? 'Nichts passt zu diesem Filter'
+                            : 'Noch keine Unterkünfte'}
                         // Name the filter that is actually hiding things, rather
                         // than saying "try All" when the area is the culprit.
                         hint={stays.length || removed.length
                             ? (area
-                                ? 'No stays in that area with those ratings — try All areas.'
-                                : 'Try All.')
-                            : 'Paste a Booking.com link above to start a shortlist.'}
+                                ? 'Keine Unterkünfte in dieser Region mit diesen Bewertungen – probier „Alle Regionen“.'
+                                : 'Probier „Alle“.')
+                            : 'Füge oben einen Booking.com-Link ein, um eine Auswahl zu beginnen.'}
                     />
                 </Card>
             ) : (
@@ -787,15 +787,15 @@ export default function StaysTab({ api, segmentSwitch }: {
                                 else cardRefs.current.delete(stay.id);
                             }}
                             menu={[
-                                { label: 'Open', onClick: () => openPlace(stay.id) },
-                                ...(stayLink(stay) ? [{ label: 'Preview the listing', onClick: () => setPreview(stay) }] : []),
+                                { label: 'Öffnen', onClick: () => openPlace(stay.id) },
+                                ...(stayLink(stay) ? [{ label: 'Angebot in der Vorschau ansehen', onClick: () => setPreview(stay) }] : []),
                                 // Removing is the ordinary action; deleting for good
                                 // lives one deliberate step further on, in Removed.
                                 stay.archived
-                                    ? { label: 'Put back on the shortlist', onClick: () => api.patchPlace(stay.id, { archived: false }) }
-                                    : { label: 'Remove from the shortlist', onClick: () => api.patchPlace(stay.id, { archived: true }) },
+                                    ? { label: 'Zurück in die Auswahl', onClick: () => api.patchPlace(stay.id, { archived: false }) }
+                                    : { label: 'Aus der Auswahl entfernen', onClick: () => api.patchPlace(stay.id, { archived: true }) },
                                 ...(stay.archived ? [{
-                                    label: 'Delete for good', danger: true, onClick: () => api.removePlaces([stay]),
+                                    label: 'Endgültig löschen', danger: true, onClick: () => api.removePlaces([stay]),
                                 }] : []),
                             ]}
                         />
@@ -810,7 +810,7 @@ export default function StaysTab({ api, segmentSwitch }: {
                 under the list rather than squeezing both into half a screen. */}
             {wide && (
                 <ColumnDivider
-                    label="Resize the map"
+                    label="Kartengröße ändern"
                     onDrag={resizeMap}
                 />
             )}
@@ -823,11 +823,11 @@ export default function StaysTab({ api, segmentSwitch }: {
                     {mapped.length === 0 ? (
                         <Card className="h-full flex items-center justify-center">
                             <EmptyState
-                                title="No stays on the map yet"
+                                title="Noch keine Unterkünfte auf der Karte"
                                 hint={stays.length
-                                    ? 'Press "Get locations" above and the shortlist puts itself on '
-                                        + 'the map.'
-                                    : 'Paste a booking link and its location comes with it.'}
+                                    ? 'Wähle oben „Standorte holen“, und die Auswahl setzt sich '
+                                        + 'selbst auf die Karte.'
+                                    : 'Füge einen Buchungslink ein, und der Standort kommt gleich mit.'}
                             />
                         </Card>
                     ) : (
@@ -847,8 +847,8 @@ export default function StaysTab({ api, segmentSwitch }: {
                     )}
                 </div>
                 <p className="text-[11px] text-gray-400 px-1 pt-1.5">
-                    {mapped.length} of {stays.length} on the map
-                    {mapped.length > 0 && ' · click a pin to jump to its card'}
+                    {mapped.length} von {stays.length} auf der Karte
+                    {mapped.length > 0 && ' · Klick auf einen Pin springt zur Karte der Unterkunft'}
                 </p>
             </aside>
         </div>
@@ -870,7 +870,7 @@ export default function StaysTab({ api, segmentSwitch }: {
                 api={api}
                 open={triaging}
                 onClose={() => setTriaging(false)}
-                title="Rate the stays"
+                title="Unterkünfte bewerten"
                 filter={(place) => place.category === 'stay' && !place.is_excursion}
             />
 
@@ -878,7 +878,7 @@ export default function StaysTab({ api, segmentSwitch }: {
                 open={pasting}
                 onClose={() => setPasting(false)}
                 side="center"
-                title={<h2 className="font-semibold text-gray-900">Add stays from links</h2>}
+                title={<h2 className="font-semibold text-gray-900">Unterkünfte aus Links hinzufügen</h2>}
             >
                 <div className="space-y-2">
                     <TextArea
@@ -892,10 +892,10 @@ export default function StaysTab({ api, segmentSwitch }: {
                             e.preventDefault();
                             setBulk((prev) => (prev ? `${prev}\n${text.trim()}` : text.trim()));
                         }}
-                        placeholder="https://www.booking.com/hotel/id/…  — one per line, or several at once"
+                        placeholder="https://www.booking.com/hotel/id/…  – eine pro Zeile oder mehrere auf einmal"
                     />
                     <p className="text-[11px] text-gray-400">
-                        The name, photo, address and pin are read from each listing; price and notes are yours.
+                        Name, Foto, Adresse und Pin werden aus dem jeweiligen Angebot gelesen; Preis und Notizen trägst du selbst ein.
                     </p>
                     <div className="flex justify-end">
                         <Button
@@ -903,7 +903,7 @@ export default function StaysTab({ api, segmentSwitch }: {
                             onClick={async () => { await addLinks(); setPasting(false); }}
                             disabled={adding || !stayUrlsFromText(bulk).length}
                         >
-                            {adding ? 'Adding…' : `Add ${stayUrlsFromText(bulk).length || ''}`.trim()}
+                            {adding ? 'Wird hinzugefügt …' : `${stayUrlsFromText(bulk).length || ''} hinzufügen`.trim()}
                         </Button>
                     </div>
                 </div>
@@ -914,7 +914,7 @@ export default function StaysTab({ api, segmentSwitch }: {
                 onClose={() => setWatching(false)}
                 side="center"
                 width="lg"
-                title={<h2 className="font-semibold text-gray-900">Watch the prices</h2>}
+                title={<h2 className="font-semibold text-gray-900">Preise beobachten</h2>}
             >
                 <PriceWatch api={api} />
             </Sheet>
@@ -956,8 +956,8 @@ function RankingList({ stays, currency, pickedId, onPick, onReorder, cardRefs }:
         return (
             <Card>
                 <EmptyState
-                    title="Nothing to rank yet"
-                    hint="Paste a booking link above, then drag the rows into the order you like them."
+                    title="Noch nichts zu ranken"
+                    hint="Füge oben einen Buchungslink ein und zieh die Zeilen dann in deine Wunschreihenfolge."
                 />
             </Card>
         );
@@ -977,8 +977,8 @@ function RankingList({ stays, currency, pickedId, onPick, onReorder, cardRefs }:
     return (
         <Card className="overflow-hidden">
             <p className="text-[11px] text-gray-400 px-3 pt-2.5">
-                Drag a row by its ⠿ handle. Every stay is here, whatever the filters say —
-                a ranking is the whole shortlist or it is nothing.
+                Zieh eine Zeile am ⠿-Griff. Alle Unterkünfte sind hier, egal was die Filter sagen –
+                eine Rangliste umfasst die ganze Auswahl oder gar nichts.
             </p>
             <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
                 <SortableContext items={rows.map((s) => s.id)} strategy={verticalListSortingStrategy}>
@@ -1048,16 +1048,16 @@ function RankRow({ stay, currency, position, picked, onPick, cardRefs, onMove, i
                 {...listeners}
                 className="hidden [@media(pointer:fine)]:block cursor-grab active:cursor-grabbing text-gray-300
                     hover:text-gray-500 touch-none pl-2 pr-1 shrink-0"
-                aria-label={`Drag ${stay.name} to reorder the ranking`}
+                aria-label={`${stay.name} ziehen, um die Rangliste zu ändern`}
             >
                 ⠿
             </button>
             <span className="flex shrink-0 flex-col justify-center [@media(pointer:fine)]:hidden">
                 <button type="button" onClick={() => onMove(-1)} disabled={isFirst}
-                    aria-label={`Move ${stay.name} up`}
+                    aria-label={`${stay.name} nach oben`}
                     className="flex size-11 items-center justify-center text-gray-500 disabled:opacity-25">▲</button>
                 <button type="button" onClick={() => onMove(1)} disabled={isLast}
-                    aria-label={`Move ${stay.name} down`}
+                    aria-label={`${stay.name} nach unten`}
                     className="flex size-11 items-center justify-center text-gray-500 disabled:opacity-25">▼</button>
             </span>
             {/* The position on screen, not the stored rank: mid-drag they differ,
@@ -1074,7 +1074,7 @@ function RankRow({ stay, currency, position, picked, onPick, cardRefs, onMove, i
                     referrerPolicy="no-referrer"
                     loading="lazy"
                     onClick={onPick}
-                    title={`Show ${stay.name} on the map`}
+                    title={`${stay.name} auf der Karte zeigen`}
                     // Twice the width at the same 96px height, so the photo is
                     // the biggest thing it can be without making every row
                     // taller. That is a 3:1 window onto a 3:2 photo, so
@@ -1101,8 +1101,8 @@ function RankRow({ stay, currency, position, picked, onPick, cardRefs, onMove, i
                     be compared down the list; repeating it here would just be
                     the same number twice. */}
                 <div className="text-[11px] text-gray-400 truncate">
-                    {stay.address || 'no address yet'}
-                    {!hasCoords(stay) ? ' · no pin' : ''}
+                    {stay.address || 'noch keine Adresse'}
+                    {!hasCoords(stay) ? ' · kein Pin' : ''}
                 </div>
             </button>
             {rating && (

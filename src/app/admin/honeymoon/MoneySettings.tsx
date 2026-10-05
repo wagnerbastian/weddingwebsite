@@ -29,7 +29,7 @@ export default function MoneySettings({ api }: { api: HoneymoonApi }) {
 
     const fetchRate = async () => {
         const code = quote.trim().toUpperCase();
-        if (!/^[A-Z]{3}$/.test(code)) { setError('Three letters, like IDR'); return; }
+        if (!/^[A-Z]{3}$/.test(code)) { setError('Drei Buchstaben, z. B. IDR'); return; }
         setBusy(true);
         setError('');
         try {
@@ -38,7 +38,7 @@ export default function MoneySettings({ api }: { api: HoneymoonApi }) {
             );
             if (!res.ok) {
                 const body = await res.json().catch(() => ({}));
-                setError(body.error ?? 'Could not fetch that rate');
+                setError(body.error ?? 'Kurs konnte nicht abgerufen werden');
                 return;
             }
             await api.refresh();
@@ -51,7 +51,7 @@ export default function MoneySettings({ api }: { api: HoneymoonApi }) {
         const code = quote.trim().toUpperCase();
         const value = Number(manual);
         if (!/^[A-Z]{3}$/.test(code) || !Number.isFinite(value) || value <= 0) {
-            setError('A three-letter code and a positive number');
+            setError('Ein dreistelliger Code und eine positive Zahl');
             return;
         }
         setError('');
@@ -93,17 +93,17 @@ export default function MoneySettings({ api }: { api: HoneymoonApi }) {
                     }}
                 />
                 <p className="mt-1.5 text-xs text-gray-400">
-                    What you mean to spend. The dashboard measures the real total against it —
-                    stays by the nights they are the base for, plus travel, excursions and bookings.
+                    Was ihr ausgeben wollt. Der Überblick misst die tatsächliche Summe daran –
+                    Unterkünfte nach den Nächten, in denen sie Standort sind, plus Verbindungen, Ausflüge und Buchungen.
                 </p>
             </div>
 
             <div>
-                <h4 className="text-xs font-semibold text-gray-500 mb-1.5">Exchange rates</h4>
+                <h4 className="text-xs font-semibold text-gray-500 mb-1.5">Wechselkurse</h4>
                 {rates.length === 0 ? (
                     <p className="text-xs text-gray-400">
-                        None yet. Without a rate, a price in another currency is counted at face
-                        value and the dashboard says so.
+                        Noch keine. Ohne Kurs wird ein Preis in einer anderen Währung zum Nennwert
+                        gezählt und der Überblick weist darauf hin.
                     </p>
                 ) : (
                     <ul className="space-y-1.5">
@@ -119,12 +119,12 @@ export default function MoneySettings({ api }: { api: HoneymoonApi }) {
                                 {rate.manual ? (
                                     <span className="rounded-full bg-gray-900 px-2 py-0.5 text-[10px]
                                         font-semibold text-white">
-                                        yours
+                                        von dir
                                     </span>
                                 ) : (
                                     <span className="text-[11px] text-gray-400">
-                                        fetched{rate.fetched_at
-                                            ? ` ${new Date(rate.fetched_at).toLocaleDateString()}`
+                                        abgerufen{rate.fetched_at
+                                            ? ` ${new Date(rate.fetched_at).toLocaleDateString('de-DE')}`
                                             : ''}
                                     </span>
                                 )}
@@ -132,11 +132,11 @@ export default function MoneySettings({ api }: { api: HoneymoonApi }) {
                                 <button
                                     type="button"
                                     onClick={() => api.removeRow(
-                                        'rates', rate, `Removed the ${rate.pair} rate`,
+                                        'rates', rate, `Kurs ${rate.pair} entfernt`,
                                     )}
                                     className="text-[11px] text-gray-500 underline decoration-dotted"
                                 >
-                                    Remove
+                                    Entfernen
                                 </button>
                             </li>
                         ))}
@@ -157,12 +157,12 @@ export default function MoneySettings({ api }: { api: HoneymoonApi }) {
                         />
                     </div>
                     <Button onClick={fetchRate} disabled={busy}>
-                        {busy ? 'Fetching…' : 'Fetch today’s rate'}
+                        {busy ? 'Wird abgerufen …' : 'Tageskurs abrufen'}
                     </Button>
                     <div className="w-32">
                         <label className="mb-1 block text-[10px] font-semibold uppercase
                             tracking-wide text-gray-400">
-                            Or set it
+                            Oder festlegen
                         </label>
                         <TextField
                             type="number"
@@ -173,14 +173,14 @@ export default function MoneySettings({ api }: { api: HoneymoonApi }) {
                             onChange={(e) => setManual(e.target.value)}
                         />
                     </div>
-                    <Button onClick={saveManual} disabled={!manual.trim()}>Save mine</Button>
+                    <Button onClick={saveManual} disabled={!manual.trim()}>Meinen speichern</Button>
                 </div>
                 {error && <p className="mt-1.5 text-xs text-rose-600">{error}</p>}
             </div>
 
             {rates.length > 0 && (
                 <div>
-                    <h4 className="text-xs font-semibold text-gray-500 mb-1.5">Quick convert</h4>
+                    <h4 className="text-xs font-semibold text-gray-500 mb-1.5">Schnell umrechnen</h4>
                     <div className="flex items-center gap-2">
                         <TextField
                             type="number"

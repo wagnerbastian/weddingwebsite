@@ -35,7 +35,7 @@ export default function Footer({
                 </div>
                 <div className="mt-0 md:mt-0 md:order-1 w-full">
                     <p className="text-center text-base text-gray-900 font-serif">
-                        &copy; {year}{couple ? ` ${couple}.` : ''} We can&apos;t wait to celebrate with you!
+                        &copy; {year}{couple ? ` ${couple}.` : ''} Wir können es kaum erwarten, mit euch zu feiern!
                     </p>
                 </div>
             </div>

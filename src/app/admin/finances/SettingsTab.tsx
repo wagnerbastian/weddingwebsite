@@ -2,7 +2,7 @@
 
 import { useCallback, useState } from 'react';
 import type { FinanceApi, FinancePayload } from './useFinances';
-import { Card, EmptyState, GlyphButton, InlineNumber, InlineText, PillButton, formatMoney } from './ui';
+import { Card, EmptyState, GlyphButton, InlineNumber, InlineText, PillButton, formatDate, formatMoney } from './ui';
 
 interface ArchivedRows {
     categories: { id: number; name: string }[];
@@ -31,15 +31,15 @@ export default function SettingsTab({ data, api }: { data: FinancePayload; api: 
         <div className="space-y-5 xl:space-y-0 xl:columns-2 xl:gap-5
             [&>*]:xl:mb-5 [&>*]:xl:break-inside-avoid">
             <Card className="p-5">
-                <h3 className="font-semibold text-gray-900 mb-1">Headcount</h3>
+                <h3 className="font-semibold text-gray-900 mb-1">Personenzahl</h3>
                 <p className="text-xs text-gray-400 mb-4">
-                    Drives any line whose quantity is set to Adults, Minors, Drinkers or All guests —
-                    dinner, kids&apos; meals, the bar.
+                    Bestimmt jeden Posten, dessen Menge auf Erwachsene, Kinder, Trinkende oder Alle Gäste
+                    steht – Dinner, Kindermenüs, Bar.
                 </p>
 
                 <div className="grid grid-cols-2 gap-4 max-w-sm">
                     <div>
-                        <label className="block text-xs font-semibold text-gray-500 mb-1">Adults</label>
+                        <label className="block text-xs font-semibold text-gray-500 mb-1">Erwachsene</label>
                         <div className="bg-gray-50 border border-gray-200 rounded-2xl px-2">
                             <InlineNumber
                                 value={settings.adult_count}
@@ -48,7 +48,7 @@ export default function SettingsTab({ data, api }: { data: FinancePayload; api: 
                         </div>
                     </div>
                     <div>
-                        <label className="block text-xs font-semibold text-gray-500 mb-1">Minors</label>
+                        <label className="block text-xs font-semibold text-gray-500 mb-1">Kinder</label>
                         <div className="bg-gray-50 border border-gray-200 rounded-2xl px-2">
                             <InlineNumber
                                 value={settings.minor_count}
@@ -60,7 +60,7 @@ export default function SettingsTab({ data, api }: { data: FinancePayload; api: 
 
                 <div className="mt-4 max-w-sm">
                     <label className="block text-xs font-semibold text-gray-500 mb-1">
-                        Drinkers <span className="font-normal text-gray-400">(21 and over)</span>
+                        Trinkende <span className="font-normal text-gray-400">(ab 21)</span>
                     </label>
                     <div className="bg-gray-50 border border-gray-200 rounded-2xl px-2">
                         <InlineNumber
@@ -69,63 +69,63 @@ export default function SettingsTab({ data, api }: { data: FinancePayload; api: 
                         />
                     </div>
                     <p className="mt-1 text-xs text-gray-400">
-                        Some of your adults, not extra guests — an under-21 still eats the adult dinner.
-                        Only lines set to Drinkers use this.
+                        Ein Teil der Erwachsenen, keine zusätzlichen Gäste – auch unter 21 isst man das
+                        Erwachsenen-Dinner. Nur Posten mit „Trinkende“ nutzen diese Zahl.
                     </p>
                     {/* Said here, beside the field, and not only on the Overview: a
                         number typed in with nothing reading it looks exactly like a
                         number that worked. */}
                     {summary.warnings.some((w) => w.kind === 'drinkers-unused') && (
                         <p className="mt-2 rounded-2xl bg-amber-50 border border-amber-100 px-3 py-2 text-xs text-amber-800">
-                            No budget line is charged per drinker yet, so this number changes nothing.
-                            Open <strong>Budget</strong>, find your bar line and set its{' '}
-                            <strong>Qty from</strong> to <strong>Drinkers (21+)</strong>.
+                            Noch kein Budgetposten wird pro trinkender Person berechnet, diese Zahl ändert also
+                            nichts. Öffne <strong>Budget</strong>, suche den Posten für die Bar und stelle{' '}
+                            <strong>Menge nach</strong> auf <strong>Trinkende (21+)</strong>.
                         </p>
                     )}
                 </div>
 
                 <div className="text-xs text-gray-500 mt-3">
-                    Total: <strong>{settings.adult_count + settings.minor_count} guests</strong>
+                    Gesamt: <strong>{settings.adult_count + settings.minor_count} Gäste</strong>
                     {settings.drinking_count > 0 && (
-                        <>, <strong>{settings.drinking_count}</strong> of them drinking</>
+                        <>, davon <strong>{settings.drinking_count}</strong> trinkend</>
                     )}
                 </div>
 
                 {headcount && (
                     <div className="mt-4 bg-gray-50 rounded-2xl p-4">
-                        <div className="text-xs font-semibold text-gray-600 mb-1">From your guest list</div>
+                        <div className="text-xs font-semibold text-gray-600 mb-1">Aus eurer Gästeliste</div>
                         <p className="text-xs text-gray-500 mb-3">
-                            {headcount.invited.toLocaleString()} invited ·{' '}
-                            {headcount.attending.toLocaleString()} confirmed attending.
-                            These are only a reference — your budget stays on the numbers you set above, so a
-                            late RSVP can&apos;t quietly move your total. Your guest list has no adult/minor
-                            marker, so that split is yours to make.
+                            {headcount.invited.toLocaleString('de-DE')} eingeladen ·{' '}
+                            {headcount.attending.toLocaleString('de-DE')} mit Zusage.
+                            Das sind nur Richtwerte – euer Budget bleibt bei den oben eingetragenen Zahlen, damit
+                            eine späte Rückmeldung die Summe nicht unbemerkt verschiebt. Die Gästeliste kennt
+                            keine Unterscheidung zwischen Erwachsenen und Kindern, die Aufteilung macht ihr selbst.
                         </p>
                         {headcount.under21 > 0 && (
                             <p className="text-xs text-gray-500 mb-3">
-                                {headcount.under21.toLocaleString()} of the{' '}
-                                {headcount.expected.toLocaleString()} people you expect are marked under
-                                21, leaving <strong>{headcount.drinking.toLocaleString()}</strong> at the bar.
+                                {headcount.under21.toLocaleString('de-DE')} der{' '}
+                                {headcount.expected.toLocaleString('de-DE')} erwarteten Personen sind als unter
+                                21 markiert, an der Bar bleiben <strong>{headcount.drinking.toLocaleString('de-DE')}</strong>.
                             </p>
                         )}
                         <div className="flex flex-wrap gap-2">
                             <PillButton
                                 onClick={() => api.update('settings', { adult_count: headcount.invited, minor_count: 0 })}
                             >
-                                Use {headcount.invited} invited as adults
+                                {headcount.invited} Eingeladene als Erwachsene übernehmen
                             </PillButton>
                             {headcount.attending > 0 && (
                                 <PillButton
                                     onClick={() => api.update('settings', { adult_count: headcount.attending, minor_count: 0 })}
                                 >
-                                    Use {headcount.attending} attending as adults
+                                    {headcount.attending} Zusagen als Erwachsene übernehmen
                                 </PillButton>
                             )}
                             {headcount.expected > 0 && (
                                 <PillButton
                                     onClick={() => api.update('settings', { drinking_count: headcount.drinking })}
                                 >
-                                    Use {headcount.drinking} drinking
+                                    {headcount.drinking} Trinkende übernehmen
                                 </PillButton>
                             )}
                         </div>
@@ -134,11 +134,11 @@ export default function SettingsTab({ data, api }: { data: FinancePayload; api: 
             </Card>
 
             <Card className="p-5">
-                <h3 className="font-semibold text-gray-900 mb-1">Who pays</h3>
+                <h3 className="font-semibold text-gray-900 mb-1">Wer zahlt</h3>
                 <p className="text-xs text-gray-400 mb-4">
-                    Shares split whatever the contributions don&apos;t cover. Anyone who buys things but
-                    doesn&apos;t owe a share — a parent picking up the decor — gets <strong>0%</strong>; their
-                    spending still shows up, just as a credit.
+                    Die Anteile teilen auf, was die Beiträge nicht decken. Wer etwas kauft, aber keinen
+                    Anteil schuldet – etwa ein Elternteil, das die Deko übernimmt –, bekommt <strong>0 %</strong>;
+                    die Ausgaben erscheinen trotzdem, nur als Guthaben.
                 </p>
 
                 <div className="space-y-2">
@@ -164,13 +164,13 @@ export default function SettingsTab({ data, api }: { data: FinancePayload; api: 
                                     </div>
                                 </div>
                                 <div className="text-[11px] text-gray-400 w-32 text-right tabular-nums">
-                                    paid {formatMoney(stats?.spent ?? 0)}
+                                    bezahlt {formatMoney(stats?.spent ?? 0)}
                                 </div>
                                 <GlyphButton
-                                    label={`Remove ${payer.name}`}
+                                    label={`${payer.name} entfernen`}
                                     className="text-lg leading-none hover:text-rose-500"
                                     onClick={() => {
-                                        if (confirm(`Remove ${payer.name}? Their purchases stay but become unassigned.`)) {
+                                        if (confirm(`${payer.name} entfernen? Die Ausgaben bleiben erhalten, sind danach aber nicht mehr zugeordnet.`)) {
                                             api.remove('payers', payer.id);
                                         }
                                     }}
@@ -180,14 +180,14 @@ export default function SettingsTab({ data, api }: { data: FinancePayload; api: 
                             </div>
                         );
                     })}
-                    {!payers.length && <EmptyState>No payers yet.</EmptyState>}
+                    {!payers.length && <EmptyState>Noch keine Zahler.</EmptyState>}
                 </div>
 
                 {payers.length > 0 && shareSum !== 100 && (
                     <p className="text-xs text-amber-700 bg-amber-50 rounded-xl px-3 py-2 mt-3">
-                        Shares add up to <strong>{shareSum}%</strong>, not 100%. That still works — each person
-                        is charged their slice of the {shareSum}% — but setting them to total 100% makes the
-                        numbers easier to read.
+                        Die Anteile ergeben <strong>{shareSum} %</strong>, nicht 100 %. Das funktioniert trotzdem – jede Person
+                        zahlt ihren Teil der {shareSum} % –, aber bei insgesamt 100 % sind die Zahlen
+                        leichter zu lesen.
                     </p>
                 )}
 
@@ -196,25 +196,25 @@ export default function SettingsTab({ data, api }: { data: FinancePayload; api: 
                         value={newPayer}
                         onChange={(e) => setNewPayer(e.target.value)}
                         onKeyDown={(e) => { if (e.key === 'Enter') addPayer(); }}
-                        placeholder="Add someone who pays for things"
+                        placeholder="Person hinzufügen, die Ausgaben bezahlt"
                         className="flex-1 bg-gray-50 border border-gray-200 rounded-2xl px-3 py-2 text-base md:text-sm
                             focus:outline-none focus:ring-2 focus:ring-accent/30"
                     />
-                    <PillButton tone="accent" onClick={addPayer} disabled={!newPayer.trim()}>Add payer</PillButton>
+                    <PillButton tone="accent" onClick={addPayer} disabled={!newPayer.trim()}>Zahler hinzufügen</PillButton>
                 </div>
             </Card>
 
             <Card className="p-5">
-                <h3 className="font-semibold text-gray-900 mb-1">Payment plan</h3>
+                <h3 className="font-semibold text-gray-900 mb-1">Zahlungsplan</h3>
                 <p className="text-xs text-gray-400 mb-4">
-                    How far ahead to spread what&apos;s left. Left blank, it counts down to your wedding date
-                    on its own.
+                    Auf welchen Zeitraum der Rest verteilt wird. Bleibt das Feld leer, zählt es automatisch
+                    bis zu eurem Hochzeitsdatum.
                 </p>
 
                 <div className="grid sm:grid-cols-2 gap-4 max-w-lg">
                     <div>
                         <label className="block text-xs font-semibold text-gray-500 mb-1">
-                            Planning horizon (months)
+                            Planungszeitraum (Monate)
                         </label>
                         <input
                             type="number"
@@ -223,7 +223,7 @@ export default function SettingsTab({ data, api }: { data: FinancePayload; api: 
                             // save 1 and then 12, each with a full refetch.
                             key={settings.plan_horizon_months ?? 'auto'}
                             defaultValue={settings.plan_horizon_months ?? ''}
-                            placeholder={weddingDate ? 'Auto — to wedding day' : 'Auto'}
+                            placeholder={weddingDate ? 'Automatisch – bis zur Hochzeit' : 'Automatisch'}
                             onBlur={(e) => {
                                 const next = e.target.value === '' ? null : e.target.value;
                                 if (String(next ?? '') !== String(settings.plan_horizon_months ?? '')) {
@@ -235,13 +235,13 @@ export default function SettingsTab({ data, api }: { data: FinancePayload; api: 
                         />
                         <p className="text-[11px] text-gray-400 mt-1">
                             {summary.horizon.derived
-                                ? `Auto: ${summary.horizon.days.toLocaleString()} days left${weddingDate ? ` until ${weddingDate}` : ''}.`
-                                : `Fixed at ${settings.plan_horizon_months} months.`}
+                                ? `Automatisch: noch ${summary.horizon.days.toLocaleString('de-DE')} Tage${weddingDate ? ` bis zum ${formatDate(weddingDate)}` : ''}.`
+                                : `Fest auf ${settings.plan_horizon_months} Monate gesetzt.`}
                         </p>
                     </div>
                     <div>
                         <label className="block text-xs font-semibold text-gray-500 mb-1">
-                            Days between paychecks
+                            Tage zwischen Gehaltszahlungen
                         </label>
                         <div className="bg-gray-50 border border-gray-200 rounded-2xl px-2">
                             <InlineNumber
@@ -251,8 +251,8 @@ export default function SettingsTab({ data, api }: { data: FinancePayload; api: 
                             />
                         </div>
                         <p className="text-[11px] text-gray-400 mt-1">
-                            14 for every other week, 7 for weekly, 15 for twice monthly.
-                            ~{Math.floor(summary.horizon.paychecks)} paychecks left.
+                            14 für alle zwei Wochen, 7 für wöchentlich, 15 für zweimal im Monat.
+                            Noch ca. {Math.floor(summary.horizon.paychecks)} Gehaltszahlungen.
                         </p>
                     </div>
                 </div>
@@ -295,10 +295,10 @@ function ArchiveCard({ data, api }: { data: FinancePayload; api: FinanceApi }) {
     if (total === 0) {
         return (
             <Card className="p-5">
-                <h3 className="font-semibold text-gray-900 mb-1">Archive</h3>
+                <h3 className="font-semibold text-gray-900 mb-1">Archiv</h3>
                 <p className="text-xs text-gray-400">
-                    Nothing archived. Removing a section, line or payment archives it rather than
-                    deleting it, so it stops counting toward your totals but stays recoverable here.
+                    Nichts archiviert. Wer einen Bereich, Posten oder eine Zahlung entfernt, archiviert
+                    ihn nur – er zählt nicht mehr zu den Summen, ist hier aber wiederherstellbar.
                 </p>
             </Card>
         );
@@ -308,30 +308,30 @@ function ArchiveCard({ data, api }: { data: FinancePayload; api: FinanceApi }) {
         <Card className="p-5">
             <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
-                    <h3 className="font-semibold text-gray-900">Archive</h3>
+                    <h3 className="font-semibold text-gray-900">Archiv</h3>
                     <p className="mt-0.5 text-xs text-gray-400">
-                        {total} archived row{total === 1 ? '' : 's'} — excluded from every total,
-                        still here if you need them.
+                        {total} {total === 1 ? 'archivierter Eintrag' : 'archivierte Einträge'} – in keiner Summe
+                        enthalten, aber bei Bedarf noch da.
                     </p>
                 </div>
                 <PillButton onClick={toggle}>
-                    {open ? 'Hide' : 'Show archived'}
+                    {open ? 'Ausblenden' : 'Archiv anzeigen'}
                 </PillButton>
             </div>
 
             {open && rows && (
                 <div className="mt-4 space-y-4">
-                    <ArchiveGroup title="Sections" items={rows.categories.map((c) => ({
+                    <ArchiveGroup title="Bereiche" items={rows.categories.map((c) => ({
                         id: c.id, label: c.name,
                     }))} onRestore={(id) => restore('categories', id)} />
-                    <ArchiveGroup title="Line items" items={rows.items.map((i) => ({
+                    <ArchiveGroup title="Posten" items={rows.items.map((i) => ({
                         id: i.id, label: i.category_name ? `${i.name} (${i.category_name})` : i.name,
                     }))} onRestore={(id) => restore('items', id)} />
-                    <ArchiveGroup title="Payments" items={rows.purchases.map((p) => ({
-                        id: p.id, label: `${p.description} — ${formatMoney(p.amount)}`,
+                    <ArchiveGroup title="Zahlungen" items={rows.purchases.map((p) => ({
+                        id: p.id, label: `${p.description} – ${formatMoney(p.amount)}`,
                     }))} onRestore={(id) => restore('purchases', id)} />
-                    <ArchiveGroup title="Contributors" items={rows.contributors.map((c) => ({
-                        id: c.id, label: `${c.name} — ${formatMoney(c.pledged)} pledged`,
+                    <ArchiveGroup title="Beitragende" items={rows.contributors.map((c) => ({
+                        id: c.id, label: `${c.name} – ${formatMoney(c.pledged)} zugesagt`,
                     }))} onRestore={(id) => restore('contributors', id)} />
                 </div>
             )}
@@ -355,7 +355,7 @@ function ArchiveGroup({ title, items, onRestore }: {
                         <span className="min-w-0 flex-1 truncate text-gray-600">{item.label}</span>
                         <button onClick={() => onRestore(item.id)}
                             className="shrink-0 text-xs font-medium text-accent hover:underline">
-                            Restore
+                            Wiederherstellen
                         </button>
                     </div>
                 ))}

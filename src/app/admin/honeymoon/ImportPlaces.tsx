@@ -19,13 +19,18 @@ import { Button, Modal, SelectField, TextArea } from './ui';
  * within a kilometre) is shown as a duplicate and skipped by default — "Warung
  * Ibu Oka" is on every list anyone will ever send you.
  */
+/** The parser's format name, as a label. */
+function formatLabel(format: string): string {
+    return format === 'spreadsheet' ? 'Tabelle' : format;
+}
+
 export default function ImportPlaces({ api, open, onClose }: {
     api: HoneymoonApi;
     open: boolean;
     onClose: () => void;
 }) {
     const [text, setText] = useState('');
-    const [source, setSource] = useState('A friend’s list');
+    const [source, setSource] = useState('Liste von Freunden');
     const [category, setCategory] = useState('');
     const [skipped, setSkipped] = useState<Set<number>>(new Set());
     const [busy, setBusy] = useState(false);
@@ -65,7 +70,7 @@ export default function ImportPlaces({ api, open, onClose }: {
                 description: place.description ?? '',
                 price_note: place.price_note ?? '',
                 links: place.links ?? [],
-                source: source.trim() || 'Imported',
+                source: source.trim() || 'Importiert',
                 // A pin that came from someone else's list is worth a look
                 // before it is trusted — the same rule the geocoder follows.
                 needs_review: place.lat != null,
@@ -73,7 +78,7 @@ export default function ImportPlaces({ api, open, onClose }: {
             const ok = await api.createMany('places', rows);
             await api.refresh();
             if (ok) {
-                setDone(`Added ${rows.length} place${rows.length === 1 ? '' : 's'}.`);
+                setDone(`${rows.length} ${rows.length === 1 ? 'Ort' : 'Orte'} hinzugefügt.`);
                 setText('');
                 setSkipped(new Set());
             }
@@ -83,12 +88,12 @@ export default function ImportPlaces({ api, open, onClose }: {
     };
 
     return (
-        <Modal open={open} onClose={onClose} title="Import places" wide>
+        <Modal open={open} onClose={onClose} title="Orte importieren" wide>
             <div className="space-y-3">
                 <p className="text-xs text-gray-500">
-                    Paste a spreadsheet (any columns, any order — name, category, lat, lng, address,
-                    notes, url are recognised), a KML from Google My Maps, or the JSON from a Google
-                    Takeout of your saved places. Or pick a file.
+                    Füge eine Tabelle ein (beliebige Spalten in beliebiger Reihenfolge – erkannt werden name, category, lat, lng, address,
+                    notes, url), eine KML aus Google My Maps oder das JSON aus einem Google
+                    Takeout deiner gespeicherten Orte. Oder wähle eine Datei.
                 </p>
 
                 <div className="flex flex-wrap items-center gap-2">
@@ -99,13 +104,13 @@ export default function ImportPlaces({ api, open, onClose }: {
                         className="hidden"
                         onChange={(e) => readFile(e.target.files)}
                     />
-                    <Button onClick={() => fileInput.current?.click()}>Choose a file…</Button>
+                    <Button onClick={() => fileInput.current?.click()}>Datei wählen …</Button>
                     <div className="min-w-[10rem] flex-1">
                         <SelectField
                             value={category}
                             onChange={(e) => setCategory(e.target.value)}
                         >
-                            <option value="">Type for rows without one — Other</option>
+                            <option value="">Kategorie für Zeilen ohne Angabe – Sonstiges</option>
                             {(api.data?.categories ?? []).map((row) => (
                                 <option key={row.key} value={row.key}>
                                     {row.icon} {row.label}
@@ -125,35 +130,34 @@ export default function ImportPlaces({ api, open, onClose }: {
 
                 <div>
                     <label className="mb-1 block text-xs font-semibold text-gray-500">
-                        Label these as
+                        Kennzeichnen als
                     </label>
                     <TextArea
                         rows={1}
                         value={source}
                         onChange={(e) => setSource(e.target.value)}
-                        placeholder="Amy’s suggestions"
+                        placeholder="Vorschläge von Amy"
                     />
                     <p className="mt-1 text-[11px] text-gray-400">
-                        Becomes the source on every imported place, so you can filter to exactly
-                        this batch later — including &ldquo;everything Amy suggested that I haven&apos;t
-                        rated&rdquo;.
+                        Wird zur Quelle jedes importierten Ortes, damit du später genau diese Auswahl
+                        filtern kannst – etwa „alles, was Amy vorgeschlagen und ich noch nicht
+                        bewertet habe“.
                     </p>
                 </div>
 
                 {parsed && (
                     <div className="rounded-2xl border border-gray-200 p-3">
                         <p className="text-sm text-gray-800">
-                            Read as {parsed.format}: {parsed.places.length} place
-                            {parsed.places.length === 1 ? '' : 's'}
-                            {duplicates.size > 0 && `, ${duplicates.size} already in your library`}
+                            Erkannt als {formatLabel(parsed.format)}: {parsed.places.length} {parsed.places.length === 1 ? 'Ort' : 'Orte'}
+                            {duplicates.size > 0 && `, ${duplicates.size} bereits in deiner Bibliothek`}
                             {parsed.skipped.length > 0
-                                && `, ${parsed.skipped.length} row${parsed.skipped.length === 1 ? '' : 's'} skipped`}.
+                                && `, ${parsed.skipped.length} ${parsed.skipped.length === 1 ? 'Zeile' : 'Zeilen'} übersprungen`}.
                         </p>
 
                         {parsed.skipped.length > 0 && (
                             <p className="mt-1 text-[11px] text-amber-700">
-                                Skipped: {parsed.skipped.slice(0, 6)
-                                    .map((row) => `line ${row.line} (${row.why})`).join(', ')}
+                                Übersprungen: {parsed.skipped.slice(0, 6)
+                                    .map((row) => `Zeile ${row.line} (${row.why})`).join(', ')}
                                 {parsed.skipped.length > 6 && '…'}
                             </p>
                         )}
@@ -179,19 +183,19 @@ export default function ImportPlaces({ api, open, onClose }: {
                                                 return next;
                                             })}
                                             className="size-4 shrink-0 rounded accent-accent"
-                                            aria-label={`Import ${place.name}`}
+                                            aria-label={`${place.name} importieren`}
                                         />
                                         <span className="min-w-0 flex-1 truncate text-sm">
                                             {place.name}
                                         </span>
                                         {place.lat != null && (
                                             <span className="shrink-0 text-[10px] text-sky-700">
-                                                pinned
+                                                mit Pin
                                             </span>
                                         )}
                                         {duplicate && (
                                             <span className="shrink-0 text-[10px] text-gray-500">
-                                                already have it
+                                                schon vorhanden
                                             </span>
                                         )}
                                     </li>
@@ -204,13 +208,13 @@ export default function ImportPlaces({ api, open, onClose }: {
                 {done && <p className="text-sm text-emerald-700">{done}</p>}
 
                 <div className="flex items-center justify-end gap-2">
-                    <Button onClick={onClose}>Close</Button>
+                    <Button onClick={onClose}>Schließen</Button>
                     <Button
                         tone="primary"
                         onClick={run}
                         disabled={!willImport.length || busy}
                     >
-                        {busy ? 'Importing…' : `Import ${willImport.length || ''}`.trim()}
+                        {busy ? 'Wird importiert …' : `Importieren ${willImport.length || ''}`.trim()}
                     </Button>
                 </div>
             </div>

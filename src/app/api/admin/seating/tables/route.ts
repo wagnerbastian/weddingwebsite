@@ -18,7 +18,7 @@ export async function POST(request: Request) {
 
     if (!floor_plan_id || !name) {
       return NextResponse.json(
-        { error: 'floor_plan_id and name are required' },
+        { error: 'floor_plan_id und Name sind erforderlich' },
         { status: 400 }
       );
     }
@@ -34,7 +34,7 @@ export async function POST(request: Request) {
   } catch (error) {
     console.error('Error creating table:', error);
     return NextResponse.json(
-      { error: 'Failed to create table' },
+      { error: 'Tisch konnte nicht erstellt werden' },
       { status: 500 }
     );
   } finally {

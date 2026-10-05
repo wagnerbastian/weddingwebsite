@@ -29,7 +29,7 @@ const MAX_PHOTOS = 600;
 /** A saved copy older than this is refreshed by the next warm-up. */
 const STALE_AFTER_MS = 12 * 60 * 60 * 1000;
 
-const OFFLINE_WRITE_MESSAGE = "You're offline — this wasn't saved. Try again when you're back online.";
+const OFFLINE_WRITE_MESSAGE = "Offline – das wurde nicht gespeichert. Bitte erneut versuchen, sobald wieder eine Verbindung besteht.";
 
 /* ───────────────────────────── the rules ───────────────────────────── */
 
@@ -188,7 +188,7 @@ if (typeof self !== 'undefined' && typeof self.addEventListener === 'function' &
             if (saved) return saved;
             const fallback = await cache.match('/offline', { ignoreVary: true });
             if (fallback) return fallback;
-            return new Response('<h1>Offline</h1><p>This page has not been saved for offline use yet.</p>', {
+            return new Response('<h1>Offline</h1><p>Diese Seite wurde noch nicht für die Offline-Nutzung gespeichert.</p>', {
                 status: 503, headers: { 'Content-Type': 'text/html; charset=utf-8' },
             });
         }

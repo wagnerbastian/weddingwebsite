@@ -656,10 +656,10 @@ export async function getHoneymoonPayload(): Promise<HoneymoonPayload> {
         `),
     ]);
 
-    const tripRow = tripRes.rows[0] ?? { id: 1, title: 'Honeymoon', home_currency: 'USD' };
+    const tripRow = tripRes.rows[0] ?? { id: 1, title: 'Flitterwochen', home_currency: 'USD' };
     const trip: Trip = {
         id: 1,
-        title: tripRow.title ?? 'Honeymoon',
+        title: tripRow.title ?? 'Flitterwochen',
         start_date: isoDate(tripRow.start_date),
         end_date: isoDate(tripRow.end_date),
         home_currency: tripRow.home_currency ?? 'USD',

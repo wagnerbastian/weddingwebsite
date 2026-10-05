@@ -19,7 +19,7 @@ export default function AdminTimeline() {
     const [editingMilestone, setEditingMilestone] = useState<Milestone | null>(null);
     const [showAddModal, setShowAddModal] = useState(false);
     const [uploading, setUploading] = useState(false);
-    const [timelineSubtitle, setTimelineSubtitle] = useState('The journey of our love');
+    const [timelineSubtitle, setTimelineSubtitle] = useState('Die Reise unserer Liebe');
     const [subtitleLoaded, setSubtitleLoaded] = useState(false);
     const fileInputRef1 = useRef<HTMLInputElement>(null);
     const fileInputRef2 = useRef<HTMLInputElement>(null);
@@ -163,7 +163,7 @@ export default function AdminTimeline() {
     };
 
     const handleDelete = async (id: number) => {
-        if (!confirm('Are you sure you want to delete this milestone?')) return;
+        if (!confirm('Diesen Meilenstein wirklich löschen?')) return;
 
         try {
             const res = await fetch('/api/admin/timeline', {
@@ -191,13 +191,13 @@ export default function AdminTimeline() {
 
         // Format based on dateFormat setting
         if (dateFormat === 'month-year') {
-            return date.toLocaleDateString('en-US', {
+            return date.toLocaleDateString('de-DE', {
                 year: 'numeric',
                 month: 'long'
             });
         } else {
             // Default to exact date
-            return date.toLocaleDateString('en-US', {
+            return date.toLocaleDateString('de-DE', {
                 year: 'numeric',
                 month: 'long',
                 day: 'numeric'
@@ -209,28 +209,28 @@ export default function AdminTimeline() {
         <div>
             <div className="flex justify-between items-center mb-6">
                 <div>
-                    <h1 className="text-3xl font-bold text-gray-900 mb-2">Timeline Management</h1>
-                    <p className="text-gray-600">Create and manage your love story timeline</p>
+                    <h1 className="text-3xl font-bold text-gray-900 mb-2">Unsere Geschichte verwalten</h1>
+                    <p className="text-gray-600">Erstellt und verwaltet den Zeitstrahl eurer Liebesgeschichte</p>
                 </div>
                 <button
                     onClick={() => setShowAddModal(true)}
                     className="bg-accent text-white px-6 py-3 rounded-xl hover:bg-accent-dark hover:shadow-xl transition-all duration-300 shadow-lg font-medium"
                 >
-                    Add Milestone
+                    Meilenstein hinzufügen
                 </button>
             </div>
 
             {/* Page Subtitle Editor */}
             <div className="mb-6 p-6 bg-white rounded-2xl border border-gray-200 shadow-lg">
-                <h2 className="text-lg font-bold text-gray-900 mb-1">Page Subtitle</h2>
-                <p className="text-sm text-gray-500 mb-3">Displayed under &quot;Our Story&quot; on the public timeline page.</p>
+                <h2 className="text-lg font-bold text-gray-900 mb-1">Untertitel der Seite</h2>
+                <p className="text-sm text-gray-500 mb-3">Wird auf der öffentlichen Seite unter „Unsere Geschichte“ angezeigt.</p>
                 <div className="flex gap-3">
                     <input
                         type="text"
                         value={timelineSubtitle}
                         onChange={(e) => setTimelineSubtitle(e.target.value)}
                         className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-accent focus:border-accent text-gray-900"
-                        placeholder="e.g. The journey of our love"
+                        placeholder="z. B. Die Reise unserer Liebe"
                     />
                     <SaveStatus state={subtitleState} onRetry={retrySubtitle} />
                 </div>
@@ -283,7 +283,7 @@ export default function AdminTimeline() {
                                     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                                     </svg>
-                                    Edit
+                                    Bearbeiten
                                 </button>
                                 <button
                                     onClick={() => handleDelete(milestone.id)}
@@ -292,7 +292,7 @@ export default function AdminTimeline() {
                                     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                                     </svg>
-                                    Delete
+                                    Löschen
                                 </button>
                             </div>
                         </div>
@@ -301,7 +301,7 @@ export default function AdminTimeline() {
 
                 {milestones.length === 0 && (
                     <div className="text-center py-12 bg-gradient-to-br from-accent/5 to-accent-light/10 rounded-2xl border border-accent/10">
-                        <p className="text-gray-500">No milestones added yet. Click &quot;Add Milestone&quot; to get started.</p>
+                        <p className="text-gray-500">Noch keine Meilensteine. Klicke auf „Meilenstein hinzufügen“, um loszulegen.</p>
                     </div>
                 )}
             </div>
@@ -310,40 +310,40 @@ export default function AdminTimeline() {
             {showAddModal && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
                     <div className="bg-white rounded-2xl shadow-xl max-w-md w-full p-6">
-                        <h3 className="text-lg font-bold text-gray-900 mb-4">Add New Milestone</h3>
+                        <h3 className="text-lg font-bold text-gray-900 mb-4">Neuen Meilenstein hinzufügen</h3>
 
                         <form onSubmit={handleAddMilestone} className="space-y-4">
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    Title *
+                                    Titel *
                                 </label>
                                 <input
                                     type="text"
                                     value={formData.title}
                                     onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-accent focus:border-accent"
-                                    placeholder="e.g., We Met"
+                                    placeholder="z. B. Wir lernen uns kennen"
                                     required
                                 />
                             </div>
 
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    Date Format *
+                                    Datumsformat *
                                 </label>
                                 <select
                                     value={formData.dateFormat}
                                     onChange={(e) => setFormData({ ...formData, dateFormat: e.target.value as 'exact' | 'month-year' })}
                                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-accent focus:border-accent text-gray-900"
                                 >
-                                    <option value="exact">Exact Date (e.g., March 6, 2015)</option>
-                                    <option value="month-year">Month & Year (e.g., March 2015)</option>
+                                    <option value="exact">Genaues Datum (z. B. 6. März 2015)</option>
+                                    <option value="month-year">Monat & Jahr (z. B. März 2015)</option>
                                 </select>
                             </div>
 
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    Date *
+                                    Datum *
                                 </label>
                                 <input
                                     type="date"
@@ -354,28 +354,28 @@ export default function AdminTimeline() {
                                 />
                                 <p className="mt-1 text-xs text-gray-500">
                                     {formData.dateFormat === 'month-year'
-                                        ? 'Select any day in the month (only month and year will be displayed)'
-                                        : 'Select the exact date'}
+                                        ? 'Wähle einen beliebigen Tag im Monat (angezeigt werden nur Monat und Jahr)'
+                                        : 'Wähle das genaue Datum'}
                                 </p>
                             </div>
 
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    Description *
+                                    Beschreibung *
                                 </label>
                                 <textarea
                                     value={formData.description}
                                     onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                                     rows={4}
                                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-accent focus:border-accent"
-                                    placeholder="Tell the story of this milestone..."
+                                    placeholder="Erzählt die Geschichte dieses Meilensteins …"
                                     required
                                 />
                             </div>
 
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    Photo 1 (optional)
+                                    Foto 1 (optional)
                                 </label>
                                 <input
                                     ref={fileInputRef1}
@@ -387,18 +387,18 @@ export default function AdminTimeline() {
                                 {formData.file1 && (
                                     <div className="mt-2">
                                         <label className="block text-xs font-medium text-gray-600 mb-1">
-                                            Photo 1 Vertical Alignment
+                                            Foto 1 – vertikale Ausrichtung
                                         </label>
                                         <select
                                             value={formData.photo1Align}
                                             onChange={(e) => setFormData({ ...formData, photo1Align: e.target.value as 'top' | 'top-center' | 'center' | 'center-bottom' | 'bottom' })}
                                             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-accent focus:border-accent text-sm"
                                         >
-                                            <option value="top">Top Align</option>
-                                            <option value="top-center">Top-Center Align</option>
-                                            <option value="center">Center Align (Default)</option>
-                                            <option value="center-bottom">Center-Bottom Align</option>
-                                            <option value="bottom">Bottom Align</option>
+                                            <option value="top">Oben</option>
+                                            <option value="top-center">Oben-Mitte</option>
+                                            <option value="center">Mitte (Standard)</option>
+                                            <option value="center-bottom">Mitte-Unten</option>
+                                            <option value="bottom">Unten</option>
                                         </select>
                                     </div>
                                 )}
@@ -406,7 +406,7 @@ export default function AdminTimeline() {
 
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    Photo 2 (optional)
+                                    Foto 2 (optional)
                                 </label>
                                 <input
                                     ref={fileInputRef2}
@@ -418,18 +418,18 @@ export default function AdminTimeline() {
                                 {formData.file2 && (
                                     <div className="mt-2">
                                         <label className="block text-xs font-medium text-gray-600 mb-1">
-                                            Photo 2 Vertical Alignment
+                                            Foto 2 – vertikale Ausrichtung
                                         </label>
                                         <select
                                             value={formData.photo2Align}
                                             onChange={(e) => setFormData({ ...formData, photo2Align: e.target.value as 'top' | 'top-center' | 'center' | 'center-bottom' | 'bottom' })}
                                             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-accent focus:border-accent text-sm"
                                         >
-                                            <option value="top">Top Align</option>
-                                            <option value="top-center">Top-Center Align</option>
-                                            <option value="center">Center Align (Default)</option>
-                                            <option value="center-bottom">Center-Bottom Align</option>
-                                            <option value="bottom">Bottom Align</option>
+                                            <option value="top">Oben</option>
+                                            <option value="top-center">Oben-Mitte</option>
+                                            <option value="center">Mitte (Standard)</option>
+                                            <option value="center-bottom">Mitte-Unten</option>
+                                            <option value="bottom">Unten</option>
                                         </select>
                                     </div>
                                 )}
@@ -446,14 +446,14 @@ export default function AdminTimeline() {
                                     }}
                                     className="flex-1 px-4 py-2 border border-gray-300 rounded-xl text-gray-700 hover:bg-gray-50 transition-all duration-300 shadow-md hover:shadow-lg"
                                 >
-                                    Cancel
+                                    Abbrechen
                                 </button>
                                 <button
                                     type="submit"
                                     disabled={uploading}
                                     className="flex-1 px-4 py-2 bg-accent text-white rounded-xl hover:bg-accent-dark disabled:opacity-50 transition-all duration-300 shadow-md hover:shadow-lg"
                                 >
-                                    {uploading ? 'Adding...' : 'Add Milestone'}
+                                    {uploading ? 'Wird hinzugefügt …' : 'Meilenstein hinzufügen'}
                                 </button>
                             </div>
                         </form>
@@ -465,12 +465,12 @@ export default function AdminTimeline() {
             {editingMilestone && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
                     <div className="bg-white rounded-2xl shadow-xl max-w-md w-full p-6">
-                        <h3 className="text-lg font-bold text-gray-900 mb-4">Edit Milestone</h3>
+                        <h3 className="text-lg font-bold text-gray-900 mb-4">Meilenstein bearbeiten</h3>
 
                         <div className="space-y-4">
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    Title
+                                    Titel
                                 </label>
                                 <input
                                     type="text"
@@ -482,21 +482,21 @@ export default function AdminTimeline() {
 
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    Date Format
+                                    Datumsformat
                                 </label>
                                 <select
                                     value={editingMilestone.dateFormat || 'exact'}
                                     onChange={(e) => setEditingMilestone({ ...editingMilestone, dateFormat: e.target.value as 'exact' | 'month-year' })}
                                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-accent focus:border-accent text-gray-900"
                                 >
-                                    <option value="exact">Exact Date (e.g., March 6, 2015)</option>
-                                    <option value="month-year">Month & Year (e.g., March 2015)</option>
+                                    <option value="exact">Genaues Datum (z. B. 6. März 2015)</option>
+                                    <option value="month-year">Monat & Jahr (z. B. März 2015)</option>
                                 </select>
                             </div>
 
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    Date
+                                    Datum
                                 </label>
                                 <input
                                     type="date"
@@ -506,14 +506,14 @@ export default function AdminTimeline() {
                                 />
                                 <p className="mt-1 text-xs text-gray-500">
                                     {(editingMilestone.dateFormat || 'exact') === 'month-year'
-                                        ? 'Select any day in the month (only month and year will be displayed)'
-                                        : 'Select the exact date'}
+                                        ? 'Wähle einen beliebigen Tag im Monat (angezeigt werden nur Monat und Jahr)'
+                                        : 'Wähle das genaue Datum'}
                                 </p>
                             </div>
 
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    Description
+                                    Beschreibung
                                 </label>
                                 <textarea
                                     value={editingMilestone.description}
@@ -527,7 +527,7 @@ export default function AdminTimeline() {
                             {editingMilestone.photos && editingMilestone.photos.length > 0 && (
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                                        Current Photos
+                                        Aktuelle Fotos
                                     </label>
                                     <div className="space-y-3">
                                         {editingMilestone.photos.map((photo, idx) => (
@@ -536,7 +536,7 @@ export default function AdminTimeline() {
                                                     <div className="relative w-24 h-24 rounded-lg overflow-hidden border border-gray-200">
                                                         <Image
                                                             src={`/api/photos/${photo}`}
-                                                            alt={`Photo ${idx + 1}`}
+                                                            alt={`Foto ${idx + 1}`}
                                                             fill
                                                             unoptimized
                                                             className="object-cover"
@@ -553,7 +553,7 @@ export default function AdminTimeline() {
                                                     </div>
                                                     <div className="flex-1">
                                                         <label className="block text-xs font-medium text-gray-600 mb-1">
-                                                            Photo {idx + 1} Vertical Alignment
+                                                            Foto {idx + 1} – vertikale Ausrichtung
                                                         </label>
                                                         <select
                                                             value={editingMilestone.photoAligns?.[idx] || 'center'}
@@ -564,11 +564,11 @@ export default function AdminTimeline() {
                                                             }}
                                                             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-accent focus:border-accent text-sm"
                                                         >
-                                                            <option value="top">Top Align</option>
-                                                            <option value="top-center">Top-Center Align</option>
-                                                            <option value="center">Center Align (Default)</option>
-                                                            <option value="center-bottom">Center-Bottom Align</option>
-                                                            <option value="bottom">Bottom Align</option>
+                                                            <option value="top">Oben</option>
+                                                            <option value="top-center">Oben-Mitte</option>
+                                                            <option value="center">Mitte (Standard)</option>
+                                                            <option value="center-bottom">Mitte-Unten</option>
+                                                            <option value="bottom">Unten</option>
                                                         </select>
                                                     </div>
                                                 </div>
@@ -582,7 +582,7 @@ export default function AdminTimeline() {
                             {(!editingMilestone.photos || editingMilestone.photos.length < 2) && (
                                 <div className="space-y-3">
                                     <label className="block text-sm font-medium text-gray-700">
-                                        Add Photos (up to 2 total)
+                                        Fotos hinzufügen (insgesamt bis zu 2)
                                     </label>
                                     {(!editingMilestone.photos || editingMilestone.photos.length === 0) && (
                                         <>
@@ -597,18 +597,18 @@ export default function AdminTimeline() {
                                                 {editFiles.file1 && (
                                                     <div className="mt-2">
                                                         <label className="block text-xs font-medium text-gray-600 mb-1">
-                                                            New Photo 1 Vertical Alignment
+                                                            New Foto 1 – vertikale Ausrichtung
                                                         </label>
                                                         <select
                                                             value={editPhotoAligns.photo1Align}
                                                             onChange={(e) => setEditPhotoAligns({ ...editPhotoAligns, photo1Align: e.target.value as 'top' | 'top-center' | 'center' | 'center-bottom' | 'bottom' })}
                                                             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-accent focus:border-accent text-sm"
                                                         >
-                                                            <option value="top">Top Align</option>
-                                                            <option value="top-center">Top-Center Align</option>
-                                                            <option value="center">Center Align (Default)</option>
-                                                            <option value="center-bottom">Center-Bottom Align</option>
-                                                            <option value="bottom">Bottom Align</option>
+                                                            <option value="top">Oben</option>
+                                                            <option value="top-center">Oben-Mitte</option>
+                                                            <option value="center">Mitte (Standard)</option>
+                                                            <option value="center-bottom">Mitte-Unten</option>
+                                                            <option value="bottom">Unten</option>
                                                         </select>
                                                     </div>
                                                 )}
@@ -624,18 +624,18 @@ export default function AdminTimeline() {
                                                 {editFiles.file2 && (
                                                     <div className="mt-2">
                                                         <label className="block text-xs font-medium text-gray-600 mb-1">
-                                                            New Photo 2 Vertical Alignment
+                                                            New Foto 2 – vertikale Ausrichtung
                                                         </label>
                                                         <select
                                                             value={editPhotoAligns.photo2Align}
                                                             onChange={(e) => setEditPhotoAligns({ ...editPhotoAligns, photo2Align: e.target.value as 'top' | 'top-center' | 'center' | 'center-bottom' | 'bottom' })}
                                                             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-accent focus:border-accent text-sm"
                                                         >
-                                                            <option value="top">Top Align</option>
-                                                            <option value="top-center">Top-Center Align</option>
-                                                            <option value="center">Center Align (Default)</option>
-                                                            <option value="center-bottom">Center-Bottom Align</option>
-                                                            <option value="bottom">Bottom Align</option>
+                                                            <option value="top">Oben</option>
+                                                            <option value="top-center">Oben-Mitte</option>
+                                                            <option value="center">Mitte (Standard)</option>
+                                                            <option value="center-bottom">Mitte-Unten</option>
+                                                            <option value="bottom">Unten</option>
                                                         </select>
                                                     </div>
                                                 )}
@@ -654,18 +654,18 @@ export default function AdminTimeline() {
                                             {editFiles.file1 && (
                                                 <div className="mt-2">
                                                     <label className="block text-xs font-medium text-gray-600 mb-1">
-                                                        New Photo Vertical Alignment
+                                                        Neues Foto – vertikale Ausrichtung
                                                     </label>
                                                     <select
                                                         value={editPhotoAligns.photo1Align}
                                                         onChange={(e) => setEditPhotoAligns({ ...editPhotoAligns, photo1Align: e.target.value as 'top' | 'top-center' | 'center' | 'center-bottom' | 'bottom' })}
                                                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-accent focus:border-accent text-sm"
                                                     >
-                                                        <option value="top">Top Align</option>
-                                                        <option value="top-center">Top-Center Align</option>
-                                                        <option value="center">Center Align (Default)</option>
-                                                        <option value="center-bottom">Center-Bottom Align</option>
-                                                        <option value="bottom">Bottom Align</option>
+                                                        <option value="top">Oben</option>
+                                                        <option value="top-center">Oben-Mitte</option>
+                                                        <option value="center">Mitte (Standard)</option>
+                                                        <option value="center-bottom">Mitte-Unten</option>
+                                                        <option value="bottom">Unten</option>
                                                     </select>
                                                 </div>
                                             )}
@@ -684,14 +684,14 @@ export default function AdminTimeline() {
                                 }}
                                 className="flex-1 px-4 py-2 border border-gray-300 rounded-xl text-gray-700 hover:bg-gray-50 transition-all duration-300 shadow-md hover:shadow-lg"
                             >
-                                Cancel
+                                Abbrechen
                             </button>
                             <button
                                 onClick={handleSaveEdit}
                                 disabled={uploading}
                                 className="flex-1 px-4 py-2 bg-accent text-white rounded-xl hover:bg-accent-dark disabled:opacity-50 transition-all duration-300 shadow-md hover:shadow-lg"
                             >
-                                {uploading ? 'Saving...' : 'Save Changes'}
+                                {uploading ? 'Wird gespeichert …' : 'Speichern'}
                             </button>
                         </div>
                     </div>

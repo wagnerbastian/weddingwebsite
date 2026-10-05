@@ -116,7 +116,7 @@ const withAmy = buildSummary({
     ...base,
     payers: [...payers, { id: 99, name: 'Amy', share_pct: 0, sort_order: 9 }],
     purchases: [...purchases, {
-        id: 999, payer_id: 99, item_id: nameToId.get('Decor')!, category_id: null,
+        id: 999, payer_id: 99, item_id: nameToId.get('Deko')!, category_id: null,
         description: 'Amy decor', amount: 250, purchased_on: null, notes: null,
     }],
 });
@@ -146,17 +146,17 @@ console.log('\n=== 7. is_paid vs actual payments ===');
 const flagged = categories.map((c) => ({ ...c, items: c.items.map((i) => ({ ...i, is_paid: true })) }));
 const allFlagged = buildSummary({ ...base, categories: flagged });
 note('every line flagged paid', `paidItemCount ${allFlagged.paidItemCount}/${allFlagged.itemCount}, but paidTotal is still ${allFlagged.paidTotal} of ${allFlagged.budgetTotal}`);
-const venueLine = s.items.find((i) => i.name === 'Venue')!;
+const venueLine = s.items.find((i) => i.name === 'Location')!;
 note('Venue line: flagged?/paid', `is_paid=${venueLine.isPaid}, paid=${venueLine.paid}, budget=${venueLine.total}`);
 
 console.log('\n=== 8. Subitem + qty_source interaction ===');
-const appet = categories[0].items.find((i) => i.name === 'Appetizers')!;
+const appet = categories[0].items.find((i) => i.name === 'Vorspeisen')!;
 const appetSourced: BudgetItem = { ...appet, qty_source: 'adults' };
 const mixed = buildSummary({
     ...base,
     categories: [{ ...categories[0], items: categories[0].items.map((i) => i.id === appet.id ? appetSourced : i) }, ...categories.slice(1)],
 });
 note('subitem line with qty_source=adults',
-    `${mixed.items.find((i) => i.name === 'Appetizers')!.total} (should ignore qty_source: 1700)`);
+    `${mixed.items.find((i) => i.name === 'Vorspeisen')!.total} (should ignore qty_source: 1700)`);
 
 console.log(`\n${problems === 0 ? 'No broken invariants.' : `${problems} BROKEN INVARIANT(S)`}\n`);

@@ -61,7 +61,7 @@ export function useHoneymoon() {
     const refresh = useCallback(async () => {
         try {
             const res = await fetch(BASE, { cache: 'no-store' });
-            if (!res.ok) throw new Error('Failed to load honeymoon data');
+            if (!res.ok) throw new Error('Flitterwochen-Daten konnten nicht geladen werden');
             const payload: HoneymoonPayload = await res.json();
             // Publish before the state update so the first render that sees the
             // new places already resolves their colours and labels correctly.
@@ -70,7 +70,7 @@ export function useHoneymoon() {
             setData(payload);
             setError('');
         } catch (e) {
-            setError(e instanceof Error ? e.message : 'Failed to load honeymoon data');
+            setError(e instanceof Error ? e.message : 'Flitterwochen-Daten konnten nicht geladen werden');
         } finally {
             setLoading(false);
         }
@@ -92,7 +92,7 @@ export function useHoneymoon() {
             }
             if (!res.ok) {
                 const body = await res.json().catch(() => ({}));
-                throw new Error(body.error || 'Save failed');
+                throw new Error(body.error || 'Speichern fehlgeschlagen');
             }
             /*
              * On the demo instance, don't refetch.
@@ -110,7 +110,7 @@ export function useHoneymoon() {
             if (!(await isDemoClient())) await refresh();
             return true;
         } catch (e) {
-            setError(e instanceof Error ? e.message : 'Save failed');
+            setError(e instanceof Error ? e.message : 'Speichern fehlgeschlagen');
             return false;
         } finally {
             inFlight.current -= 1;
@@ -170,13 +170,13 @@ export function useHoneymoon() {
                 setSessionExpired(true);
                 return false;
             }
-            if (!res.ok) throw new Error('Save failed');
+            if (!res.ok) throw new Error('Speichern fehlgeschlagen');
             // The demo drops writes, so a refetch there would snap the pill back.
             if (!(await isDemoClient())) await refresh();
             return true;
         } catch (e) {
             if (before) commit(before);
-            setError(e instanceof Error ? e.message : 'Save failed');
+            setError(e instanceof Error ? e.message : 'Speichern fehlgeschlagen');
             return false;
         }
     }, [commit, refresh]);
@@ -316,12 +316,12 @@ export function useHoneymoon() {
                 // places invisible under any country filter.
                 body: JSON.stringify({ name: name.trim(), country: country ?? '' }),
             });
-            if (!res.ok) throw new Error('Could not add that region');
+            if (!res.ok) throw new Error('Region konnte nicht hinzugefügt werden');
             const row = await res.json();
             await refresh();
             return typeof row?.id === 'number' ? row.id : null;
         } catch (e) {
-            setError(e instanceof Error ? e.message : 'Could not add that region');
+            setError(e instanceof Error ? e.message : 'Region konnte nicht hinzugefügt werden');
             return null;
         }
     }, [refresh]);
@@ -352,11 +352,11 @@ export function useHoneymoon() {
             // 409 is the API saying the key exists (a race with another tab),
             // which is fine. Anything else is a real failure and says so —
             // this used to treat every 500 as "duplicate, carry on".
-            if (!res.ok && res.status !== 409) throw new Error('Could not add that category');
+            if (!res.ok && res.status !== 409) throw new Error('Kategorie konnte nicht hinzugefügt werden');
             await refresh();
             return key;
         } catch (e) {
-            setError(e instanceof Error ? e.message : 'Could not add that category');
+            setError(e instanceof Error ? e.message : 'Kategorie konnte nicht hinzugefügt werden');
             return null;
         }
     }, [refresh, data?.categories]);
@@ -383,7 +383,7 @@ export function useHoneymoon() {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(body),
         });
-        if (!res.ok) throw new Error('Restore failed');
+        if (!res.ok) throw new Error('Wiederherstellen fehlgeschlagen');
         return res.json();
     }, []);
 
@@ -395,7 +395,7 @@ export function useHoneymoon() {
         });
         // A failed re-link during an undo is data loss that nothing else would
         // report — surface it rather than swallowing the status.
-        if (!res.ok) throw new Error('Restore did not finish — a link could not be put back');
+        if (!res.ok) throw new Error('Wiederherstellen wurde nicht abgeschlossen – ein Link konnte nicht zurückgesetzt werden');
     }, []);
 
     /**
@@ -410,7 +410,7 @@ export function useHoneymoon() {
         try {
             return await quietPost(resource, body);
         } catch (e) {
-            setError(e instanceof Error ? e.message : 'Save failed');
+            setError(e instanceof Error ? e.message : 'Speichern fehlgeschlagen');
             return null;
         }
     }, [quietPost]);
@@ -424,7 +424,7 @@ export function useHoneymoon() {
             await quietPost(resource, rows);
             return true;
         } catch (e) {
-            setError(e instanceof Error ? e.message : 'Save failed');
+            setError(e instanceof Error ? e.message : 'Speichern fehlgeschlagen');
             return false;
         }
     }, [quietPost]);
@@ -466,7 +466,7 @@ export function useHoneymoon() {
                 try {
                     await restore();
                 } catch (e) {
-                    setError(e instanceof Error ? e.message : 'Could not undo that');
+                    setError(e instanceof Error ? e.message : 'Rückgängig machen nicht möglich');
                 }
                 await refresh();
             },
@@ -546,8 +546,8 @@ export function useHoneymoon() {
         }
 
         const label = places.length === 1
-            ? `Deleted ${places[0].name}`
-            : `Deleted ${places.length} places`;
+            ? `${places[0].name} gelöscht`
+            : `${places.length} Orte gelöscht`;
 
         return withUndo(
             label,
@@ -581,7 +581,7 @@ export function useHoneymoon() {
      * the day at its old position by reordering again.
      */
     const removeDay = useCallback(async (day: Day) => withUndo(
-        `Deleted day ${day.day_number}`,
+        `Tag ${day.day_number} gelöscht`,
         async () => {
             const ok = await remove('days', day.id);
             if (!ok) return false;

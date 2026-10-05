@@ -14,9 +14,9 @@ function insertLink(
     value: string,
     onChange: (val: string) => void
 ) {
-    const text = prompt('Link text:');
+    const text = prompt('Linktext:');
     if (!text) return;
-    const url = prompt('URL (e.g. https://example.com):');
+    const url = prompt('URL (z. B. https://example.com):');
     if (!url) return;
     const tag = `[${text}](${url})`;
     const start = textarea.selectionStart;
@@ -59,7 +59,7 @@ export default function AdminFAQ() {
     };
 
     const checkDelete = (index: number) => {
-        if (confirm('Are you sure you want to delete this Q&A?')) {
+        if (confirm('Diese Frage samt Antwort wirklich löschen?')) {
             const newFaqs = faqs.filter((_, i) => i !== index);
             setFaqs(newFaqs);
         }
@@ -93,8 +93,8 @@ export default function AdminFAQ() {
     return (
         <div className="max-w-4xl">
             <AutosaveHeader
-                title="Q&A / FAQ Management"
-                subtitle="Manage frequently asked questions for your guests. Changes save themselves."
+                title="Fragen & Antworten"
+                subtitle="Verwaltet die häufig gestellten Fragen eurer Gäste. Änderungen werden automatisch gespeichert."
                 state={state}
                 onRetry={retry}
             />
@@ -107,7 +107,7 @@ export default function AdminFAQ() {
                                 onClick={() => checkMoveUp(index)}
                                 disabled={index === 0}
                                 className="p-1 text-gray-400 hover:text-gray-600 disabled:opacity-30"
-                                title="Move Up"
+                                title="Nach oben"
                             >
                                 ↑
                             </button>
@@ -115,14 +115,14 @@ export default function AdminFAQ() {
                                 onClick={() => checkMoveDown(index)}
                                 disabled={index === faqs.length - 1}
                                 className="p-1 text-gray-400 hover:text-gray-600 disabled:opacity-30"
-                                title="Move Down"
+                                title="Nach unten"
                             >
                                 ↓
                             </button>
                             <button
                                 onClick={() => checkDelete(index)}
                                 className="p-1 text-red-400 hover:text-red-600"
-                                title="Delete"
+                                title="Löschen"
                             >
                                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                                     <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
@@ -132,18 +132,18 @@ export default function AdminFAQ() {
 
                         <div className="grid gap-4">
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Question</label>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Frage</label>
                                 <input
                                     type="text"
                                     value={faq.question}
-                                    placeholder="Question"
+                                    placeholder="Frage"
                                     onChange={(e) => handleChange(index, 'question', e.target.value)}
                                     className="block w-full rounded-lg border-gray-300 shadow-sm focus:border-accent focus:ring-accent sm:text-sm p-2 border text-gray-900"
                                 />
                             </div>
                             <div>
                                 <div className="flex items-center justify-between mb-1">
-                                    <label className="block text-sm font-medium text-gray-700">Answer</label>
+                                    <label className="block text-sm font-medium text-gray-700">Antwort</label>
                                     <button
                                         type="button"
                                         onClick={(e) => {
@@ -151,9 +151,9 @@ export default function AdminFAQ() {
                                             if (ta) insertLink(ta, faq.answer, (val) => handleChange(index, 'answer', val));
                                         }}
                                         className="text-xs px-2 py-1 rounded bg-accent/10 text-accent hover:bg-accent/20 transition-colors font-medium"
-                                        title="Insert a hyperlink"
+                                        title="Link einfügen"
                                     >
-                                        🔗 Insert Link
+                                        🔗 Link einfügen
                                     </button>
                                 </div>
                                 <textarea
@@ -162,7 +162,7 @@ export default function AdminFAQ() {
                                     onChange={(e) => handleChange(index, 'answer', e.target.value)}
                                     className="block w-full rounded-lg border-gray-300 shadow-sm focus:border-accent focus:ring-accent sm:text-sm p-2 border text-gray-900"
                                 />
-                                <p className="text-xs text-gray-400 mt-1">Use <code>[link text](https://url.com)</code> syntax for hyperlinks</p>
+                                <p className="text-xs text-gray-400 mt-1">Für Links die Schreibweise <code>[Linktext](https://url.de)</code> verwenden</p>
                             </div>
                         </div>
                     </div>
@@ -172,7 +172,7 @@ export default function AdminFAQ() {
                     onClick={handleAdd}
                     className="w-full py-4 border-2 border-dashed border-gray-300 rounded-2xl text-gray-500 hover:border-accent hover:text-accent transition-all duration-300 flex items-center justify-center font-medium hover:shadow-lg"
                 >
-                    + Add New Question
+                    + Neue Frage hinzufügen
                 </button>
             </div>
         </div>

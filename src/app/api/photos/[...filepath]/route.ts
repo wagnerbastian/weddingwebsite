@@ -41,17 +41,17 @@ export async function GET(
         const isThumb = filepath[filepath.length - 1] === 'thumb';
         const segments = isThumb ? filepath.slice(0, -1) : filepath;
         if (segments.length === 0) {
-            return new NextResponse('File not found', { status: 404 });
+            return new NextResponse('Datei nicht gefunden', { status: 404 });
         }
 
         // Security: the resolved path must stay within the photos directory.
         const filePath = resolveInPhotos(segments.join('/'));
         if (!filePath) {
-            return new NextResponse('Forbidden', { status: 403 });
+            return new NextResponse('Zugriff verweigert', { status: 403 });
         }
 
         if (!fs.existsSync(filePath) || !fs.statSync(filePath).isFile()) {
-            return new NextResponse('File not found', { status: 404 });
+            return new NextResponse('Datei nicht gefunden', { status: 404 });
         }
 
         const ext = path.extname(filePath).toLowerCase();
@@ -114,6 +114,6 @@ export async function GET(
         });
     } catch (error) {
         console.error('Error serving photo:', error);
-        return new NextResponse('Error serving file', { status: 500 });
+        return new NextResponse('Fehler beim Laden der Datei', { status: 500 });
     }
 }

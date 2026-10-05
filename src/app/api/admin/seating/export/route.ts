@@ -235,7 +235,7 @@ export async function GET() {
         return NextResponse.json({ ...header, tables, unseated, vendors } satisfies SeatingExportData);
     } catch (error) {
         console.error('Error building seating export:', error);
-        return NextResponse.json({ error: 'Failed to build seating export' }, { status: 500 });
+        return NextResponse.json({ error: 'Sitzplan-Export konnte nicht erstellt werden' }, { status: 500 });
     } finally {
         client.release();
     }

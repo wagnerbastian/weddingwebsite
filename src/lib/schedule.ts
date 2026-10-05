@@ -48,10 +48,10 @@ export function publicScheduleEvents(events: ScheduleEvent[] | undefined): Sched
 export function parseEventTime(time: string): number | null {
     const text = (time ?? '').trim().toLowerCase();
     if (!text) return null;
-    if (/^(noon|midday)$/.test(text)) return 12 * 60;
-    if (/^midnight$/.test(text)) return 0;
+    if (/^(noon|midday|mittag)$/.test(text)) return 12 * 60;
+    if (/^(midnight|mitternacht)$/.test(text)) return 0;
 
-    const match = text.match(/^(\d{1,4})(?:[:.](\d{2}))?\s*(a\.?m\.?|p\.?m\.?)?$/);
+    const match = text.match(/^(\d{1,4})(?:[:.](\d{2}))?\s*(a\.?m\.?|p\.?m\.?)?(?:\s*uhr)?$/);
     if (!match) return null;
 
     const digits = match[1];
@@ -96,8 +96,7 @@ export function formatEventTime(minutes: number): string {
     const wrapped = ((Math.round(minutes) % 1440) + 1440) % 1440;
     const hour24 = Math.floor(wrapped / 60);
     const minute = wrapped % 60;
-    const hour12 = hour24 % 12 === 0 ? 12 : hour24 % 12;
-    return `${hour12}:${String(minute).padStart(2, '0')} ${hour24 < 12 ? 'AM' : 'PM'}`;
+    return `${String(hour24).padStart(2, '0')}:${String(minute).padStart(2, '0')} Uhr`;
 }
 
 /**
@@ -163,7 +162,7 @@ export function blankEvent(): ScheduleEvent {
  * rows filters the column. Leaving it out would produce a file nobody could tell
  * apart from a guest-facing one.
  */
-export const SCHEDULE_HEADERS = ['Time', 'Event', 'Location', 'Description', 'Public'] as const;
+export const SCHEDULE_HEADERS = ['Zeit', 'Programmpunkt', 'Ort', 'Beschreibung', 'Öffentlich'] as const;
 
 /** The day as rows, in the order it is shown — which is clock order. */
 export function scheduleRows(events: ScheduleEvent[]): string[][] {
@@ -172,6 +171,6 @@ export function scheduleRows(events: ScheduleEvent[]): string[][] {
         event.title ?? '',
         event.location ?? '',
         event.description ?? '',
-        isPublicEvent(event) ? 'Yes' : 'No',
+        isPublicEvent(event) ? 'Ja' : 'Nein',
     ]);
 }

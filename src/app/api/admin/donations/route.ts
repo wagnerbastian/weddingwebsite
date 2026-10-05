@@ -47,7 +47,7 @@ export async function GET() {
     return NextResponse.json(result.rows);
   } catch (error) {
     console.error('Error fetching donations:', error);
-    return NextResponse.json({ error: 'Failed to fetch donations' }, { status: 500 });
+    return NextResponse.json({ error: 'Spenden konnten nicht geladen werden' }, { status: 500 });
   }
 }
 
@@ -59,7 +59,7 @@ export async function POST(request: Request) {
     const { amount, gift, valid } = normalize(body);
     if (!guest_name || !valid) {
       return NextResponse.json(
-        { error: 'guest_name and either a numeric amount or a gift are required' },
+        { error: 'Gastname und entweder ein Betrag oder ein Geschenk sind erforderlich' },
         { status: 400 }
       );
     }
@@ -73,7 +73,7 @@ export async function POST(request: Request) {
     return NextResponse.json(result.rows[0]);
   } catch (error) {
     console.error('Error adding donation:', error);
-    return NextResponse.json({ error: 'Failed to add donation' }, { status: 500 });
+    return NextResponse.json({ error: 'Spende konnte nicht hinzugefügt werden' }, { status: 500 });
   }
 }
 
@@ -85,7 +85,7 @@ export async function PUT(request: Request) {
     const { amount, gift, valid } = normalize(body);
     if (!id || !guest_name || !valid) {
       return NextResponse.json(
-        { error: 'id, guest_name and either a numeric amount or a gift are required' },
+        { error: 'ID, Gastname und entweder ein Betrag oder ein Geschenk sind erforderlich' },
         { status: 400 }
       );
     }
@@ -99,12 +99,12 @@ export async function PUT(request: Request) {
        JSON.stringify(Array.isArray(co_donors) ? co_donors : []), id]
     );
     if (result.rowCount === 0) {
-      return NextResponse.json({ error: 'Donation not found' }, { status: 404 });
+      return NextResponse.json({ error: 'Spende nicht gefunden' }, { status: 404 });
     }
     return NextResponse.json(result.rows[0]);
   } catch (error) {
     console.error('Error updating donation:', error);
-    return NextResponse.json({ error: 'Failed to update donation' }, { status: 500 });
+    return NextResponse.json({ error: 'Spende konnte nicht aktualisiert werden' }, { status: 500 });
   }
 }
 
@@ -115,7 +115,7 @@ export async function PATCH(request: Request) {
     const { ids, thank_you_sent } = await request.json();
     const cleanIds = (Array.isArray(ids) ? ids : []).map(Number).filter(n => Number.isInteger(n));
     if (cleanIds.length === 0) {
-      return NextResponse.json({ error: 'ids must be a non-empty array' }, { status: 400 });
+      return NextResponse.json({ error: 'IDs müssen eine nicht leere Liste sein' }, { status: 400 });
     }
     const sent = thank_you_sent !== false;
     const result = await pool.query(
@@ -129,7 +129,7 @@ export async function PATCH(request: Request) {
     return NextResponse.json({ success: true, updated: result.rowCount, rows: result.rows });
   } catch (error) {
     console.error('Error updating thank-you status:', error);
-    return NextResponse.json({ error: 'Failed to update thank-you status' }, { status: 500 });
+    return NextResponse.json({ error: 'Dankes-Status konnte nicht aktualisiert werden' }, { status: 500 });
   }
 }
 
@@ -138,12 +138,12 @@ export async function DELETE(request: Request) {
     await ensureTable();
     const { id } = await request.json();
     if (!id) {
-      return NextResponse.json({ error: 'id is required' }, { status: 400 });
+      return NextResponse.json({ error: 'ID ist erforderlich' }, { status: 400 });
     }
     await pool.query('DELETE FROM donations WHERE id = $1', [id]);
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error('Error deleting donation:', error);
-    return NextResponse.json({ error: 'Failed to delete donation' }, { status: 500 });
+    return NextResponse.json({ error: 'Spende konnte nicht gelöscht werden' }, { status: 500 });
   }
 }

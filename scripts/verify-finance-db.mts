@@ -60,8 +60,8 @@ check('contributors seeded', first.contributors.length === 4);
 check('receipts seeded', first.contributors.flatMap(c => c.receipts).length === 3);
 check('headcount seeded', first.settings.adult_count === 124 && first.settings.minor_count === 11);
 
-const sub = first.categories[0].items.find(i => i.name === 'Appetizers');
-check('section renamed to Venue Cost', first.categories.some(c => c.name === 'Venue Cost'),
+const sub = first.categories[0].items.find(i => i.name === 'Vorspeisen');
+check('section renamed to Location-Kosten', first.categories.some(c => c.name === 'Location-Kosten'),
     first.categories.map(c => c.name).join(', '));
 check('appetizers has sub-items', (sub?.subitems.length ?? 0) === 6);
 check('appetizers flagged use_subitems', sub?.use_subitems === true);
@@ -188,7 +188,7 @@ near('total back to original', buildSummary({ ...afterDelete, weddingDate: null 
 
 console.log('\n--- Section-level payments ---');
 const sectionData = await loadFinanceData();
-const venueCat = sectionData.categories.find(c => c.name === 'Venue Cost')!;
+const venueCat = sectionData.categories.find(c => c.name === 'Location-Kosten')!;
 const sSec = buildSummary({ ...sectionData, weddingDate: null });
 const venueStats = sSec.categories.find(c => c.id === venueCat.id)!;
 near('installments landed on section', venueStats.directSpent, 9680);
@@ -216,12 +216,12 @@ await PATCH(req({ id: exclRow.id, category_id: venueCat.id }), params('purchases
 
 console.log('\n--- Referential behaviour ---');
 // The venue installments target the section, so the Venue *line* carries none.
-const venue = afterDelete.categories.flatMap(c => c.items).find(i => i.name === 'Venue')!;
+const venue = afterDelete.categories.flatMap(c => c.items).find(i => i.name === 'Location')!;
 check('venue line has no line-level payments',
     afterDelete.purchases.filter(p => p.item_id === venue.id).length === 0);
 
 // Deleting a budget line must keep its purchases, just unlinked. Decor has three.
-const decor = afterDelete.categories.flatMap(c => c.items).find(i => i.name === 'Decor')!;
+const decor = afterDelete.categories.flatMap(c => c.items).find(i => i.name === 'Deko')!;
 check('decor has 3 linked payments',
     afterDelete.purchases.filter(p => p.item_id === decor.id).length === 3);
 await DELETE(new Request(`http://x/?id=${decor.id}`, { method: 'DELETE' }), params('items'));
@@ -234,7 +234,7 @@ check('orphaned purchases went unlinked',
     `${afterVenueDelete.purchases.filter(p => p.item_id === null && p.category_id === null).length}`);
 
 // Deleting a section must not destroy its installments either.
-const venueCatId = afterVenueDelete.categories.find(c => c.name === 'Venue Cost')!.id;
+const venueCatId = afterVenueDelete.categories.find(c => c.name === 'Location-Kosten')!.id;
 await DELETE(new Request(`http://x/?id=${venueCatId}`, { method: 'DELETE' }), params('categories'));
 const afterCatDelete = await loadFinanceData();
 check('installments survived section deletion', afterCatDelete.purchases.length === 14,
@@ -269,7 +269,7 @@ check('due date produces a day count',
 
 console.log('\n--- Archive keeps rows out of totals but recoverable ---');
 const beforeArchive = buildSummary({ ...typed, weddingDate: null }).budgetTotal;
-const victim = typed.categories.flatMap((c) => c.items).find((i) => i.name === 'Dj')!;
+const victim = typed.categories.flatMap((c) => c.items).find((i) => i.name === 'DJ')!;
 await PATCH(req({ id: victim.id, archived: true }), params('items'));
 const afterArchive = await loadFinanceData();
 check('archived line left the working set',

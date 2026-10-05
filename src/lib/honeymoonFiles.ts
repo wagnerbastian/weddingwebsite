@@ -15,8 +15,10 @@ const FOLDER_LABELS: Record<string, string> = {
 };
 
 /** The document's name inside a warning sentence (German nouns keep their capital). */
-const DOC_NOUNS: Record<string, string> = {
-    passport: 'Reisepass', visa: 'Visum', insurance: 'Versicherung',
+const DOC_NOUNS: Record<string, { article: string; noun: string }> = {
+    passport: { article: 'Der', noun: 'Reisepass' },
+    visa: { article: 'Das', noun: 'Visum' },
+    insurance: { article: 'Die', noun: 'Versicherung' },
 };
 
 /** Filename words, in the order they are tested — the first match wins. */
@@ -77,9 +79,9 @@ export function documentWarnings(
             if (!doc.expires_on || !['passport', 'visa', 'insurance'].includes(doc.kind)) continue;
             const person = doc.person?.trim();
             const owner = person ? `${person}${/[sßxz]$/i.test(person) ? '’' : 's'} ` : '';
-            const what = DOC_NOUNS[doc.kind] ?? 'Dokument';
+            const what = DOC_NOUNS[doc.kind] ?? { article: 'Das', noun: 'Dokument' };
             const on = formatDate(doc.expires_on);
-            const subject = person ? `${owner}${what}` : `Der ${what}`;
+            const subject = person ? `${owner}${what.noun}` : `${what.article} ${what.noun}`;
             if (doc.expires_on < start) {
                 warnings.push({ documentId: doc.id, level: 'warn', message: `${subject} läuft am ${on} ab, vor der Abreise.` });
             } else if (doc.expires_on <= end) {

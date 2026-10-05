@@ -68,7 +68,7 @@ export async function POST(req: Request) {
     else if (typeof body.csv === 'string') {
       const lines = body.csv.split(/\r?\n/).filter((l: string) => l.trim());
       if (lines.length < 2) {
-        return NextResponse.json({ error: 'CSV has no data rows' }, { status: 400 });
+        return NextResponse.json({ error: 'Die CSV enthält keine Datenzeilen' }, { status: 400 });
       }
 
       const rawHeaders = parseCsvLine(lines[0].replace(/^﻿/, ''));
@@ -89,7 +89,7 @@ export async function POST(req: Request) {
       const colDesc  = idx(['description', 'desc', 'notes']);
 
       if (colTitle === -1) {
-        return NextResponse.json({ error: 'Could not find a title/name column in CSV.' }, { status: 400 });
+        return NextResponse.json({ error: 'In der CSV wurde keine Titel-/Namensspalte gefunden.' }, { status: 400 });
       }
 
       for (const line of lines.slice(1)) {
@@ -115,7 +115,7 @@ export async function POST(req: Request) {
         });
       }
     } else {
-      return NextResponse.json({ error: 'Send { items: [] } or { csv: "..." }' }, { status: 400 });
+      return NextResponse.json({ error: 'Sende { items: [] } oder { csv: "..." }' }, { status: 400 });
     }
 
     const updated = [...existing, ...added];
@@ -124,6 +124,6 @@ export async function POST(req: Request) {
     return NextResponse.json({ success: true, added: added.length, skipped: skipped.length });
   } catch (err) {
     console.error('Target import error:', err);
-    return NextResponse.json({ error: 'Failed to import' }, { status: 500 });
+    return NextResponse.json({ error: 'Import fehlgeschlagen' }, { status: 500 });
   }
 }

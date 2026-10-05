@@ -1058,7 +1058,7 @@ console.log('\nTrip mode — today');
 
     check('Indonesia has its own numbers',
         emergencyFor('Indonesia').numbers[0].number === '112'
-        && emergencyFor('Indonesia').numbers.some((n) => n.label === 'Ambulance'));
+        && emergencyFor('Indonesia').numbers.some((n) => n.label === 'Rettungsdienst'));
     check("Singapore's police and ambulance differ",
         emergencyFor('Singapore').numbers.map((n) => n.number).join(',') === '999,995,995');
     check('an unknown country falls back to 112, and says it is a guess',
@@ -1271,8 +1271,8 @@ console.log('\nBudget');
     check('an unknown pair does not guess', convert(10, 'JPY', 'IDR', rates) === null);
     check('a missing currency is treated as the target',
         convert(10, null, 'USD', rates) === 10);
-    check('a rate describes itself', describeRate(rates[0]) === '1 USD = 15,800 IDR');
-    check('and a small one keeps its decimals', describeRate(rates[1]) === '1 USD = 1.35 SGD');
+    check('a rate describes itself', describeRate(rates[0]) === '1 USD = 15.800 IDR');
+    check('and a small one keeps its decimals', describeRate(rates[1]) === '1 USD = 1,35 SGD');
 
     const hotel = { ...makePlace(1, 'Amankila', -8.4, 115.5), cost: 420, cost_currency: 'USD',
         cost_per: 'night' as const };
@@ -1313,7 +1313,7 @@ console.log('\nBudget');
         String(budget.total));
     check('a place with only a price note is counted as unpriced', budget.unpriced === 1);
     check('the biggest line is first', budget.lines[0].label === 'Amankila');
-    check('the detail says how it was worked out', budget.lines[0].detail === '3 nights × 420');
+    check('the detail says how it was worked out', budget.lines[0].detail === '3 Nächte × 420');
     check('a budget gives a remainder',
         budget.remaining != null && Math.abs(budget.remaining - (5000 - budget.total)) < 0.01);
 
@@ -1345,8 +1345,8 @@ console.log('\nBudget');
     check('what has been paid is counted', booked.paid === 400);
     check('and what is left to pay', Math.abs(booked.outstanding - (booked.total - 400)) < 0.01);
 
-    check('money reads as money', formatMoney(1260, 'USD') === '$1,260');
-    check('and an unknown code still prints', formatMoney(1260, 'XXZ').includes('1,260'));
+    check('money reads as money', formatMoney(1260, 'USD').replace(/\s/g, ' ') === '1.260 $');
+    check('and an unknown code still prints', formatMoney(1260, 'XXZ').includes('1.260'));
 }
 
 console.log('\nOne price per stay');
@@ -1391,7 +1391,7 @@ console.log('\nOne price per stay');
     check('a booking costs the rate times the nights it covers',
         bookingTotal(bed(), priced)?.amount === 930);
     check('and says so, so a wrong figure is traceable',
-        bookingTotal(bed(), priced)?.detail === '3 nights × 310');
+        bookingTotal(bed(), priced)?.detail === '3 Nächte × 310');
     check('a rate with no dates is not a total',
         bookingTotal(bed({ check_out: null }), priced) === null);
     check('a price for the whole stay needs no nights',
@@ -1606,7 +1606,7 @@ console.log('\nSuggesting a day');
     check('the categories are mixed rather than three warungs',
         new Set(suggestion?.places.map((place) => place.category)).size === 3,
         suggestion?.places.map((p) => p.category).join(','));
-    check('it says why', (suggestion?.why ?? '').includes('within'));
+    check('it says why', (suggestion?.why ?? '').includes('Umkreis'));
     check('the loop has a length', (suggestion?.km ?? 0) > 0);
     check('already-scheduled places are skipped',
         !suggestDay(base, [base, ...liked], new Set([2, 3]))?.places
@@ -1940,10 +1940,10 @@ console.log('\nPacking');
     }];
     const suggestions = packingSuggestions({ places: [beach, temple, villa], days });
     const texts = suggestions.map((entry) => entry.text).join(' | ');
-    check('a beach day suggests sunscreen', texts.includes('sunscreen'));
+    check('a beach day suggests sunscreen', texts.includes('Sonnencreme'));
     check('a temple suggests a sarong', texts.includes('Sarong'));
-    check('a flight suggests passports', texts.includes('Passports'));
-    check('an overnight flight suggests an eye mask', texts.includes('Eye mask'));
+    check('a flight suggests passports', texts.includes('Reisepässe'));
+    check('an overnight flight suggests an eye mask', texts.includes('Schlafmaske'));
     check('every suggestion says why', suggestions.every((entry) => entry.why.length > 0));
     check('a trip with nothing planned still suggests the universals',
         packingSuggestions({ places: [], days: [] }).length >= 2);
@@ -2679,9 +2679,9 @@ console.log('\nTravel documents');
         folders.kinds.map((f) => `${f.key}:${f.count}`).join() === 'kind:passport:2,kind:insurance:1,kind:ticket:1',
         folders.kinds.map((f) => `${f.key}:${f.count}`).join());
     check('people get folders, and unassigned files are Shared',
-        folders.people.map((f) => `${f.label}:${f.count}`).join() === 'Austin:2,Heaven:1,Shared:1',
+        folders.people.map((f) => `${f.label}:${f.count}`).join() === 'Austin:2,Heaven:1,Gemeinsam:1',
         folders.people.map((f) => `${f.label}:${f.count}`).join());
-    check('folders are named in the plural', folders.kinds[0].label === 'Passports');
+    check('folders are named in the plural', folders.kinds[0].label === 'Reisepässe');
     check('warnings read as sentences', mid[0].message.startsWith('Austin'), mid[0].message);
     check('a kind folder filters', filterDocuments(docs, 'kind:passport', '').length === 2);
     check('a person folder filters', filterDocuments(docs, 'person:Austin', '').length === 2);
