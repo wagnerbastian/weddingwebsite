@@ -133,7 +133,7 @@ console.log('\nSigning out');
 await goOffline(context, false);
 await p.goto(`${BASE}/admin`, { waitUntil: 'networkidle' });
 const left = await p.evaluate(async () => {
-    const button = [...document.querySelectorAll('button')].find((b) => b.textContent?.trim() === 'Logout');
+    const button = [...document.querySelectorAll('button')].find((b) => b.textContent?.trim() === 'Abmelden');
     button?.click();
     await new Promise((r) => setTimeout(r, 2500));
     const out: string[] = [];

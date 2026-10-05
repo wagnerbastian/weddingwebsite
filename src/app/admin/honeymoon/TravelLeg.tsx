@@ -130,7 +130,7 @@ export default function TravelLegCard({ leg, day, api }: {
                 <p className="mt-2 rounded-xl bg-rose-50 border border-rose-200 px-2.5 py-1.5
                     text-[11px] text-rose-800">
                     Diese Teilstrecke startet am {misdated}, und die Reise hat keinen Tag für dieses
-                    Datum – deshalb liegt sie vorerst hier. Passe das Datum im Tab „Verbindungen" an
+                    Datum – deshalb liegt sie vorerst hier. Passe das Datum im Tab „Verbindungen“ an
                     oder füge die fehlenden Tage hinzu.
                 </p>
             )}

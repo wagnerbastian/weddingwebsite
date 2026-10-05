@@ -141,7 +141,7 @@ export default function LegEnd({ leg, end, api }: {
                     </>
                 ) : (
                     <span className="text-[11px] text-gray-400">
-                        Noch nicht gesucht – auf „Suchen" tippen, um es auf die Karte zu setzen
+                        Noch nicht gesucht – auf „Suchen“ tippen, um es auf die Karte zu setzen
                     </span>
                 )}
             </div>
