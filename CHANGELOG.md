@@ -11,6 +11,17 @@ All notable changes to this project are documented here, newest at the top.
 > renders those three as coloured badges. Bump the patch on every deploy, the minor when
 > asked. Entries predating this convention carry a date but no time.
 
+## v0.10.4 — [Unreleased] Die ganze Oberfläche auf Deutsch (`ccr-c63fa0b6-p83mno`, 2026-10-05 22:01)
+
+Translate the whole UI into German — clean and modern.
+
+### Changed
+- **The whole interface is German** — the public site (addressing guests as „ihr“), the admin panel, RSVPs and guest list, finances, seating chart and the whole honeymoon portal, including toasts, confirmations, error messages from the API, print sheets, CSV headers, the offline copy, `.ics` texts and the RSVP emails. `<html lang="de">`.
+- **German formats** — dates as `05.10.2026` / `12. Juni`, times as `16:00 Uhr`, numbers and amounts with `de-DE` separators (the configured currency is unchanged). Durations read `2 h 40 min`.
+- **Stored values stay as they were** — status codes, categories, diet codes and other keys are untouched; German labels come from display maps, so existing data needs no migration. Defaults seeded on a fresh install (finance categories, schedule starter event, checklist groups) are German.
+- The countdown and the schedule now also read dates and times typed the German way (`15. Juni 2026`, `12.09.2026`, `16:00 Uhr`).
+- Check scripts assert the German texts; no check was removed.
+
 ## v0.10.3 — [Released] The whole site, offline (`main`, 2026-10-05 14:23)
 
 Austin: the site is installed to the iPhone home screen, and with no internet it does not open. Make the entire site work without internet.

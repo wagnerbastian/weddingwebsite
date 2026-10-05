@@ -107,7 +107,7 @@ await p.goto(`${BASE}/admin/honeymoon`, { waitUntil: 'load' });
 await p.waitForTimeout(1500);
 check('the offline bar shows', await p.locator('[data-offline-banner]').isVisible().catch(() => false));
 check('the honeymoon data is there, not an empty shell',
-    (await p.locator('text=/\\d+ places/').count()) > 0);
+    (await p.locator('text=/\\d+ Orte/').count()) > 0);
 
 await p.goto(`${BASE}/`, { waitUntil: 'load' });
 await p.waitForTimeout(1000);
@@ -121,10 +121,10 @@ if (await link.count()) {
 
 await p.goto(`${BASE}/admin/honeymoon/checklist`, { waitUntil: 'load' });
 await p.waitForTimeout(1500);
-const box = p.locator('input[placeholder^="Renew passports"]').first();
+const box = p.locator('input[placeholder^="Reisepässe verlängern"]').first();
 if (await box.count()) {
     await box.fill('Written offline — must not arrive');
-    await p.getByRole('button', { name: 'Add', exact: true }).first().click();
+    await p.getByRole('button', { name: 'Hinzufügen', exact: true }).first().click();
     await p.waitForTimeout(1200);
     check('a save offline says it was not saved', (await p.locator("text=/Offline – das wurde nicht gespeichert/").count()) > 0);
 }

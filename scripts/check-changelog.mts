@@ -133,9 +133,9 @@ console.log('\nSummaries');
     check('a long unpunctuated line is cut', leadOf('x'.repeat(400)).length <= 120);
 
     check('a bare date is written out',
-        formatReleaseDate('2026-07-27') === 'Jul 27, 2026', formatReleaseDate('2026-07-27'));
+        formatReleaseDate('2026-07-27') === '27. Juli 2026', formatReleaseDate('2026-07-27'));
     check('a branch and time keeps the time',
-        formatReleaseDate('main, 2026-08-17 16:05') === 'Aug 17, 2026 · 16:05 UTC',
+        formatReleaseDate('main, 2026-08-17 16:05') === '17. Aug. 2026 · 16:05 Uhr UTC',
         formatReleaseDate('main, 2026-08-17 16:05'));
     check('an empty decoration is empty', formatReleaseDate('') === '');
     check('something unparseable is shown as-is', formatReleaseDate('soon') === 'soon');

@@ -94,7 +94,7 @@ console.log('\nOne place panel, from every entry point');
     let formOpened = false;
     if (await clickFirst(p, '[data-place-row] button')) {
         await p.waitForTimeout(400);
-        if (await clickFirst(p, '[data-sheet-panel] button[aria-label="More actions"]')) {
+        if (await clickFirst(p, '[data-sheet-panel] button[aria-label="Weitere Aktionen"]')) {
             await p.waitForTimeout(300);
             await p.getByRole('button', { name: 'Alles bearbeiten' }).last().click({ timeout: 5000 }).catch(() => undefined);
             await p.waitForTimeout(500);
@@ -125,7 +125,7 @@ console.log('\nOne place panel, from every entry point');
     check('an itinerary stop opens the panel — not an edit form', fromStop != null, stopLabel);
 
     await go(p, '');
-    const shortlist = p.locator('text=Shortlist').locator('xpath=ancestor::*[@data-card][1]//button').first();
+    const shortlist = p.locator('text=Auswahl').locator('xpath=ancestor::*[@data-card][1]//button').first();
     if (await shortlist.count()) {
         await shortlist.click();
         check('an overview shortlist entry opens the panel', (await openedPanel(p)) != null);
@@ -176,9 +176,9 @@ console.log('\nOne place panel, from every entry point');
     check('no two overview cards overlap', boxes.length > 0 && overlaps === 0, `${overlaps} of ${boxes.length}`);
 
     console.log('\nFiles');
-    check('Files is a tab', (await p.locator('a:has-text("Files")').count()) > 0);
+    check('Files is a tab', (await p.locator('a:has-text("Dokumente")').count()) > 0);
     await go(p, '/settings');
-    check('Settings no longer has a Documents section', (await p.locator('h3:has-text("Documents")').count()) === 0);
+    check('Settings no longer has a Documents section', (await p.locator('h3:has-text("Dokumente")').count()) === 0);
     await go(p, '/files');
     if (await p.locator('[data-file]').count()) {
         await p.locator('[data-file]').first().click();
@@ -187,7 +187,7 @@ console.log('\nOne place panel, from every entry point');
         check('a file opens in the viewer', !!viewer);
         await p.keyboard.press('Escape');
     } else {
-        check('with no files, the tab says what goes there', (await p.locator('text=The papers you would hate to lose').count()) === 1);
+        check('with no files, the tab says what goes there', (await p.locator('text=Die Papiere, die ihr ungern verlieren würdet').count()) === 1);
     }
     await p.context().close();
 }
@@ -251,18 +251,18 @@ console.log('\nPhone (390×844)');
     }
 
     await go(p, '/today');
-    await p.getByRole('button', { name: /More/ }).last().click().catch(() => undefined);
+    await p.getByRole('button', { name: /Mehr/ }).last().click().catch(() => undefined);
     await p.waitForTimeout(400);
-    check('More includes Files', (await p.locator('[data-sheet-panel] a:has-text("Files")').count()) === 1);
+    check('More includes Files', (await p.locator('[data-sheet-panel] a:has-text("Dokumente")').count()) === 1);
     await p.keyboard.press('Escape');
 
     await go(p, '/settings');
     const range = p.locator('[data-date-range]').first();
     check('on a touch screen the trip dates start locked', (await range.getAttribute('data-date-range')) === 'locked');
-    await range.getByRole('button', { name: 'Change dates', exact: true }).click().catch(() => undefined);
+    await range.getByRole('button', { name: 'Daten ändern', exact: true }).click().catch(() => undefined);
     await p.waitForTimeout(200);
-    check('Change dates unlocks them', (await range.getAttribute('data-date-range')) === 'editing');
-    await range.getByRole('button', { name: 'Done', exact: true }).click().catch(() => undefined);
+    check('Daten ändern unlocks them', (await range.getAttribute('data-date-range')) === 'editing');
+    await range.getByRole('button', { name: 'Fertig', exact: true }).click().catch(() => undefined);
     await p.waitForTimeout(200);
     check('and Done locks them again', (await range.getAttribute('data-date-range')) === 'locked');
 
