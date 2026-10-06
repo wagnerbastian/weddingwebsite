@@ -384,6 +384,85 @@ export function occupancy(table: SeatingTableData): { seated: number; capacity: 
     return { seated, capacity, free: Math.max(0, capacity - seated) };
 }
 
+/* ---- where the chairs go on the canvas ---- */
+
+/** Which edge of the table a chair is on. A round table has only the one. */
+export type SeatSide = 'around' | 'top' | 'bottom';
+
+export interface SeatSpot {
+    side: SeatSide;
+    /** The chip's centre, in the node's own coordinates (its top-left is 0,0). */
+    x: number;
+    y: number;
+}
+
+export interface TableLayout {
+    /** The table top, placed inside the node. */
+    table: { x: number; y: number; width: number; height: number };
+    /** The whole node, chairs included — what React Flow measures and fits. */
+    node: { width: number; height: number };
+    /** One per seat, in seat-list order. */
+    spots: SeatSpot[];
+}
+
+/** The widest a seat chip gets — an 80px name, its padding and border — plus a gap. */
+export const SEAT_SLOT = 104;
+const ROUND_SIZE = 160;
+const ROUND_ORBIT = 52;
+const ROW_PAD = 36;
+
+/**
+ * Where each seat of a table sits on the canvas.
+ *
+ * The seat list is walked the way a round table always was: clockwise from the
+ * top. A rectangular table fills its top edge left to right and comes back
+ * along the bottom right to left, so neighbours in the list are neighbours at
+ * the table — a party seated in a run stays together round the end instead of
+ * landing at opposite corners — and the reorder dialog decides who sits where.
+ * A head table seats one side only, the top, facing the room. Both long tables
+ * grow with their seats rather than piling chips on top of each other, and the
+ * padding for the chairs is there from the first seat on, so a table never
+ * jumps when someone sits down. (Until v0.10.5 every seat of a long table went
+ * in a row underneath it, whatever its shape said.)
+ */
+export function tableLayout(tableType: string, seatCount: number): TableLayout {
+    const n = Math.max(0, Math.floor(seatCount));
+
+    if (tableType === 'round') {
+        const size = ROUND_SIZE + ROUND_ORBIT * 2;
+        const centre = size / 2;
+        const r = ROUND_SIZE / 2 + 28;
+        return {
+            table: { x: ROUND_ORBIT, y: ROUND_ORBIT, width: ROUND_SIZE, height: ROUND_SIZE },
+            node: { width: size, height: size },
+            spots: Array.from({ length: n }, (_, i) => {
+                const angle = (2 * Math.PI * i) / n - Math.PI / 2;
+                return { side: 'around' as const, x: centre + r * Math.cos(angle), y: centre + r * Math.sin(angle) };
+            }),
+        };
+    }
+
+    // Anything that is not round or head is drawn as a rectangle, as it always was.
+    const isHead = tableType === 'head';
+    const columns = isHead ? n : Math.ceil(n / 2);
+    const width = Math.max(isHead ? 240 : 200, columns * SEAT_SLOT);
+    const height = isHead ? 80 : 100;
+    const step = width / Math.max(1, columns);
+    const columnX = (c: number) => step * (c + 0.5);
+    const topY = ROW_PAD / 2;
+    const bottomY = ROW_PAD + height + ROW_PAD / 2;
+
+    return {
+        table: { x: 0, y: ROW_PAD, width, height },
+        node: { width, height: ROW_PAD + height + (isHead ? 0 : ROW_PAD) },
+        spots: Array.from({ length: n }, (_, i) => i < columns
+            ? { side: 'top' as const, x: columnX(i), y: topY }
+            // Back along the bottom, right to left. An odd seat count leaves the
+            // bottom-left chair empty, where the walk round the table ends.
+            : { side: 'bottom' as const, x: columnX(columns - 1 - (i - columns)), y: bottomY }),
+    };
+}
+
 /**
  * Seat whole parties into the chairs that are free, one party at a time.
  *

@@ -15,6 +15,7 @@ import {
     planAutoSeat, planGatherParty, planMove, planSeatSelection, planSwap, planUnseat,
     planUnseatSelection, seatIndexer, seatingIssues, splitPartyGroupIds,
     planRenameSeats, renamesBetween, staleSeatNames, partySeatingState, buildPersonSeat,
+    SEAT_SLOT, tableLayout,
 } from '../src/lib/seating';
 import {
     DEFAULT_EXPORT_OPTIONS, NO_RESTRICTION_LABEL, alphabetical, csvHeaders, csvRows,
@@ -264,6 +265,60 @@ console.log('\nChairs');
     const over = table(2, 'Table 2', 2, [seat(0, 'A', 1), seat(1, 'B', 1), seat(2, 'C', 1)]);
     check('capacity widens to the seats in use rather than going negative',
         occupancy(over).capacity === 3 && occupancy(over).free === 0);
+}
+
+/* ---- where the chairs go on the canvas ---- */
+
+console.log('\nWhere the chairs go');
+{
+    const sides = (type: string, n: number) => tableLayout(type, n).spots.map(s => s.side[0]).join('');
+
+    const rect = tableLayout('rectangular', 8);
+    check('a rectangular table seats both long sides, not everyone underneath',
+        sides('rectangular', 8) === 'ttttbbbb', sides('rectangular', 8));
+    check('the top fills left to right',
+        rect.spots.slice(0, 4).every((s, i, row) => i === 0 || s.x > row[i - 1].x));
+    check('and the bottom comes back right to left, so the list walks round the table',
+        rect.spots.slice(4).every((s, i, row) => i === 0 || s.x < row[i - 1].x));
+    check('the last on top and the first below sit at the same end',
+        rect.spots[3].x === rect.spots[4].x, `${rect.spots[3].x} / ${rect.spots[4].x}`);
+    check('top chairs are above the table top, bottom chairs below it',
+        rect.spots.every(s => s.side === 'top'
+            ? s.y < rect.table.y
+            : s.y > rect.table.y + rect.table.height));
+
+    const odd = tableLayout('rectangular', 5);
+    check('an odd count puts the extra chair on top', sides('rectangular', 5) === 'tttbb', sides('rectangular', 5));
+    check('and leaves the bottom-left chair empty, facing the first on top',
+        odd.spots[4].x === odd.spots[1].x && odd.spots[3].x === odd.spots[2].x);
+
+    const head = tableLayout('head', 6);
+    check('a head table seats the top only', sides('head', 6) === 'tttttt', sides('head', 6));
+    check('left to right', head.spots.every((s, i, row) => i === 0 || s.x > row[i - 1].x));
+    check('with no room kept below it', head.node.height === head.table.y + head.table.height);
+
+    const round = tableLayout('round', 4);
+    check('a round table still starts at the top and goes clockwise',
+        Math.abs(round.spots[0].x - round.node.width / 2) < 1e-9 && round.spots[0].y < round.table.y
+            && round.spots[1].x > round.node.width / 2);
+    check('an unknown shape is drawn as a rectangle, as it always was',
+        sides('oval', 4) === 'ttbb');
+
+    // Chips are up to SEAT_SLOT wide; two in a row closer than that overlap.
+    for (const [type, n] of [['rectangular', 2], ['rectangular', 9], ['rectangular', 24], ['head', 1], ['head', 12]] as const) {
+        const l = tableLayout(type, n);
+        const rows = ['top', 'bottom'].map(side => l.spots.filter(s => s.side === side).map(s => s.x).sort((a, b) => a - b));
+        const tight = rows.every(xs => xs.every((x, i) => i === 0 || x - xs[i - 1] >= SEAT_SLOT));
+        const inside = l.spots.every(s => s.x - SEAT_SLOT / 2 >= 0 && s.x + SEAT_SLOT / 2 <= l.node.width
+            && s.y >= 0 && s.y <= l.node.height);
+        check(`${type} with ${n}: no two chips overlap, every chip inside the node`, tight && inside);
+    }
+
+    check('the table does not move when the first guest sits down',
+        JSON.stringify(tableLayout('rectangular', 0).table) === JSON.stringify(tableLayout('rectangular', 1).table)
+            && JSON.stringify(tableLayout('head', 0).table) === JSON.stringify(tableLayout('head', 1).table));
+    check('an empty table has no chairs', tableLayout('rectangular', 0).spots.length === 0
+        && tableLayout('round', 0).spots.length === 0);
 }
 
 /* ---- moving ---- */

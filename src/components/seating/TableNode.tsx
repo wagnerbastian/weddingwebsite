@@ -19,7 +19,7 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { SeatingTableData, SeatData, SeatTransferPayload, ColorMode } from './types';
-import { rsvpLabel } from '@/lib/seating';
+import { rsvpLabel, tableLayout, SeatSide } from '@/lib/seating';
 
 interface TableNodeProps {
   data: {
@@ -127,7 +127,16 @@ function SeatChip({
 
 // ── Sortable row inside the reorder modal ─────────────────────────────────
 
-function SortableSeatRow({ seat }: { seat: SeatData }) {
+const SIDE_LABEL: Record<SeatSide, string | null> = { around: null, top: 'oben', bottom: 'unten' };
+
+/** How the list maps onto the table — the order tableLayout() walks it in. */
+function orderHint(tableType: string): string {
+  if (tableType === 'round') return 'Im Uhrzeigersinn, oben beginnend';
+  if (tableType === 'head') return 'Von links nach rechts';
+  return 'Im Uhrzeigersinn: oben von links nach rechts, dann unten zurück';
+}
+
+function SortableSeatRow({ seat, side }: { seat: SeatData; side: SeatSide }) {
   const name = seat.display_name || seat.guest_name || '?';
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: seat.seat_index,
@@ -156,6 +165,9 @@ function SortableSeatRow({ seat }: { seat: SeatData }) {
         </svg>
       </div>
       <span className="text-sm text-gray-800 font-medium truncate">{name}</span>
+      {SIDE_LABEL[side] && (
+        <span className="ml-auto shrink-0 text-[10px] uppercase tracking-wide text-gray-400">{SIDE_LABEL[side]}</span>
+      )}
     </div>
   );
 }
@@ -173,6 +185,9 @@ function ReorderModal({
 }) {
   const [seats, setSeats] = useState<SeatData[]>([...table.seats]);
   const [mounted, setMounted] = useState(false);
+  // Where each row lands, by its place in the list: on a long table the order
+  // decides who sits on which side, so the list has to say so.
+  const { spots } = tableLayout(table.table_type, seats.length);
 
   // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { setMounted(true); }, []);
@@ -204,6 +219,7 @@ function ReorderModal({
           <div>
             <h3 className="text-base font-semibold text-gray-800">{table.name}</h3>
             <p className="text-xs text-gray-400 mt-0.5">Ziehen, um die Reihenfolge festzulegen</p>
+            <p className="text-xs text-gray-400">{orderHint(table.table_type)}</p>
           </div>
           <button
             onClick={onClose}
@@ -224,8 +240,8 @@ function ReorderModal({
             <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
               <SortableContext items={seats.map(s => s.seat_index)} strategy={verticalListSortingStrategy}>
                 <div className="space-y-2">
-                  {seats.map(seat => (
-                    <SortableSeatRow key={seat.seat_index} seat={seat} />
+                  {seats.map((seat, i) => (
+                    <SortableSeatRow key={seat.seat_index} seat={seat} side={spots[i].side} />
                   ))}
                 </div>
               </SortableContext>
@@ -410,10 +426,7 @@ function TableBody({
   };
 
   const isRound = table.table_type === 'round';
-  const isHead = table.table_type === 'head';
-
-  const tableW = isRound ? 160 : isHead ? Math.max(240, totalSeatCount * 48) : 200;
-  const tableH = isRound ? 160 : isHead ? 80 : 100;
+  const { width: tableW, height: tableH } = tableLayout(table.table_type, totalSeatCount).table;
 
   const baseClasses = `relative flex flex-col items-center justify-center
     border-2 transition-colors cursor-grab select-none
@@ -469,7 +482,7 @@ function TableBody({
   );
 }
 
-// ── Seat chips rendered around/below the table ─────────────────────────────
+// ── Seat chips, where tableLayout() puts them ──────────────────────────────
 
 function SeatsDisplay({
   table,
@@ -486,65 +499,29 @@ function SeatsDisplay({
 }) {
   if (table.seats.length === 0) return null;
 
-  const isRound = table.table_type === 'round';
-  const tableW = isRound ? 160 : table.table_type === 'head' ? Math.max(240, table.seats.length * 48) : 200;
-  const tableH = isRound ? 160 : table.table_type === 'head' ? 80 : 100;
-  const orbitPad = isRound ? 52 : 0;
-
-  const cx = orbitPad + tableW / 2;
-  const cy = orbitPad + tableH / 2;
-
-  if (isRound) {
-    const n = table.seats.length;
-    const r = tableW / 2 + 28;
-    return (
-      <>
-        {table.seats.map((seat, i) => {
-          const angle = (2 * Math.PI * i) / n - Math.PI / 2;
-          const x = cx + r * Math.cos(angle);
-          const y = cy + r * Math.sin(angle);
-          const isSplit = seat.party_group_id !== null && splitPartyGroupIds.has(seat.party_group_id);
-          return (
-            <div
-              key={seat.seat_index}
-              className="absolute"
-              style={{ left: x, top: y, transform: 'translate(-50%, -50%)' }}
-            >
-              <SeatChip
-                seat={seat}
-                tableId={table.id}
-                isSplit={isSplit}
-                colorMode={colorMode}
-                onRemoveSeat={() => onUnassignSeat(table.id, seat.seat_index)}
-                onRemoveParty={() => seat.party_group_id !== null && onUnassignParty(table.id, seat.party_group_id)}
-              />
-            </div>
-          );
-        })}
-      </>
-    );
-  }
-
+  const { spots } = tableLayout(table.table_type, table.seats.length);
   return (
-    <div
-      className="absolute flex flex-wrap gap-1 justify-center"
-      style={{ top: tableH + 8, left: 0, right: 0 }}
-    >
-      {table.seats.map(seat => {
+    <>
+      {table.seats.map((seat, i) => {
         const isSplit = seat.party_group_id !== null && splitPartyGroupIds.has(seat.party_group_id);
         return (
-          <SeatChip
+          <div
             key={seat.seat_index}
-            seat={seat}
-            tableId={table.id}
-            isSplit={isSplit}
-            colorMode={colorMode}
-            onRemoveSeat={() => onUnassignSeat(table.id, seat.seat_index)}
-            onRemoveParty={() => seat.party_group_id !== null && onUnassignParty(table.id, seat.party_group_id)}
-          />
+            className="absolute"
+            style={{ left: spots[i].x, top: spots[i].y, transform: 'translate(-50%, -50%)' }}
+          >
+            <SeatChip
+              seat={seat}
+              tableId={table.id}
+              isSplit={isSplit}
+              colorMode={colorMode}
+              onRemoveSeat={() => onUnassignSeat(table.id, seat.seat_index)}
+              onRemoveParty={() => seat.party_group_id !== null && onUnassignParty(table.id, seat.party_group_id)}
+            />
+          </div>
         );
       })}
-    </div>
+    </>
   );
 }
 
@@ -553,17 +530,15 @@ function SeatsDisplay({
 export default function TableNode({ data }: TableNodeProps) {
   const { table, colorMode, onDropGuest, onDropPerson, onMoveSeat, onUnassignParty, onUnassignSeat, onReorderSeats, onDeleteTable, onRenameTable, splitPartyGroupIds } = data;
 
-  const isRound = table.table_type === 'round';
-  const tableW = isRound ? 160 : table.table_type === 'head' ? Math.max(240, table.seats.length * 48) : 200;
-  const tableH = isRound ? 160 : table.table_type === 'head' ? 80 : 100;
-  const orbitPad = isRound ? 52 : 0;
-  const belowPad = !isRound && table.seats.length > 0 ? 40 : 0;
+  // The node is the table and its chairs, so the chairs are inside what React
+  // Flow measures, selects and fits to the screen.
+  const layout = tableLayout(table.table_type, table.seats.length);
 
   return (
     <div
       style={{
-        width: tableW + orbitPad * 2,
-        height: tableH + orbitPad * 2 + belowPad,
+        width: layout.node.width,
+        height: layout.node.height,
         position: 'relative',
       }}
     >
@@ -573,10 +548,10 @@ export default function TableNode({ data }: TableNodeProps) {
       <div
         style={{
           position: 'absolute',
-          left: orbitPad,
-          top: orbitPad,
-          width: tableW,
-          height: tableH,
+          left: layout.table.x,
+          top: layout.table.y,
+          width: layout.table.width,
+          height: layout.table.height,
         }}
       >
         <TableBody

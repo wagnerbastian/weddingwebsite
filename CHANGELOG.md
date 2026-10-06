@@ -11,6 +11,19 @@ All notable changes to this project are documented here, newest at the top.
 > renders those three as coloured badges. Bump the patch on every deploy, the minor when
 > asked. Entries predating this convention carry a date but no time.
 
+## v0.10.5 — [Unreleased] Rechteckige Tische: Plätze oben und unten (`ccr-b8dc6d9b-ub1z66`, 2026-10-06 21:51)
+
+„Wenn ich Tische einfüge, dann geht das bei runden Tischen gut, da kann man die Anordnung anpassen. Bei den rechteckigen Tischen sind immer alle unten.“
+
+### Fixed
+- **Rechteckige Tische verteilen ihre Gäste auf beide Längsseiten** — die erste Hälfte oben von links nach rechts, der Rest unten von rechts zurück, also im Uhrzeigersinn um den Tisch wie beim runden. So bleibt eine Gruppe auch über das Tischende hinweg nebeneinander. Bisher lagen alle Plätze als Reihe unter dem Tisch, egal was die Tischform versprach. Bei ungerader Zahl bleibt unten links ein Platz frei.
+- **Der Haupttisch setzt seine Gäste oben**, mit Blick in den Saal, wie es der Dialog „Tisch hinzufügen“ schon immer beschrieben hat — bisher saßen sie ebenfalls unten.
+
+### Changed
+- **„Plätze neu anordnen“ zeigt bei rechteckigen Tischen, wer oben und wer unten sitzt**, und bei jeder Tischform, in welcher Richtung die Liste um den Tisch läuft. Die Reihenfolge in der Liste entscheidet über die Seite.
+- **Lange Tische wachsen mit ihren Plätzen** (104 px je Platz einer Seite), damit sich die Namen nicht überlappen. Der Platz für die obere Reihe gehört jetzt zum Tisch, deshalb rutschen bestehende rechteckige Tische und Haupttische einmalig ein Stück nach unten.
+- Die Verteilung der Plätze steckt in einer Funktion, `tableLayout()` in `src/lib/seating.ts`; `npm run check:seating` prüft sie mit 19 neuen Prüfungen (jetzt 243).
+
 ## v0.10.4 — [Unreleased] Die ganze Oberfläche auf Deutsch (`ccr-c63fa0b6-p83mno`, 2026-10-05 22:01)
 
 Translate the whole UI into German — clean and modern.
