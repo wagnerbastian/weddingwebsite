@@ -17,7 +17,8 @@ import TableNode from '@/components/seating/TableNode';
 import GuestSidebar from '@/components/seating/GuestSidebar';
 import AddTableModal from '@/components/seating/AddTableModal';
 import SeatingExportModal from '@/components/seating/SeatingExportModal';
-import { buildPersonSeat, partySeatingState } from '@/lib/seating';
+import { buildPersonSeat, partySeatingState, tableLayout, TableLayout } from '@/lib/seating';
+import { seatChipWidths } from '@/components/seating/seatChip';
 import RoomEditor, { RoomShape, Vertex } from '@/components/seating/RoomEditor';
 import SeatingListView from '@/components/seating/SeatingListView';
 import { SeatingTableData, GuestListEntry, FloorPlan, OffListRsvp, SeatTransferPayload, ColorMode } from '@/components/seating/types';
@@ -252,12 +253,17 @@ function SeatingCanvas({
   }, [onRefresh]);
 
   const handleNodeDragStop: OnNodeDrag = useCallback(async (_event: React.MouseEvent, node: Node) => {
+    // The stored x/y is the table's anchor, not the node's corner — see below.
+    const { anchor } = (node.data as { layout: TableLayout }).layout;
     await fetch(`/api/admin/seating/tables/${node.id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ x: node.position.x, y: node.position.y }),
+      body: JSON.stringify({ x: node.position.x + anchor.x, y: node.position.y + anchor.y }),
     });
-  }, []);
+    // The nodes are rebuilt from `tables` whenever the colour mode flips, so a
+    // move that only the canvas knows about snapped back on the next toggle.
+    onRefresh();
+  }, [onRefresh]);
 
   // Handle drag from sidebar → drop onto canvas (drop on a seat slot)
   const handleCanvasDrop = useCallback((e: React.DragEvent) => {
@@ -282,25 +288,32 @@ function SeatingCanvas({
   // Node sync effect
   useEffect(() => {
     const split = splitPartyGroupIds();
-    const newNodes: Node[] = tables.map(table => ({
-      id: String(table.id),
-      type: 'tableNode',
-      position: { x: table.x, y: table.y },
-      data: {
-        table,
-        colorMode,
-        onDropGuest: handleDropGuest,
-        onDropPerson: handleDropPerson,
-        onMoveSeat: handleMoveSeat,
-        onReorderSeats: handleReorderSeats,
-        onUnassignParty: handleUnassignParty,
-        onUnassignSeat: handleUnassignSeat,
-        onDeleteTable: handleDeleteTable,
-        onRenameTable: handleRenameTable,
-        splitPartyGroupIds: split,
-      },
-      draggable: true,
-    }));
+    const newNodes: Node[] = tables.map(table => {
+      // A table grows with its names, and the node grows with it. Placing the
+      // node by its anchor rather than its corner is what keeps the table itself
+      // where it was put while the chairs around it come and go.
+      const layout = tableLayout(table.table_type, seatChipWidths(table, split, colorMode));
+      return {
+        id: String(table.id),
+        type: 'tableNode',
+        position: { x: table.x - layout.anchor.x, y: table.y - layout.anchor.y },
+        data: {
+          table,
+          layout,
+          colorMode,
+          onDropGuest: handleDropGuest,
+          onDropPerson: handleDropPerson,
+          onMoveSeat: handleMoveSeat,
+          onReorderSeats: handleReorderSeats,
+          onUnassignParty: handleUnassignParty,
+          onUnassignSeat: handleUnassignSeat,
+          onDeleteTable: handleDeleteTable,
+          onRenameTable: handleRenameTable,
+          splitPartyGroupIds: split,
+        },
+        draggable: true,
+      };
+    });
     setNodes(newNodes);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tables, guests, colorMode]);

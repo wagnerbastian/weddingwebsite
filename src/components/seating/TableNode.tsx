@@ -19,11 +19,14 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { SeatingTableData, SeatData, SeatTransferPayload, ColorMode } from './types';
-import { rsvpLabel, tableLayout, SeatSide } from '@/lib/seating';
+import { rsvpLabel, seatSides, SeatSide, TableLayout } from '@/lib/seating';
+import { CHIP_NAME_MAX, chipName } from './seatChip';
 
 interface TableNodeProps {
   data: {
     table: SeatingTableData;
+    /** Worked out by the page, which also needs its anchor to place the node. */
+    layout: TableLayout;
     colorMode: ColorMode;
     onDropGuest: (tableId: number, guestId: string) => void;
     onDropPerson: (tableId: number, payload: string) => void;
@@ -55,7 +58,7 @@ function SeatChip({
   onRemoveParty: () => void;
 }) {
   const [hover, setHover] = useState(false);
-  const name = seat.display_name || seat.guest_name || '?';
+  const name = chipName(seat);
 
   const transfer: SeatTransferPayload = {
     fromTableId: tableId,
@@ -104,10 +107,13 @@ function SeatChip({
           : (isSplit ? 'Gruppe ist getrennt – zum Verschieben ziehen' : `${name} auf einen anderen Tisch ziehen`)}
     >
       {colorMode === 'party' && isSplit && <span className="text-yellow-500 mr-0.5">⚠</span>}
-      <span className="truncate max-w-[80px]">{name}</span>
+      <span className="truncate" style={{ maxWidth: CHIP_NAME_MAX }}>{name}</span>
       {hover && (
+        // Over the chip's corner rather than beside the name: the table is
+        // sized by the chips' measured widths, so a chip that grew on hover
+        // would push into its neighbour.
         <button
-          className="nodrag ml-1 text-gray-400 hover:text-red-500 transition-colors leading-none"
+          className="nodrag absolute -top-2 -right-2 w-4 h-4 flex items-center justify-center rounded-full bg-white border border-gray-300 text-[11px] leading-none text-gray-500 shadow-sm hover:text-red-500 hover:border-red-300 transition-colors"
           // Removes this one person. It used to clear the whole party, so freeing
           // the one chair a declined plus-one was sitting in took the other two
           // with it. Hold Alt (or Shift) to remove the party, as before.
@@ -137,7 +143,7 @@ function orderHint(tableType: string): string {
 }
 
 function SortableSeatRow({ seat, side }: { seat: SeatData; side: SeatSide }) {
-  const name = seat.display_name || seat.guest_name || '?';
+  const name = chipName(seat);
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: seat.seat_index,
   });
@@ -187,7 +193,7 @@ function ReorderModal({
   const [mounted, setMounted] = useState(false);
   // Where each row lands, by its place in the list: on a long table the order
   // decides who sits on which side, so the list has to say so.
-  const { spots } = tableLayout(table.table_type, seats.length);
+  const sides = seatSides(table.table_type, seats.length);
 
   // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { setMounted(true); }, []);
@@ -241,7 +247,7 @@ function ReorderModal({
               <SortableContext items={seats.map(s => s.seat_index)} strategy={verticalListSortingStrategy}>
                 <div className="space-y-2">
                   {seats.map((seat, i) => (
-                    <SortableSeatRow key={seat.seat_index} seat={seat} side={spots[i].side} />
+                    <SortableSeatRow key={seat.seat_index} seat={seat} side={sides[i]} />
                   ))}
                 </div>
               </SortableContext>
@@ -378,6 +384,8 @@ function TableControls({
 
 function TableBody({
   table,
+  width: tableW,
+  height: tableH,
   splitPartyGroupIds,
   onDropGuest,
   onDropPerson,
@@ -388,6 +396,8 @@ function TableBody({
   onReorderSeats,
 }: {
   table: SeatingTableData;
+  width: number;
+  height: number;
   splitPartyGroupIds: Set<number>;
   onDropGuest: (tableId: number, guestId: string) => void;
   onDropPerson: (tableId: number, payload: string) => void;
@@ -426,7 +436,6 @@ function TableBody({
   };
 
   const isRound = table.table_type === 'round';
-  const { width: tableW, height: tableH } = tableLayout(table.table_type, totalSeatCount).table;
 
   const baseClasses = `relative flex flex-col items-center justify-center
     border-2 transition-colors cursor-grab select-none
@@ -486,12 +495,14 @@ function TableBody({
 
 function SeatsDisplay({
   table,
+  layout,
   splitPartyGroupIds,
   colorMode,
   onUnassignParty,
   onUnassignSeat,
 }: {
   table: SeatingTableData;
+  layout: TableLayout;
   splitPartyGroupIds: Set<number>;
   colorMode: ColorMode;
   onUnassignParty: (tableId: number, partyGroupId: number) => void;
@@ -499,7 +510,7 @@ function SeatsDisplay({
 }) {
   if (table.seats.length === 0) return null;
 
-  const { spots } = tableLayout(table.table_type, table.seats.length);
+  const { spots } = layout;
   return (
     <>
       {table.seats.map((seat, i) => {
@@ -507,7 +518,7 @@ function SeatsDisplay({
         return (
           <div
             key={seat.seat_index}
-            className="absolute"
+            className="absolute w-max"
             style={{ left: spots[i].x, top: spots[i].y, transform: 'translate(-50%, -50%)' }}
           >
             <SeatChip
@@ -528,12 +539,10 @@ function SeatsDisplay({
 // ── Main node export ───────────────────────────────────────────────────────
 
 export default function TableNode({ data }: TableNodeProps) {
-  const { table, colorMode, onDropGuest, onDropPerson, onMoveSeat, onUnassignParty, onUnassignSeat, onReorderSeats, onDeleteTable, onRenameTable, splitPartyGroupIds } = data;
+  const { table, layout, colorMode, onDropGuest, onDropPerson, onMoveSeat, onUnassignParty, onUnassignSeat, onReorderSeats, onDeleteTable, onRenameTable, splitPartyGroupIds } = data;
 
   // The node is the table and its chairs, so the chairs are inside what React
   // Flow measures, selects and fits to the screen.
-  const layout = tableLayout(table.table_type, table.seats.length);
-
   return (
     <div
       style={{
@@ -556,6 +565,8 @@ export default function TableNode({ data }: TableNodeProps) {
       >
         <TableBody
           table={table}
+          width={layout.table.width}
+          height={layout.table.height}
           splitPartyGroupIds={splitPartyGroupIds}
           onDropGuest={onDropGuest}
           onDropPerson={onDropPerson}
@@ -569,6 +580,7 @@ export default function TableNode({ data }: TableNodeProps) {
 
       <SeatsDisplay
         table={table}
+        layout={layout}
         splitPartyGroupIds={splitPartyGroupIds}
         colorMode={colorMode}
         onUnassignParty={onUnassignParty}

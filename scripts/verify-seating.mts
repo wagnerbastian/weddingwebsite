@@ -15,7 +15,7 @@ import {
     planAutoSeat, planGatherParty, planMove, planSeatSelection, planSwap, planUnseat,
     planUnseatSelection, seatIndexer, seatingIssues, splitPartyGroupIds,
     planRenameSeats, renamesBetween, staleSeatNames, partySeatingState, buildPersonSeat,
-    SEAT_SLOT, tableLayout,
+    SEAT_CHIP_HEIGHT, seatSides, tableLayout, type TableLayout,
 } from '../src/lib/seating';
 import {
     DEFAULT_EXPORT_OPTIONS, NO_RESTRICTION_LABEL, alphabetical, csvHeaders, csvRows,
@@ -271,11 +271,25 @@ console.log('\nChairs');
 
 console.log('\nWhere the chairs go');
 {
-    const sides = (type: string, n: number) => tableLayout(type, n).spots.map(s => s.side[0]).join('');
+    const H = SEAT_CHIP_HEIGHT;
+    const sides = (type: string, n: number) => seatSides(type, n).map(s => s[0]).join('');
+    const even = (n: number, w = 90) => Array.from({ length: n }, () => w);
+    // Chips touch when their boxes come closer than this.
+    const overlaps = (l: TableLayout, widths: number[]) => l.spots.some((a, i) => l.spots.some((b, j) => j > i
+        && Math.abs(a.x - b.x) < (widths[i] + widths[j]) / 2
+        && Math.abs(a.y - b.y) < H));
+    const inside = (l: TableLayout, widths: number[]) => l.spots.every((s, i) =>
+        s.x - widths[i] / 2 >= -1e-9 && s.x + widths[i] / 2 <= l.node.width + 1e-9
+        && s.y - H / 2 >= -1e-9 && s.y + H / 2 <= l.node.height + 1e-9);
 
-    const rect = tableLayout('rectangular', 8);
     check('a rectangular table seats both long sides, not everyone underneath',
         sides('rectangular', 8) === 'ttttbbbb', sides('rectangular', 8));
+    check('an odd count puts the extra chair on top', sides('rectangular', 5) === 'tttbb', sides('rectangular', 5));
+    check('a head table seats the top only', sides('head', 6) === 'tttttt', sides('head', 6));
+    check('a round table goes all the way round', sides('round', 3) === 'aaa');
+    check('an unknown shape is drawn as a rectangle, as it always was', sides('oval', 4) === 'ttbb');
+
+    const rect = tableLayout('rectangular', even(8));
     check('the top fills left to right',
         rect.spots.slice(0, 4).every((s, i, row) => i === 0 || s.x > row[i - 1].x));
     check('and the bottom comes back right to left, so the list walks round the table',
@@ -284,41 +298,69 @@ console.log('\nWhere the chairs go');
         rect.spots[3].x === rect.spots[4].x, `${rect.spots[3].x} / ${rect.spots[4].x}`);
     check('top chairs are above the table top, bottom chairs below it',
         rect.spots.every(s => s.side === 'top'
-            ? s.y < rect.table.y
-            : s.y > rect.table.y + rect.table.height));
+            ? s.y + H / 2 <= rect.table.y
+            : s.y - H / 2 >= rect.table.y + rect.table.height));
 
-    const odd = tableLayout('rectangular', 5);
-    check('an odd count puts the extra chair on top', sides('rectangular', 5) === 'tttbb', sides('rectangular', 5));
-    check('and leaves the bottom-left chair empty, facing the first on top',
+    const odd = tableLayout('rectangular', even(5));
+    check('an odd count leaves the bottom-left chair empty, facing the first on top',
         odd.spots[4].x === odd.spots[1].x && odd.spots[3].x === odd.spots[2].x);
 
-    const head = tableLayout('head', 6);
-    check('a head table seats the top only', sides('head', 6) === 'tttttt', sides('head', 6));
-    check('left to right', head.spots.every((s, i, row) => i === 0 || s.x > row[i - 1].x));
+    const head = tableLayout('head', even(6));
+    check('a head table runs left to right', head.spots.every((s, i, row) => i === 0 || s.x > row[i - 1].x));
     check('with no room kept below it', head.node.height === head.table.y + head.table.height);
 
-    const round = tableLayout('round', 4);
-    check('a round table still starts at the top and goes clockwise',
-        Math.abs(round.spots[0].x - round.node.width / 2) < 1e-9 && round.spots[0].y < round.table.y
-            && round.spots[1].x > round.node.width / 2);
-    check('an unknown shape is drawn as a rectangle, as it always was',
-        sides('oval', 4) === 'ttbb');
+    /* growing with the names */
+    const short = tableLayout('rectangular', even(8, 40));
+    const long = tableLayout('rectangular', even(8, 170));
+    check('a long table keeps its width while the names fit', short.table.width === 200, String(short.table.width));
+    check('and grows when they do not', long.table.width >= 4 * 170, String(long.table.width));
+    const mixed = [180, 40, 40, 40, 40, 40, 40, 40];
+    const facing = tableLayout('rectangular', mixed);
+    check('two chairs facing each other share a column as wide as the wider name',
+        facing.spots[0].x === facing.spots[7].x);
 
-    // Chips are up to SEAT_SLOT wide; two in a row closer than that overlap.
-    for (const [type, n] of [['rectangular', 2], ['rectangular', 9], ['rectangular', 24], ['head', 1], ['head', 12]] as const) {
-        const l = tableLayout(type, n);
-        const rows = ['top', 'bottom'].map(side => l.spots.filter(s => s.side === side).map(s => s.x).sort((a, b) => a - b));
-        const tight = rows.every(xs => xs.every((x, i) => i === 0 || x - xs[i - 1] >= SEAT_SLOT));
-        const inside = l.spots.every(s => s.x - SEAT_SLOT / 2 >= 0 && s.x + SEAT_SLOT / 2 <= l.node.width
-            && s.y >= 0 && s.y <= l.node.height);
-        check(`${type} with ${n}: no two chips overlap, every chip inside the node`, tight && inside);
+    const roundSmall = tableLayout('round', even(4, 50));
+    const roundBig = tableLayout('round', even(12, 170));
+    check('a round table keeps its size while the names fit',
+        roundSmall.table.width === 160, String(roundSmall.table.width));
+    check('and grows when they do not', roundBig.table.width > 160, String(roundBig.table.width));
+    check('a round table still starts at the top and goes clockwise',
+        Math.abs(roundSmall.spots[0].x - (roundSmall.table.x + 80)) < 1e-9
+            && roundSmall.spots[0].y < roundSmall.table.y
+            && roundSmall.spots[1].x > roundSmall.table.x + 80);
+    const centre = { x: roundBig.table.x + roundBig.table.width / 2, y: roundBig.table.y + roundBig.table.height / 2 };
+    check('no chip on a round table reaches into it',
+        roundBig.spots.every(s => {
+            const w = 170;
+            const nx = Math.max(s.x - w / 2, Math.min(centre.x, s.x + w / 2));
+            const ny = Math.max(s.y - H / 2, Math.min(centre.y, s.y + H / 2));
+            return Math.hypot(nx - centre.x, ny - centre.y) >= roundBig.table.width / 2;
+        }));
+
+    // Every shape, from one chair to a long banquet, with short, long and
+    // mixed names: nothing overlaps and nothing hangs outside the node.
+    const lengths = (n: number) => [even(n, 40), even(n, 190), Array.from({ length: n }, (_, i) => (i % 3 ? 60 : 190))];
+    for (const [type, n] of [['round', 1], ['round', 6], ['round', 10], ['round', 16],
+        ['rectangular', 2], ['rectangular', 9], ['rectangular', 24], ['head', 1], ['head', 12]] as const) {
+        const clean = lengths(n).every(w => {
+            const l = tableLayout(type, w);
+            return !overlaps(l, w) && inside(l, w);
+        });
+        check(`${type} with ${n}: no two chips overlap, every chip inside the node`, clean);
     }
 
-    check('the table does not move when the first guest sits down',
-        JSON.stringify(tableLayout('rectangular', 0).table) === JSON.stringify(tableLayout('rectangular', 1).table)
-            && JSON.stringify(tableLayout('head', 0).table) === JSON.stringify(tableLayout('head', 1).table));
-    check('an empty table has no chairs', tableLayout('rectangular', 0).spots.length === 0
-        && tableLayout('round', 0).spots.length === 0);
+    /* staying put */
+    const at = (l: TableLayout) => l.table.x - l.anchor.x === 0 && l.table.y - l.anchor.y === 0;
+    check('a long table keeps its top-left corner on the stored position, however many sit at it',
+        [0, 1, 8, 24].every(n => at(tableLayout('rectangular', even(n, 190))) && at(tableLayout('head', even(n)))));
+    const centreFromAnchor = (l: TableLayout) => [
+        l.table.x + l.table.width / 2 - l.anchor.x, l.table.y + l.table.height / 2 - l.anchor.y,
+    ].map(v => Math.round(v * 1e6) / 1e6).join(',');
+    check('a round table keeps its centre where it always was, 132px in from the stored position',
+        [[], even(1), even(8, 190), lengths(10)[2]].every(w => centreFromAnchor(tableLayout('round', w)) === '132,132'),
+        centreFromAnchor(roundBig));
+    check('an empty table has no chairs', tableLayout('rectangular', []).spots.length === 0
+        && tableLayout('round', []).spots.length === 0);
 }
 
 /* ---- moving ---- */
