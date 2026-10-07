@@ -19,7 +19,9 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { SeatingTableData, SeatData, SeatTransferPayload, ColorMode } from './types';
-import { rsvpLabel, seatSides, SeatSide, TableLayout } from '@/lib/seating';
+import {
+  canRotate, normaliseRotation, rsvpLabel, seatRunDirection, seatSides, sideDirection, TableLayout,
+} from '@/lib/seating';
 import { CHIP_NAME_MAX, chipName } from './seatChip';
 
 interface TableNodeProps {
@@ -36,6 +38,9 @@ interface TableNodeProps {
     onReorderSeats: (tableId: number, orderedSeatIndices: { seat_index: number; display_name: string; guest_list_id: number | null; party_group_id: number | null }[]) => void;
     onDeleteTable: (tableId: number) => void;
     onRenameTable: (tableId: number, name: string) => void;
+    /** Show the table at this angle without saving it — while the handle is dragged. */
+    onRotatePreview: (tableId: number, rotation: number) => void;
+    onRotateCommit: (tableId: number, rotation: number) => void;
     splitPartyGroupIds: Set<number>;
   };
 }
@@ -133,16 +138,19 @@ function SeatChip({
 
 // ── Sortable row inside the reorder modal ─────────────────────────────────
 
-const SIDE_LABEL: Record<SeatSide, string | null> = { around: null, top: 'oben', bottom: 'unten' };
-
-/** How the list maps onto the table — the order tableLayout() walks it in. */
-function orderHint(tableType: string): string {
+/**
+ * How the list maps onto the table — the order tableLayout() walks it in — in
+ * the directions the table actually faces on screen once it is turned.
+ */
+function orderHint(tableType: string, rotation: number): string {
   if (tableType === 'round') return 'Im Uhrzeigersinn, oben beginnend';
-  if (tableType === 'head') return 'Von links nach rechts';
-  return 'Im Uhrzeigersinn: oben von links nach rechts, dann unten zurück';
+  const { from, to } = seatRunDirection(rotation);
+  const first = sideDirection('top', rotation) ?? '';
+  if (tableType === 'head') return `${first.charAt(0).toUpperCase()}${first.slice(1)}, von ${from} nach ${to}`;
+  return `Im Uhrzeigersinn: ${first} von ${from} nach ${to}, dann ${sideDirection('bottom', rotation)} zurück`;
 }
 
-function SortableSeatRow({ seat, side }: { seat: SeatData; side: SeatSide }) {
+function SortableSeatRow({ seat, side }: { seat: SeatData; side: string | null }) {
   const name = chipName(seat);
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: seat.seat_index,
@@ -171,8 +179,8 @@ function SortableSeatRow({ seat, side }: { seat: SeatData; side: SeatSide }) {
         </svg>
       </div>
       <span className="text-sm text-gray-800 font-medium truncate">{name}</span>
-      {SIDE_LABEL[side] && (
-        <span className="ml-auto shrink-0 text-[10px] uppercase tracking-wide text-gray-400">{SIDE_LABEL[side]}</span>
+      {side && (
+        <span className="ml-auto shrink-0 text-[10px] uppercase tracking-wide text-gray-400">{side}</span>
       )}
     </div>
   );
@@ -225,7 +233,7 @@ function ReorderModal({
           <div>
             <h3 className="text-base font-semibold text-gray-800">{table.name}</h3>
             <p className="text-xs text-gray-400 mt-0.5">Ziehen, um die Reihenfolge festzulegen</p>
-            <p className="text-xs text-gray-400">{orderHint(table.table_type)}</p>
+            <p className="text-xs text-gray-400">{orderHint(table.table_type, table.rotation)}</p>
           </div>
           <button
             onClick={onClose}
@@ -247,7 +255,7 @@ function ReorderModal({
               <SortableContext items={seats.map(s => s.seat_index)} strategy={verticalListSortingStrategy}>
                 <div className="space-y-2">
                   {seats.map((seat, i) => (
-                    <SortableSeatRow key={seat.seat_index} seat={seat} side={sides[i]} />
+                    <SortableSeatRow key={seat.seat_index} seat={seat} side={sideDirection(sides[i], table.rotation)} />
                   ))}
                 </div>
               </SortableContext>
@@ -286,11 +294,14 @@ function TableControls({
   onDelete,
   onRename,
   onReorder,
+  onRotate90,
 }: {
   table: SeatingTableData;
   onDelete: () => void;
   onRename: (name: string) => void;
   onReorder: () => void;
+  /** Absent for a table that cannot turn. */
+  onRotate90?: () => void;
 }) {
   const [renaming, setRenaming] = useState(false);
   const [value, setValue] = useState(table.name);
@@ -350,6 +361,19 @@ function TableControls({
         </button>
       )}
 
+      {onRotate90 && (
+        <button
+          className="nodrag p-1 rounded text-gray-400 hover:text-indigo-500 hover:bg-white/50 transition-colors"
+          title="Um 90° drehen (oder am Griff ziehen)"
+          onClick={e => { e.stopPropagation(); onRotate90(); }}
+        >
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M21 12a9 9 0 1 1-3-6.7" />
+            <polyline points="21 3 21 9 15 9" />
+          </svg>
+        </button>
+      )}
+
       {confirmDelete ? (
         <div className="flex items-center gap-1">
           <span className="text-xs text-red-500">Löschen?</span>
@@ -380,12 +404,99 @@ function TableControls({
   );
 }
 
+// ── Rotate handle ──────────────────────────────────────────────────────────
+
+/**
+ * The grip at a long table's end. Dragging it turns the table about its centre,
+ * in 15° steps — Shift for single degrees. Only the release saves; every step
+ * before it is a preview the page draws without a request.
+ */
+function RotateHandle({
+  rotation,
+  shapeRef,
+  onActiveChange,
+  onPreview,
+  onCommit,
+}: {
+  rotation: number;
+  shapeRef: React.RefObject<HTMLDivElement | null>;
+  onActiveChange: (active: boolean) => void;
+  onPreview: (rotation: number) => void;
+  onCommit: (rotation: number) => void;
+}) {
+  const drag = useRef<{ cx: number; cy: number; from: number; start: number; last: number } | null>(null);
+  const angleAt = (e: React.PointerEvent, cx: number, cy: number) =>
+    (Math.atan2(e.clientY - cy, e.clientX - cx) * 180) / Math.PI;
+
+  return (
+    // The padding bridges the gap to the table: the grip only shows while the
+    // table is hovered, and a gap to cross would hide it on the way there.
+    <div className="absolute" style={{ left: '100%', top: '50%', marginTop: -12, paddingLeft: 8 }}>
+      <div
+        aria-label="Tisch drehen"
+        title="Ziehen, um den Tisch zu drehen (Umschalt: ohne Raster)"
+        // `nodrag` keeps React Flow from moving the table instead; no touch
+        // scrolling, so a finger can turn it too.
+        className="nodrag flex items-center justify-center w-6 h-6 rounded-full bg-white border border-gray-300 text-gray-500 shadow-sm hover:text-indigo-500 hover:border-indigo-300 cursor-grab active:cursor-grabbing"
+        style={{ touchAction: 'none' }}
+        onPointerDown={e => {
+          e.stopPropagation();
+          e.preventDefault();
+          const box = shapeRef.current?.getBoundingClientRect();
+          if (!box) return;
+          // A turned element's box is the box of what is drawn, so its middle is
+          // the table's centre at any angle.
+          const cx = box.left + box.width / 2;
+          const cy = box.top + box.height / 2;
+          drag.current = { cx, cy, from: rotation, start: angleAt(e, cx, cy), last: rotation };
+          e.currentTarget.setPointerCapture(e.pointerId);
+          onActiveChange(true);
+        }}
+        onPointerMove={e => {
+          const d = drag.current;
+          if (!d) return;
+          // Relative to where the grip was taken, so taking it off-centre does not
+          // jolt the table.
+          const step = e.shiftKey ? 1 : 15;
+          const next = normaliseRotation(Math.round((d.from + angleAt(e, d.cx, d.cy) - d.start) / step) * step);
+          if (next !== d.last) {
+            d.last = next;
+            onPreview(next);
+          }
+        }}
+        onPointerUp={() => {
+          const d = drag.current;
+          if (!d) return;
+          drag.current = null;
+          onActiveChange(false);
+          if (d.last !== d.from) onCommit(d.last);
+        }}
+        onPointerCancel={() => {
+          const d = drag.current;
+          if (!d) return;
+          drag.current = null;
+          onActiveChange(false);
+          onPreview(d.from);
+        }}
+      >
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M21 12a9 9 0 1 1-3-6.7" />
+          <polyline points="21 3 21 9 15 9" />
+        </svg>
+      </div>
+    </div>
+  );
+}
+
 // ── Table shapes ───────────────────────────────────────────────────────────
 
 function TableBody({
   table,
   width: tableW,
   height: tableH,
+  rotation,
+  onRotatePreview,
+  onRotateCommit,
   splitPartyGroupIds,
   onDropGuest,
   onDropPerson,
@@ -398,6 +509,10 @@ function TableBody({
   table: SeatingTableData;
   width: number;
   height: number;
+  /** The angle it is drawn at — the preview's while the handle is dragged. */
+  rotation: number;
+  onRotatePreview: (tableId: number, rotation: number) => void;
+  onRotateCommit: (tableId: number, rotation: number) => void;
   splitPartyGroupIds: Set<number>;
   onDropGuest: (tableId: number, guestId: string) => void;
   onDropPerson: (tableId: number, payload: string) => void;
@@ -410,6 +525,8 @@ function TableBody({
   const [hovered, setHovered] = useState(false);
   const [dragOver, setDragOver] = useState(false);
   const [reorderOpen, setReorderOpen] = useState(false);
+  const [rotating, setRotating] = useState(false);
+  const shapeRef = useRef<HTMLDivElement>(null);
   const seatCount = table.seats.filter(s => s.rsvp_status !== 'likely_not_coming').length;
   const totalSeatCount = table.seats.length;
 
@@ -436,6 +553,13 @@ function TableBody({
   };
 
   const isRound = table.table_type === 'round';
+  const turnable = canRotate(table.table_type);
+  // The label stays upright inside a turned table, so it gets the table's
+  // width across the screen — on a table stood on its end, its depth.
+  const rad = (rotation * Math.PI) / 180;
+  const cos = Math.abs(Math.cos(rad));
+  const sin = Math.abs(Math.sin(rad));
+  const across = Math.min(cos > 1e-6 ? tableW / cos : Infinity, sin > 1e-6 ? tableH / sin : Infinity);
 
   const baseClasses = `relative flex flex-col items-center justify-center
     border-2 transition-colors cursor-grab select-none
@@ -445,6 +569,7 @@ function TableBody({
   return (
     <>
       <div
+        ref={shapeRef}
         className={baseClasses}
         style={{ width: tableW, height: tableH }}
         onMouseEnter={() => setHovered(true)}
@@ -453,26 +578,45 @@ function TableBody({
         onDragLeave={() => setDragOver(false)}
         onDrop={handleDrop}
       >
-        <span className="text-xs font-semibold text-gray-600 px-3 text-center leading-tight">
-          {table.name}
-        </span>
-        {totalSeatCount === 0 ? (
-          <span className="text-xs text-gray-400 mt-0.5">Gäste hierher ziehen</span>
-        ) : seatCount < totalSeatCount ? (
-          <span className="text-center mt-0.5 leading-tight flex flex-col items-center">
-            <span className="text-xs text-gray-400">{seatCount} {seatCount === 1 ? 'Person' : 'Personen'}</span>
-            <span className="text-[9px] text-orange-400 font-medium">+{totalSeatCount - seatCount} wahrscheinlich nicht dabei</span>
+        {/* Turned back by the table's own angle, so the writing reads level. */}
+        <div
+          className="flex flex-col items-center"
+          style={{ transform: rotation ? `rotate(${-rotation}deg)` : undefined, maxWidth: Math.max(90, across) }}
+        >
+          <span className="text-xs font-semibold text-gray-600 px-3 text-center leading-tight">
+            {table.name}
           </span>
-        ) : (
-          <span className="text-xs text-gray-400 mt-0.5">{seatCount} {seatCount === 1 ? 'Person' : 'Personen'}</span>
-        )}
+          {rotating ? (
+            <span className="text-xs text-indigo-500 font-medium mt-0.5 tabular-nums">{rotation}°</span>
+          ) : totalSeatCount === 0 ? (
+            <span className="text-xs text-gray-400 mt-0.5">Gäste hierher ziehen</span>
+          ) : seatCount < totalSeatCount ? (
+            <span className="text-center mt-0.5 leading-tight flex flex-col items-center">
+              <span className="text-xs text-gray-400">{seatCount} {seatCount === 1 ? 'Person' : 'Personen'}</span>
+              <span className="text-[9px] text-orange-400 font-medium">+{totalSeatCount - seatCount} wahrscheinlich nicht dabei</span>
+            </span>
+          ) : (
+            <span className="text-xs text-gray-400 mt-0.5">{seatCount} {seatCount === 1 ? 'Person' : 'Personen'}</span>
+          )}
 
-        {hovered && (
-          <TableControls
-            table={table}
-            onDelete={() => onDeleteTable(table.id)}
-            onRename={name => onRenameTable(table.id, name)}
-            onReorder={() => setReorderOpen(true)}
+          {hovered && !rotating && (
+            <TableControls
+              table={table}
+              onDelete={() => onDeleteTable(table.id)}
+              onRename={name => onRenameTable(table.id, name)}
+              onReorder={() => setReorderOpen(true)}
+              onRotate90={turnable ? () => onRotateCommit(table.id, normaliseRotation(rotation + 90)) : undefined}
+            />
+          )}
+        </div>
+
+        {turnable && (hovered || rotating) && (
+          <RotateHandle
+            rotation={rotation}
+            shapeRef={shapeRef}
+            onActiveChange={setRotating}
+            onPreview={r => onRotatePreview(table.id, r)}
+            onCommit={r => onRotateCommit(table.id, r)}
           />
         )}
       </div>
@@ -539,7 +683,7 @@ function SeatsDisplay({
 // ── Main node export ───────────────────────────────────────────────────────
 
 export default function TableNode({ data }: TableNodeProps) {
-  const { table, layout, colorMode, onDropGuest, onDropPerson, onMoveSeat, onUnassignParty, onUnassignSeat, onReorderSeats, onDeleteTable, onRenameTable, splitPartyGroupIds } = data;
+  const { table, layout, colorMode, onDropGuest, onDropPerson, onMoveSeat, onUnassignParty, onUnassignSeat, onReorderSeats, onDeleteTable, onRenameTable, onRotatePreview, onRotateCommit, splitPartyGroupIds } = data;
 
   // The node is the table and its chairs, so the chairs are inside what React
   // Flow measures, selects and fits to the screen.
@@ -561,12 +705,17 @@ export default function TableNode({ data }: TableNodeProps) {
           top: layout.table.y,
           width: layout.table.width,
           height: layout.table.height,
+          // About its centre, which is where the layout turned it.
+          transform: layout.rotation ? `rotate(${layout.rotation}deg)` : undefined,
         }}
       >
         <TableBody
           table={table}
           width={layout.table.width}
           height={layout.table.height}
+          rotation={layout.rotation}
+          onRotatePreview={onRotatePreview}
+          onRotateCommit={onRotateCommit}
           splitPartyGroupIds={splitPartyGroupIds}
           onDropGuest={onDropGuest}
           onDropPerson={onDropPerson}

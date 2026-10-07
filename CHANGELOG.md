@@ -11,7 +11,22 @@ All notable changes to this project are documented here, newest at the top.
 > renders those three as coloured badges. Bump the patch on every deploy, the minor when
 > asked. Entries predating this convention carry a date but no time.
 
-## v0.10.5 — [Unreleased] Tische: Plätze auf beiden Seiten, Tische wachsen mit den Namen (`ccr-b8dc6d9b-ub1z66`, 2026-10-06 22:00)
+## v0.10.6 — [Unreleased] Tische drehen (`ccr-b8dc6d9b-ub1z66`, 2026-10-07 13:56)
+
+„Können wir eine Funktion hinzufügen, die Tische zu drehen? Damit nicht alle horizontal sind.“
+
+### Added
+- **Rechteckige Tische und der Haupttisch lassen sich drehen.** Beim Überfahren erscheint am Tischende ein Griff: ziehen, und der Tisch dreht sich um seine Mitte, in 15°-Schritten (mit gedrückter Umschalttaste ohne Raster). Während des Drehens steht der Winkel im Tisch; gespeichert wird beim Loslassen.
+- **„Um 90° drehen“** in der Leiste, die beim Überfahren eines Tischs erscheint — für den schnellen Wechsel von quer auf längs.
+- Die Gäste drehen mit und bleiben an den Längsseiten, die Namen bleiben dabei waagerecht lesbar. Ein hochkant gestellter Tisch ist so kurz wie seine übereinander stehenden Namen hoch sind, nicht so lang wie sie breit sind.
+- **„Plätze neu anordnen“ nennt die Seiten nach ihrer Richtung auf dem Bildschirm** — bei einem hochkant gestellten Tisch „rechts“ und „links“ statt „oben“ und „unten“, und der Hinweis sagt, in welche Richtung die Liste läuft („rechts von oben nach unten, dann links zurück“).
+
+### Changed
+- Runde Tische haben keinen Griff — ein Kreis sieht in jedem Winkel gleich aus.
+- Ein gedrehter langer Tisch wächst mit neuen Gästen entlang seiner eigenen Länge, von seiner eigenen linken oberen Ecke aus. Die Skizze auf der Übersichtsseite zeigt die Drehung schon immer an.
+- `tableLayout()` nimmt den Winkel als drittes Argument; `positionAfterTurn()`, `sideDirection()` und `seatRunDirection()` in `src/lib/seating.ts` sind neu. `npm run check:seating` prüft das Drehen mit 17 neuen Prüfungen, unter anderem jeden 15°-Schritt für beide Tischformen (jetzt 272).
+
+## v0.10.5 — [Released] Tische: Plätze auf beiden Seiten, Tische wachsen mit den Namen (`ccr-b8dc6d9b-ub1z66`, 2026-10-06 22:00)
 
 „Wenn ich Tische einfüge, dann geht das bei runden Tischen gut, da kann man die Anordnung anpassen. Bei den rechteckigen Tischen sind immer alle unten.“ — und dann: „Kann der Tisch dann auch größer werden, dass man das sauber sieht?“
 
@@ -28,7 +43,7 @@ All notable changes to this project are documented here, newest at the top.
 - Das × zum Entfernen sitzt beim Überfahren auf der Ecke des Namensschilds, statt es zu verbreitern.
 - Die Verteilung der Plätze und die Tischgröße stecken in einer Funktion, `tableLayout()` in `src/lib/seating.ts`; `npm run check:seating` prüft sie mit 31 neuen Prüfungen (jetzt 255).
 
-## v0.10.4 — [Unreleased] Die ganze Oberfläche auf Deutsch (`ccr-c63fa0b6-p83mno`, 2026-10-05 22:01)
+## v0.10.4 — [Released] Die ganze Oberfläche auf Deutsch (`ccr-c63fa0b6-p83mno`, 2026-10-05 22:01)
 
 Translate the whole UI into German — clean and modern.
 
