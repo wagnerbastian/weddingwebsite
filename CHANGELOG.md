@@ -11,6 +11,23 @@ All notable changes to this project are documented here, newest at the top.
 > renders those three as coloured badges. Bump the patch on every deploy, the minor when
 > asked. Entries predating this convention carry a date but no time.
 
+## v0.10.5 — [Unreleased] Tische: Plätze auf beiden Seiten, Tische wachsen mit den Namen (`ccr-b8dc6d9b-ub1z66`, 2026-10-06 22:00)
+
+„Wenn ich Tische einfüge, dann geht das bei runden Tischen gut, da kann man die Anordnung anpassen. Bei den rechteckigen Tischen sind immer alle unten.“ — und dann: „Kann der Tisch dann auch größer werden, dass man das sauber sieht?“
+
+### Fixed
+- **Rechteckige Tische verteilen ihre Gäste auf beide Längsseiten** — die erste Hälfte oben von links nach rechts, der Rest unten von rechts zurück, also im Uhrzeigersinn um den Tisch wie beim runden. So bleibt eine Gruppe auch über das Tischende hinweg nebeneinander. Bisher lagen alle Plätze als Reihe unter dem Tisch, egal was die Tischform versprach. Bei ungerader Zahl bleibt unten links ein Platz frei.
+- **Der Haupttisch setzt seine Gäste oben**, mit Blick in den Saal, wie es der Dialog „Tisch hinzufügen“ schon immer beschrieben hat — bisher saßen sie ebenfalls unten.
+- **Runde Tische mit vielen oder langen Namen überlappen nicht mehr.** Ein runder Tisch hatte immer dieselbe Größe, ein voller Tisch war ein Haufen übereinanderliegender Namen.
+- Ein verschobener Tisch sprang beim Umschalten zwischen Gruppen- und Rückmeldungsansicht an seinen alten Platz zurück, bis die Seite neu geladen wurde.
+
+### Changed
+- **Tische wachsen mit ihren Gästen, und Namen stehen in voller Länge da** (bis etwa 30 Zeichen, vorher wurde nach rund 12 abgeschnitten). Ein langer Tisch wird Spalte für Spalte breiter, zwei gegenüberliegende Plätze teilen sich eine Spalte; ein runder Tisch bekommt einen größeren Durchmesser, bis sich keine zwei Namen berühren. Die Breiten werden im Browser in der Schrift der Namensschilder gemessen.
+- **Ein Tisch bleibt dabei, wo er steht** — ein langer Tisch an seiner linken oberen Ecke, ein runder an seiner Mitte — und bestehende Tische stehen genau dort, wo sie vorher standen. Ein Tisch, der jetzt breiter ist, kann allerdings in einen Nachbartisch ragen und muss dann einmal beiseitegeschoben werden.
+- **„Plätze neu anordnen“ zeigt bei rechteckigen Tischen, wer oben und wer unten sitzt**, und bei jeder Tischform, in welcher Richtung die Liste um den Tisch läuft. Die Reihenfolge in der Liste entscheidet über die Seite.
+- Das × zum Entfernen sitzt beim Überfahren auf der Ecke des Namensschilds, statt es zu verbreitern.
+- Die Verteilung der Plätze und die Tischgröße stecken in einer Funktion, `tableLayout()` in `src/lib/seating.ts`; `npm run check:seating` prüft sie mit 31 neuen Prüfungen (jetzt 255).
+
 ## v0.10.4 — [Unreleased] Die ganze Oberfläche auf Deutsch (`ccr-c63fa0b6-p83mno`, 2026-10-05 22:01)
 
 Translate the whole UI into German — clean and modern.

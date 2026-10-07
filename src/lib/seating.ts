@@ -384,6 +384,146 @@ export function occupancy(table: SeatingTableData): { seated: number; capacity: 
     return { seated, capacity, free: Math.max(0, capacity - seated) };
 }
 
+/* ---- where the chairs go on the canvas ---- */
+
+/** Which edge of the table a chair is on. A round table has only the one. */
+export type SeatSide = 'around' | 'top' | 'bottom';
+
+export interface SeatSpot {
+    side: SeatSide;
+    /** The chip's centre, in the node's own coordinates (its top-left is 0,0). */
+    x: number;
+    y: number;
+}
+
+export interface TableLayout {
+    /** The table top, placed inside the node. */
+    table: { x: number; y: number; width: number; height: number };
+    /** The whole node, chairs included — what React Flow measures and fits. */
+    node: { width: number; height: number };
+    /**
+     * The point in the node that the table's stored x/y names. The canvas puts
+     * the node at stored − anchor, so the table stays where it was put however
+     * its chairs make the node grow: a long table keeps its top-left corner, a
+     * round one its centre.
+     */
+    anchor: { x: number; y: number };
+    /** One per seat, in seat-list order. */
+    spots: SeatSpot[];
+}
+
+/** A seat chip's height: one line of 12px text, its padding and border. */
+export const SEAT_CHIP_HEIGHT = 22;
+/** The least room between two chips, and between a chip and a round table. */
+const SEAT_GAP = 10;
+const ROUND_MIN_RADIUS = 80;
+const ROUND_MAX_RADIUS = 600;
+const ROW_PAD = 36;
+/**
+ * Where a round table's stored x/y has always pointed: 132px up and left of its
+ * centre — the 52px orbit its node used to carry, plus the 80px radius. Kept,
+ * so no table that is already placed moves.
+ */
+const ROUND_ANCHOR = 132;
+
+/**
+ * Which side each seat of a table is on, in seat-list order.
+ *
+ * The list walks clockwise, the way a round table always did: a rectangular
+ * table fills its top edge left to right and comes back along the bottom right
+ * to left, so neighbours in the list are neighbours at the table — a party
+ * seated in a run stays together round the end instead of landing at opposite
+ * corners. A head table seats the top only, facing the room.
+ */
+export function seatSides(tableType: string, seatCount: number): SeatSide[] {
+    const n = Math.max(0, Math.floor(seatCount));
+    if (tableType === 'round') return Array.from({ length: n }, () => 'around');
+    const top = tableType === 'head' ? n : Math.ceil(n / 2);
+    return Array.from({ length: n }, (_, i) => (i < top ? 'top' : 'bottom'));
+}
+
+/**
+ * Where each seat of a table sits on the canvas, and how big the table is.
+ *
+ * `chipWidths` is each seat's chip, measured, in seat-list order. The table
+ * grows until every name fits at full length with room between them: a long
+ * table gets wider column by column — two chairs facing each other share a
+ * column, as wide as the wider name — and a round table gets a bigger radius
+ * until no two chips touch. Chips on a round table hug the edge, so a long name
+ * at the side reaches outwards rather than into the table.
+ *
+ * Until v0.10.5 every seat of a long table went in a row underneath it, names
+ * were cut off at 80px, and a round table never grew, so a full one with long
+ * names was a pile of overlapping chips.
+ */
+export function tableLayout(tableType: string, chipWidths: number[]): TableLayout {
+    const widths = chipWidths.map(w => Math.max(0, w));
+    const sides = seatSides(tableType, widths.length);
+    const H = SEAT_CHIP_HEIGHT;
+
+    if (tableType === 'round') {
+        const n = widths.length;
+        const angles = widths.map((_, i) => (2 * Math.PI * i) / n - Math.PI / 2);
+        const place = (r: number) => widths.map((w, i) => {
+            const cos = Math.cos(angles[i]);
+            const sin = Math.sin(angles[i]);
+            // Far enough out along its ray that the chip's nearest edge is
+            // SEAT_GAP clear of the table, whatever its width.
+            const d = r + SEAT_GAP + (w / 2) * Math.abs(cos) + (H / 2) * Math.abs(sin);
+            return { x: d * cos, y: d * sin, w };
+        });
+        const clash = (spots: { x: number; y: number; w: number }[]) => spots.some((a, i) =>
+            spots.some((b, j) => j > i
+                && Math.abs(a.x - b.x) < (a.w + b.w) / 2 + SEAT_GAP
+                && Math.abs(a.y - b.y) < H + SEAT_GAP));
+
+        let r = ROUND_MIN_RADIUS;
+        while (r < ROUND_MAX_RADIUS && clash(place(r))) r += 4;
+        const placed = place(r);
+
+        const minX = Math.min(-r, ...placed.map(s => s.x - s.w / 2));
+        const maxX = Math.max(r, ...placed.map(s => s.x + s.w / 2));
+        const minY = Math.min(-r, ...placed.map(s => s.y - H / 2));
+        const maxY = Math.max(r, ...placed.map(s => s.y + H / 2));
+        const cx = -minX;
+        const cy = -minY;
+        return {
+            table: { x: cx - r, y: cy - r, width: r * 2, height: r * 2 },
+            node: { width: maxX - minX, height: maxY - minY },
+            anchor: { x: cx - ROUND_ANCHOR, y: cy - ROUND_ANCHOR },
+            spots: placed.map((s, i) => ({ side: sides[i], x: cx + s.x, y: cy + s.y })),
+        };
+    }
+
+    // Anything that is not round or head is drawn as a rectangle, as it always was.
+    const isHead = tableType === 'head';
+    const columnCount = sides.filter(s => s === 'top').length;
+    // Back along the bottom, right to left. An odd seat count leaves the
+    // bottom-left chair empty, where the walk round the table ends.
+    const columnOf = (i: number) => (sides[i] === 'top' ? i : columnCount - 1 - (i - columnCount));
+
+    const columns = Array.from({ length: columnCount }, () => 0);
+    widths.forEach((w, i) => { columns[columnOf(i)] = Math.max(columns[columnOf(i)], w + SEAT_GAP); });
+    const natural = columns.reduce((sum, w) => sum + w, 0);
+    const width = Math.max(isHead ? 240 : 200, natural);
+    // A table wider than its chairs need spreads them along its length.
+    const spare = columnCount > 0 ? (width - natural) / columnCount : 0;
+    const centres: number[] = [];
+    columns.reduce((left, w) => { centres.push(left + (w + spare) / 2); return left + w + spare; }, 0);
+
+    const height = isHead ? 80 : 100;
+    return {
+        table: { x: 0, y: ROW_PAD, width, height },
+        node: { width, height: ROW_PAD + height + (isHead ? 0 : ROW_PAD) },
+        anchor: { x: 0, y: ROW_PAD },
+        spots: widths.map((_, i) => ({
+            side: sides[i],
+            x: centres[columnOf(i)],
+            y: sides[i] === 'top' ? ROW_PAD / 2 : ROW_PAD + height + ROW_PAD / 2,
+        })),
+    };
+}
+
 /**
  * Seat whole parties into the chairs that are free, one party at a time.
  *
