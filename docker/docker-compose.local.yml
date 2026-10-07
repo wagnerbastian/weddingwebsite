@@ -1,0 +1,8 @@
+services:
+  web:
+    image: weddingwebsite:de        # eigener Name, damit das Original-Image nicht überschrieben wird
+    pull_policy: build
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+      target: production
