@@ -17,7 +17,7 @@ import TableNode from '@/components/seating/TableNode';
 import GuestSidebar from '@/components/seating/GuestSidebar';
 import AddTableModal from '@/components/seating/AddTableModal';
 import SeatingExportModal from '@/components/seating/SeatingExportModal';
-import { buildPersonSeat, partySeatingState, tableLayout, TableLayout } from '@/lib/seating';
+import { buildPersonSeat, partySeatingState, positionAfterTurn, tableLayout, TableLayout } from '@/lib/seating';
 import { seatChipWidths } from '@/components/seating/seatChip';
 import RoomEditor, { RoomShape, Vertex } from '@/components/seating/RoomEditor';
 import SeatingListView from '@/components/seating/SeatingListView';
@@ -265,6 +265,39 @@ function SeatingCanvas({
     onRefresh();
   }, [onRefresh]);
 
+  // Turning a table about its centre: the stored point is the table's own
+  // corner, which the turn swings round, so it moves with the angle.
+  const turnTable = useCallback((tableId: number, rotation: number) => {
+    const table = tables.find(t => t.id === tableId);
+    if (!table) return null;
+    const widths = seatChipWidths(table, splitPartyGroupIds(), colorMode);
+    const before = tableLayout(table.table_type, widths, table.rotation);
+    const after = tableLayout(table.table_type, widths, rotation);
+    return { layout: after, stored: positionAfterTurn({ x: table.x, y: table.y }, before, after) };
+  }, [tables, colorMode, splitPartyGroupIds]);
+
+  // While the handle is dragged: redraw that one table, save nothing.
+  const handleRotatePreview = useCallback((tableId: number, rotation: number) => {
+    const turned = turnTable(tableId, rotation);
+    if (!turned) return;
+    const { layout, stored } = turned;
+    setNodes(ns => ns.map(n => n.id === String(tableId)
+      ? { ...n, position: { x: stored.x - layout.anchor.x, y: stored.y - layout.anchor.y }, data: { ...n.data, layout } }
+      : n));
+  }, [turnTable, setNodes]);
+
+  const handleRotateCommit = useCallback(async (tableId: number, rotation: number) => {
+    const turned = turnTable(tableId, rotation);
+    if (!turned) return;
+    handleRotatePreview(tableId, rotation);
+    await fetch(`/api/admin/seating/tables/${tableId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ rotation: turned.layout.rotation, x: turned.stored.x, y: turned.stored.y }),
+    });
+    onRefresh();
+  }, [turnTable, handleRotatePreview, onRefresh]);
+
   // Handle drag from sidebar → drop onto canvas (drop on a seat slot)
   const handleCanvasDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -292,7 +325,7 @@ function SeatingCanvas({
       // A table grows with its names, and the node grows with it. Placing the
       // node by its anchor rather than its corner is what keeps the table itself
       // where it was put while the chairs around it come and go.
-      const layout = tableLayout(table.table_type, seatChipWidths(table, split, colorMode));
+      const layout = tableLayout(table.table_type, seatChipWidths(table, split, colorMode), table.rotation);
       return {
         id: String(table.id),
         type: 'tableNode',
@@ -309,6 +342,8 @@ function SeatingCanvas({
           onUnassignSeat: handleUnassignSeat,
           onDeleteTable: handleDeleteTable,
           onRenameTable: handleRenameTable,
+          onRotatePreview: handleRotatePreview,
+          onRotateCommit: handleRotateCommit,
           splitPartyGroupIds: split,
         },
         draggable: true,

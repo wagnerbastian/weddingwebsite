@@ -63,7 +63,7 @@ image:
 | `npm run check:honeymoon:ui` | The honeymoon portal in a real browser, 53 checks (none of them write): the same place panel and sections from every entry point, the itinerary toolbar staying on screen, travel on both timeline shapes, overview cards never overlapping, and at 390×844 no sideways scroll and no control under 44px on any of its pages. Needs a browser and a server with honeymoon data (`BASE=… ADMIN_PASSWORD=…`, or `DEMO=1` against the demo) |
 | `npm run check:hero` | The home page's hero collapse in a real browser, at five viewport-and-input pairings — phone portrait, **phone landscape**, tablet portrait, tablet landscape, desktop — each driven by the input that device actually sends. Needs a browser and a server whose site config has a hero photo, or every case reports the placeholder instead of a pass |
 | `npm run audit:finance` | A deeper sweep over the finance logic |
-| `npm run check:seating` | 255 assertions with no database or browser: who takes a chair (a party member who declined takes none), seat-index allocation, where each chair sits on the canvas, moves, swaps, gathering a split party, auto-seating, the plan's own warnings, and the export — tallies, vendor plates, the grand total, the spreadsheet's columns and the one-page fit maths |
+| `npm run check:seating` | 272 assertions with no database or browser: who takes a chair (a party member who declined takes none), seat-index allocation, where each chair sits on the canvas, moves, swaps, gathering a split party, auto-seating, the plan's own warnings, and the export — tallies, vendor plates, the grand total, the spreadsheet's columns and the one-page fit maths |
 | `npm run check:honeymoon` | 743 assertions with no database or network: distances, date maths, URL parsing, the calendar grid, `.ics` output, search ranking, seed integrity, the trip-mode day resolution, sunrise/sunset, OSM opening hours, the day timeline, time zones on legs, the budget, conflicts, imports/exports, markdown, the flight parser, and journeys (layovers, day placement, door-to-door time) |
 
 Seeds: `npm run seed:honeymoon` (bundles the Bali/Singapore travel guide,
@@ -409,6 +409,13 @@ order, before the commit:
     grows stays put — a long table at its top-left corner, a round one at its
     centre (132px in from the stored point, where it always was). (Until v0.10.5
     every long table put all its seats underneath and a round table never grew.)
+    **A long table can be turned** (`seating_tables.rotation`, clockwise degrees;
+    a round one ignores it): the grip at its end previews every 15° step through
+    `setNodes` and saves on release, and the stored point is the table's *own*
+    top-left corner turned with it, so a turn has to move it —
+    `positionAfterTurn()` — or the table would pivot on that corner. The chips
+    stay upright and are spaced by their reach *along* the table, which is why a
+    table on its end is short.
   - **List** (`SeatingListView.tsx`) — the same plan as a roster, grouped **by
     table** (rows are people, with an "Not seated" block on top) or **by guest**
     (rows are whole parties). Multi-select (click, ⌘/Ctrl-click, Shift-range,

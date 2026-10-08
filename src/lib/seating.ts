@@ -408,6 +408,8 @@ export interface TableLayout {
      * round one its centre.
      */
     anchor: { x: number; y: number };
+    /** How far the table top is turned, clockwise in degrees, about its centre. Always 0 for a round table. */
+    rotation: number;
     /** One per seat, in seat-list order. */
     spots: SeatSpot[];
 }
@@ -418,13 +420,45 @@ export const SEAT_CHIP_HEIGHT = 22;
 const SEAT_GAP = 10;
 const ROUND_MIN_RADIUS = 80;
 const ROUND_MAX_RADIUS = 600;
-const ROW_PAD = 36;
+/** Between a long table's edge and the chips along it. */
+const EDGE_GAP = 7;
+/** How far a turned long table may lengthen its columns to keep chips apart. */
+const MAX_STRETCH = 200;
 /**
  * Where a round table's stored x/y has always pointed: 132px up and left of its
  * centre — the 52px orbit its node used to carry, plus the 80px radius. Kept,
  * so no table that is already placed moves.
  */
 const ROUND_ANCHOR = 132;
+
+/** Whether any two upright chips, given by centre and width, come closer than SEAT_GAP. */
+function chipsClash(spots: { x: number; y: number; w: number }[]): boolean {
+    return spots.some((a, i) => spots.some((b, j) => j > i
+        && Math.abs(a.x - b.x) < (a.w + b.w) / 2 + SEAT_GAP
+        && Math.abs(a.y - b.y) < SEAT_CHIP_HEIGHT + SEAT_GAP));
+}
+
+/** A rotation as stored, made a clean angle in [0, 360). Anything unreadable is 0. */
+export function normaliseRotation(degrees: number | null | undefined): number {
+    const d = Number(degrees);
+    if (!Number.isFinite(d)) return 0;
+    const r = ((Math.round(d * 100) / 100) % 360 + 360) % 360;
+    return r === 360 ? 0 : r;
+}
+
+/** Whether a table of this shape can be turned. A round one looks the same at every angle. */
+export function canRotate(tableType: string): boolean {
+    return tableType !== 'round';
+}
+
+/** Clockwise by `degrees`, in screen coordinates (y down). Right angles come out exact. */
+function turner(degrees: number): (x: number, y: number) => { x: number; y: number } {
+    const rad = (degrees * Math.PI) / 180;
+    const exact = (v: number) => (Math.abs(v) < 1e-12 ? 0 : v);
+    const cos = exact(Math.cos(rad));
+    const sin = exact(Math.sin(rad));
+    return (x, y) => ({ x: x * cos - y * sin, y: x * sin + y * cos });
+}
 
 /**
  * Which side each seat of a table is on, in seat-list order.
@@ -452,11 +486,14 @@ export function seatSides(tableType: string, seatCount: number): SeatSide[] {
  * until no two chips touch. Chips on a round table hug the edge, so a long name
  * at the side reaches outwards rather than into the table.
  *
+ * A long table can be turned (`rotation`, clockwise degrees, about its centre);
+ * its chairs turn with it and its names stay upright. A round table ignores it.
+ *
  * Until v0.10.5 every seat of a long table went in a row underneath it, names
  * were cut off at 80px, and a round table never grew, so a full one with long
  * names was a pile of overlapping chips.
  */
-export function tableLayout(tableType: string, chipWidths: number[]): TableLayout {
+export function tableLayout(tableType: string, chipWidths: number[], rotation = 0): TableLayout {
     const widths = chipWidths.map(w => Math.max(0, w));
     const sides = seatSides(tableType, widths.length);
     const H = SEAT_CHIP_HEIGHT;
@@ -472,13 +509,8 @@ export function tableLayout(tableType: string, chipWidths: number[]): TableLayou
             const d = r + SEAT_GAP + (w / 2) * Math.abs(cos) + (H / 2) * Math.abs(sin);
             return { x: d * cos, y: d * sin, w };
         });
-        const clash = (spots: { x: number; y: number; w: number }[]) => spots.some((a, i) =>
-            spots.some((b, j) => j > i
-                && Math.abs(a.x - b.x) < (a.w + b.w) / 2 + SEAT_GAP
-                && Math.abs(a.y - b.y) < H + SEAT_GAP));
-
         let r = ROUND_MIN_RADIUS;
-        while (r < ROUND_MAX_RADIUS && clash(place(r))) r += 4;
+        while (r < ROUND_MAX_RADIUS && chipsClash(place(r))) r += 4;
         const placed = place(r);
 
         const minX = Math.min(-r, ...placed.map(s => s.x - s.w / 2));
@@ -491,37 +523,126 @@ export function tableLayout(tableType: string, chipWidths: number[]): TableLayou
             table: { x: cx - r, y: cy - r, width: r * 2, height: r * 2 },
             node: { width: maxX - minX, height: maxY - minY },
             anchor: { x: cx - ROUND_ANCHOR, y: cy - ROUND_ANCHOR },
+            rotation: 0,
             spots: placed.map((s, i) => ({ side: sides[i], x: cx + s.x, y: cy + s.y })),
         };
     }
 
     // Anything that is not round or head is drawn as a rectangle, as it always was.
     const isHead = tableType === 'head';
+    const angle = normaliseRotation(rotation);
+    const turn = turner(angle);
     const columnCount = sides.filter(s => s === 'top').length;
     // Back along the bottom, right to left. An odd seat count leaves the
     // bottom-left chair empty, where the walk round the table ends.
     const columnOf = (i: number) => (sides[i] === 'top' ? i : columnCount - 1 - (i - columnCount));
 
+    // A column is as wide as its chips reach along the table: the full width of
+    // a name on a table square to the screen, only a chip's height on one stood
+    // on its end — the names are stacked then, not side by side. Spaced by that
+    // reach, neighbours along a side can never touch at any angle (their
+    // shadows on the table's length are apart), which is what lets a turned
+    // table stay as short as an upright one.
+    const along = turn(1, 0);
+    const reach = (w: number) => w * Math.abs(along.x) + H * Math.abs(along.y);
     const columns = Array.from({ length: columnCount }, () => 0);
-    widths.forEach((w, i) => { columns[columnOf(i)] = Math.max(columns[columnOf(i)], w + SEAT_GAP); });
+    widths.forEach((w, i) => { columns[columnOf(i)] = Math.max(columns[columnOf(i)], reach(w) + SEAT_GAP); });
     const natural = columns.reduce((sum, w) => sum + w, 0);
-    const width = Math.max(isHead ? 240 : 200, natural);
-    // A table wider than its chairs need spreads them along its length.
-    const spare = columnCount > 0 ? (width - natural) / columnCount : 0;
-    const centres: number[] = [];
-    columns.reduce((left, w) => { centres.push(left + (w + spare) / 2); return left + w + spare; }, 0);
-
     const height = isHead ? 80 : 100;
-    return {
-        table: { x: 0, y: ROW_PAD, width, height },
-        node: { width, height: ROW_PAD + height + (isHead ? 0 : ROW_PAD) },
-        anchor: { x: 0, y: ROW_PAD },
-        spots: widths.map((_, i) => ({
-            side: sides[i],
-            x: centres[columnOf(i)],
-            y: sides[i] === 'top' ? ROW_PAD / 2 : ROW_PAD + height + ROW_PAD / 2,
-        })),
+
+    // Laid out in the table's own frame — centre at 0,0, the long sides along
+    // x — then turned. The chips are not turned with it: names stay readable,
+    // so each one moves out along its side's normal until its upright box is
+    // clear of that side, which for a table on its end means half a name's
+    // width rather than half a chip's height.
+    const place = (stretch: number) => {
+        const width = Math.max(isHead ? 240 : 200, natural + stretch * columnCount);
+        // A table wider than its chairs need spreads them along its length.
+        const spare = columnCount > 0 ? (width - natural) / columnCount : 0;
+        const centres: number[] = [];
+        columns.reduce((left, w) => { centres.push(left + (w + spare) / 2 - width / 2); return left + w + spare; }, 0);
+        const spots = widths.map((w, i) => {
+            const outward = sides[i] === 'top' ? -1 : 1;
+            const edge = turn(centres[columnOf(i)], (outward * height) / 2);
+            const normal = turn(0, outward);
+            const d = EDGE_GAP + (w / 2) * Math.abs(normal.x) + (H / 2) * Math.abs(normal.y);
+            return { x: edge.x + normal.x * d, y: edge.y + normal.y * d, w };
+        });
+        return { width, spots };
     };
+
+    // By the reasoning above this never has to lengthen anything; it is the
+    // backstop that keeps "no two names overlap" true if that reasoning is ever
+    // edited out from under it.
+    let stretch = 0;
+    let placed = place(0);
+    while (stretch < MAX_STRETCH && chipsClash(placed.spots)) {
+        stretch += 4;
+        placed = place(stretch);
+    }
+    const width = placed.width;
+
+    const corners = [turn(-width / 2, -height / 2), turn(width / 2, -height / 2), turn(width / 2, height / 2), turn(-width / 2, height / 2)];
+    const minX = Math.min(...corners.map(c => c.x), ...placed.spots.map(s => s.x - s.w / 2));
+    const maxX = Math.max(...corners.map(c => c.x), ...placed.spots.map(s => s.x + s.w / 2));
+    const minY = Math.min(...corners.map(c => c.y), ...placed.spots.map(s => s.y - H / 2));
+    const maxY = Math.max(...corners.map(c => c.y), ...placed.spots.map(s => s.y + H / 2));
+    const cx = -minX;
+    const cy = -minY;
+    return {
+        table: { x: cx - width / 2, y: cy - height / 2, width, height },
+        node: { width: maxX - minX, height: maxY - minY },
+        // The table's own top-left corner, wherever turning has taken it: a
+        // long table grows along its own length from there.
+        anchor: { x: cx + corners[0].x, y: cy + corners[0].y },
+        rotation: angle,
+        spots: placed.spots.map((s, i) => ({ side: sides[i], x: cx + s.x, y: cy + s.y })),
+    };
+}
+
+/**
+ * Where a table's stored x/y has to go for it to turn in place, about its own
+ * centre. The stored point is the table's own top-left corner, which turning
+ * swings round — left where it was, the table would pivot on its corner.
+ */
+export function positionAfterTurn(
+    stored: { x: number; y: number },
+    before: TableLayout,
+    after: TableLayout,
+): { x: number; y: number } {
+    const centre = (l: TableLayout) => ({
+        x: l.table.x + l.table.width / 2 - l.anchor.x,
+        y: l.table.y + l.table.height / 2 - l.anchor.y,
+    });
+    return {
+        x: stored.x + centre(before).x - centre(after).x,
+        y: stored.y + centre(before).y - centre(after).y,
+    };
+}
+
+const DIRECTIONS = ['rechts', 'unten rechts', 'unten', 'unten links', 'links', 'oben links', 'oben', 'oben rechts'];
+
+/** The nearest of the eight screen directions to a vector, in German. */
+function direction(x: number, y: number): string {
+    const k = Math.round(Math.atan2(y, x) / (Math.PI / 4));
+    return DIRECTIONS[((k % 8) + 8) % 8];
+}
+
+/**
+ * Where on screen a side of a long table faces once it is turned — "oben" for
+ * the top side of a table square to the screen, "rechts" once it is stood on
+ * its end. Null for a round table, which has no sides.
+ */
+export function sideDirection(side: SeatSide, rotation: number): string | null {
+    if (side === 'around') return null;
+    const normal = turner(normaliseRotation(rotation))(0, side === 'top' ? -1 : 1);
+    return direction(normal.x, normal.y);
+}
+
+/** Which way the seat list runs along a long table's first side, on screen. */
+export function seatRunDirection(rotation: number): { from: string; to: string } {
+    const along = turner(normaliseRotation(rotation))(1, 0);
+    return { from: direction(-along.x, -along.y), to: direction(along.x, along.y) };
 }
 
 /**

@@ -16,6 +16,7 @@ import {
     planUnseatSelection, seatIndexer, seatingIssues, splitPartyGroupIds,
     planRenameSeats, renamesBetween, staleSeatNames, partySeatingState, buildPersonSeat,
     SEAT_CHIP_HEIGHT, seatSides, tableLayout, type TableLayout,
+    canRotate, normaliseRotation, positionAfterTurn, seatRunDirection, sideDirection,
 } from '../src/lib/seating';
 import {
     DEFAULT_EXPORT_OPTIONS, NO_RESTRICTION_LABEL, alphabetical, csvHeaders, csvRows,
@@ -361,6 +362,131 @@ console.log('\nWhere the chairs go');
         centreFromAnchor(roundBig));
     check('an empty table has no chairs', tableLayout('rectangular', []).spots.length === 0
         && tableLayout('round', []).spots.length === 0);
+}
+
+/* ---- turning a table ---- */
+
+console.log('\nTurning a table');
+{
+    const H = SEAT_CHIP_HEIGHT;
+    const even = (n: number, w = 90) => Array.from({ length: n }, () => w);
+    const near = (a: number, b: number) => Math.abs(a - b) < 1e-6;
+    const centreOf = (l: TableLayout) => ({ x: l.table.x + l.table.width / 2, y: l.table.y + l.table.height / 2 });
+    const same = (a: TableLayout, b: TableLayout) => JSON.stringify(a) === JSON.stringify(b);
+
+    // The turned table top as four corners, and whether an upright chip box
+    // overlaps it — separating axes: the box's two and the table's two.
+    const tableCorners = (l: TableLayout) => {
+        const c = centreOf(l);
+        const r = (l.rotation * Math.PI) / 180;
+        return [[-1, -1], [1, -1], [1, 1], [-1, 1]].map(([sx, sy]) => {
+            const x = (sx * l.table.width) / 2;
+            const y = (sy * l.table.height) / 2;
+            return { x: c.x + x * Math.cos(r) - y * Math.sin(r), y: c.y + x * Math.sin(r) + y * Math.cos(r) };
+        });
+    };
+    const hitsTable = (l: TableLayout, s: { x: number; y: number }, w: number) => {
+        const box = [{ x: s.x - w / 2, y: s.y - H / 2 }, { x: s.x + w / 2, y: s.y - H / 2 },
+            { x: s.x + w / 2, y: s.y + H / 2 }, { x: s.x - w / 2, y: s.y + H / 2 }];
+        const poly = tableCorners(l);
+        const r = (l.rotation * Math.PI) / 180;
+        const axes = [{ x: 1, y: 0 }, { x: 0, y: 1 }, { x: Math.cos(r), y: Math.sin(r) }, { x: -Math.sin(r), y: Math.cos(r) }];
+        return axes.every(ax => {
+            const p = (pts: { x: number; y: number }[]) => pts.map(q => q.x * ax.x + q.y * ax.y);
+            const [a, b] = [p(box), p(poly)];
+            return Math.min(...a) < Math.max(...b) - 1e-9 && Math.min(...b) < Math.max(...a) - 1e-9;
+        });
+    };
+    const clean = (l: TableLayout, widths: number[]) => {
+        const apart = l.spots.every((a, i) => l.spots.every((b, j) => j <= i
+            || Math.abs(a.x - b.x) >= (widths[i] + widths[j]) / 2 || Math.abs(a.y - b.y) >= H));
+        const clear = l.spots.every((s, i) => !hitsTable(l, s, widths[i]));
+        const inside = l.spots.every((s, i) => s.x - widths[i] / 2 >= -1e-6 && s.x + widths[i] / 2 <= l.node.width + 1e-6
+            && s.y - H / 2 >= -1e-6 && s.y + H / 2 <= l.node.height + 1e-6)
+            && tableCorners(l).every(c => c.x >= -1e-6 && c.x <= l.node.width + 1e-6 && c.y >= -1e-6 && c.y <= l.node.height + 1e-6);
+        return apart && clear && inside;
+    };
+
+    const names = [120, 70, 190, 90, 150, 60, 110, 80];
+    check('square to the screen, a turnable table lays out exactly as it always did',
+        same(tableLayout('rectangular', names, 0), tableLayout('rectangular', names))
+            && same(tableLayout('rectangular', names, 360), tableLayout('rectangular', names)));
+    check('angles are kept clean: −90 is 270, 450 is 90, nonsense is 0',
+        normaliseRotation(-90) === 270 && normaliseRotation(450) === 90
+            && normaliseRotation(Number.NaN) === 0 && normaliseRotation(null) === 0);
+
+    const upright = tableLayout('rectangular', names, 90);
+    const c = centreOf(upright);
+    check('stood on its end, the top side sits to the right of the table',
+        upright.spots.filter(s => s.side === 'top').every((s, i) => s.x - names[i] / 2 >= c.x + upright.table.height / 2));
+    check('and the bottom side to its left',
+        upright.spots.filter(s => s.side === 'bottom').every((s, i) => s.x + names[i + 4] / 2 <= c.x - upright.table.height / 2));
+    check('the seat list then runs down the right and back up the left',
+        upright.spots.slice(0, 4).every((s, i, row) => i === 0 || s.y > row[i - 1].y)
+            && upright.spots.slice(4).every((s, i, row) => i === 0 || s.y < row[i - 1].y));
+    check('the names stay upright: each chip clears the table by its own half width, not half its height',
+        upright.spots.every((s, i) => !hitsTable(upright, s, names[i])));
+    const longNames = even(8, 190);
+    check('stood on its end, a table is as long as its stacked names are tall, not as wide as they are',
+        tableLayout('rectangular', longNames, 90).table.width === 200
+            && tableLayout('rectangular', longNames, 0).table.width >= 4 * 190,
+        String(tableLayout('rectangular', longNames, 90).table.width));
+    check('and turned halfway, somewhere in between',
+        tableLayout('rectangular', longNames, 45).table.width < tableLayout('rectangular', longNames, 0).table.width);
+
+    // Every 15° — what the handle snaps to — for both long shapes and a
+    // spread of name lengths: nothing overlaps, no name lies on the table,
+    // nothing hangs outside the node.
+    for (const type of ['rectangular', 'head'] as const) {
+        const bad: string[] = [];
+        for (const widths of [even(8), even(9, 190), names, even(2, 40), even(16, 130)]) {
+            for (let angle = 0; angle < 360; angle += 15) {
+                if (!clean(tableLayout(type, widths, angle), widths)) bad.push(`${widths.length}@${angle}°`);
+            }
+        }
+        check(`${type}, every 15°: no two chips overlap, none lies on the table, all inside the node`,
+            bad.length === 0, bad.slice(0, 6).join(', '));
+    }
+    check('and at an angle the handle can reach between the steps', clean(tableLayout('rectangular', names, 37), names));
+
+    const stored = { x: 500, y: 300 };
+    const flowCentre = (at: { x: number; y: number }, l: TableLayout) => ({
+        x: at.x - l.anchor.x + centreOf(l).x, y: at.y - l.anchor.y + centreOf(l).y,
+    });
+    const turnsInPlace = [15, 45, 90, 180, 270, 333].every(angle => {
+        const before = tableLayout('rectangular', names, 0);
+        const after = tableLayout('rectangular', names, angle);
+        const moved = positionAfterTurn(stored, before, after);
+        const [a, b] = [flowCentre(stored, before), flowCentre(moved, after)];
+        return near(a.x, b.x) && near(a.y, b.y);
+    });
+    check('turning moves the stored point so the table turns about its own centre', turnsInPlace);
+
+    const corner = { x: upright.anchor.x - c.x, y: upright.anchor.y - c.y };
+    check("the stored point is the table's own top-left corner, turned with it",
+        near(corner.x, upright.table.height / 2) && near(corner.y, -upright.table.width / 2),
+        JSON.stringify(corner));
+    const few = tableLayout('rectangular', even(4), 90);
+    const many = tableLayout('rectangular', even(24), 90);
+    const fromCorner = (l: TableLayout) => ({ x: centreOf(l).x - l.anchor.x, y: centreOf(l).y - l.anchor.y });
+    check('so a table stood on its end grows downwards along its own length, not sideways',
+        near(fromCorner(few).x, fromCorner(many).x) && fromCorner(many).y > fromCorner(few).y);
+
+    check('a round table has no turn',
+        same(tableLayout('round', names, 90), tableLayout('round', names)) && tableLayout('round', names, 90).rotation === 0
+            && !canRotate('round') && canRotate('rectangular') && canRotate('head'));
+
+    check('a side is named by where it faces on screen',
+        sideDirection('top', 0) === 'oben' && sideDirection('bottom', 0) === 'unten'
+            && sideDirection('top', 90) === 'rechts' && sideDirection('bottom', 90) === 'links'
+            && sideDirection('top', 180) === 'unten' && sideDirection('top', 270) === 'links'
+            && sideDirection('top', 45) === 'oben rechts' && sideDirection('around', 90) === null,
+        [0, 90, 180, 270, 45].map(a => sideDirection('top', a)).join(', '));
+    const run0 = seatRunDirection(0);
+    const run90 = seatRunDirection(90);
+    check('and the list runs left to right along the top, top to bottom once stood on its end',
+        run0.from === 'links' && run0.to === 'rechts' && run90.from === 'oben' && run90.to === 'unten',
+        JSON.stringify([run0, run90]));
 }
 
 /* ---- moving ---- */
