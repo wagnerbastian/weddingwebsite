@@ -62,9 +62,6 @@ export async function GET() {
       LIMIT 5
     `);
 
-    // Ensure is_hidden column exists (idempotent)
-    await client.query(`ALTER TABLE wip_toggles ADD COLUMN IF NOT EXISTS is_hidden BOOLEAN DEFAULT false`);
-
     // WIP toggles
     const wipResult = await client.query(`
       SELECT page_label, is_wip, is_hidden FROM wip_toggles ORDER BY page_label

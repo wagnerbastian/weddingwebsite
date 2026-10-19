@@ -59,17 +59,20 @@ UPDATE guest_list SET kind = 'guest' WHERE kind IS NULL;
 -- the bar line on the budget, which counts drinkers rather than adults.
 ALTER TABLE guest_list ADD COLUMN IF NOT EXISTS under_21 BOOLEAN DEFAULT false;
 ALTER TABLE rsvps ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP DEFAULT NOW();
--- Per-page "hidden from the nav" flag, added with the WIP controls. Created at
--- runtime by /api/wip-status too; both must stay in step.
+-- Per-page "hidden from the nav" flag, added with the WIP controls. Lives here
+-- and only here: /api/wip-status, the dashboard and the toggles route each used
+-- to run this ALTER on every request, and an ALTER takes an ACCESS EXCLUSIVE
+-- lock that queues behind any open reader and then blocks every reader after it
+-- — including the middleware's WIP check, i.e. every public page view.
 ALTER TABLE wip_toggles ADD COLUMN IF NOT EXISTS is_hidden BOOLEAN DEFAULT false;
 
 -- ---------------------------------------------------------------------------
 -- Donations against the honeymoon fund.
 --
--- Mirrored by ensureDonationsTable() in src/app/api/admin/donations/route.ts,
--- which runs the same statements on first request. Both must stay in step — a
--- fresh database that has never had that route called still needs the table,
--- which is how the demo seed discovered it was missing here.
+-- The donations route used to run these same statements on every request (the
+-- RSVP admin page hit it on every load); the SET DEFAULT / DROP NOT NULL below
+-- are not no-ops, so each call took an ACCESS EXCLUSIVE lock. They run once per
+-- boot here now, before the app serves anything.
 -- ---------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS donations (
   id SERIAL PRIMARY KEY,

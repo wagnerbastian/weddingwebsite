@@ -56,22 +56,45 @@ const GATED_PAGES = new Set(['/our-story', '/wedding-party', '/schedule', '/phot
  * every few seconds rather than one per page view. A failed fetch answers
  * "nothing gated" — the page shows — because hiding the whole site on a
  * hiccup is the worse failure.
+ *
+ * The request is bounded and shared. Unbounded, one hung `/api/wip-status`
+ * (a database that stopped answering is enough) hung every public page view
+ * that arrived after the cache went stale, each adding its own stuck request —
+ * the site looked down while only one query was. So: a deadline, one request in
+ * flight however many pages ask, and a short back-off after a failure rather
+ * than retrying on every page view.
  */
 type WipMap = Record<string, { is_wip: boolean; is_hidden: boolean }>;
 let wipCache: { at: number; value: WipMap } | null = null;
+let wipInflight: Promise<WipMap> | null = null;
 const WIP_TTL_MS = 15_000;
+const WIP_TIMEOUT_MS = 2_000;
+const WIP_RETRY_MS = 5_000;
 
-async function wipStatus(origin: string): Promise<WipMap> {
-    const now = Date.now();
-    if (wipCache && now - wipCache.at < WIP_TTL_MS) return wipCache.value;
+async function fetchWipStatus(origin: string): Promise<WipMap> {
+    // AbortController rather than AbortSignal.timeout(): this file runs on the
+    // edge runtime, and the controller is the one form every runtime has.
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), WIP_TIMEOUT_MS);
     try {
-        const res = await fetch(`${origin}/api/wip-status`, { cache: 'no-store' });
+        const res = await fetch(`${origin}/api/wip-status`, { cache: 'no-store', signal: controller.signal });
         const value = res.ok ? ((await res.json()) as WipMap) : {};
-        wipCache = { at: now, value };
+        wipCache = { at: Date.now(), value };
         return value;
     } catch {
-        return wipCache?.value ?? {};
+        // Keep what we last knew, and look again soon — not on every page view.
+        const value = wipCache?.value ?? {};
+        wipCache = { at: Date.now() - WIP_TTL_MS + WIP_RETRY_MS, value };
+        return value;
+    } finally {
+        clearTimeout(timer);
     }
+}
+
+async function wipStatus(origin: string): Promise<WipMap> {
+    if (wipCache && Date.now() - wipCache.at < WIP_TTL_MS) return wipCache.value;
+    wipInflight ??= fetchWipStatus(origin).finally(() => { wipInflight = null; });
+    return wipInflight;
 }
 
 export async function middleware(request: NextRequest) {

@@ -7,27 +7,10 @@ const RETURNING = `id, guest_id, guest_name, amount::float8 AS amount, gift,
                    thank_you_sent, thank_you_sent_at,
                    COALESCE(co_donors, '[]'::jsonb) AS co_donors`;
 
-async function ensureTable() {
-  await pool.query(`
-    CREATE TABLE IF NOT EXISTS donations (
-      id SERIAL PRIMARY KEY,
-      guest_id INTEGER,
-      guest_name TEXT NOT NULL,
-      amount NUMERIC NOT NULL,
-      fund_item_id TEXT,
-      fund_item_title TEXT,
-      event TEXT,
-      created_at TIMESTAMP DEFAULT NOW()
-    )
-  `);
-  await pool.query(`ALTER TABLE donations ADD COLUMN IF NOT EXISTS co_donors JSONB DEFAULT '[]'::jsonb`);
-  // A donation can be money, a physical gift, or both — so amount is no longer required.
-  await pool.query(`ALTER TABLE donations ADD COLUMN IF NOT EXISTS gift TEXT`);
-  await pool.query(`ALTER TABLE donations ADD COLUMN IF NOT EXISTS thank_you_sent BOOLEAN DEFAULT FALSE`);
-  await pool.query(`ALTER TABLE donations ADD COLUMN IF NOT EXISTS thank_you_sent_at TIMESTAMP`);
-  await pool.query(`ALTER TABLE donations ALTER COLUMN amount SET DEFAULT 0`);
-  await pool.query(`ALTER TABLE donations ALTER COLUMN amount DROP NOT NULL`);
-}
+// The table and its columns live in database/init.sql, applied once per boot.
+// They were created here on every request — including the ALTER COLUMN ... SET
+// DEFAULT / DROP NOT NULL pair, which are not no-ops and each took an ACCESS
+// EXCLUSIVE lock that queued behind any open reader of donations.
 
 // A donation must carry something: a dollar amount, a gift, or both.
 function normalize(body: { amount?: unknown; gift?: unknown }) {
@@ -40,7 +23,6 @@ function normalize(body: { amount?: unknown; gift?: unknown }) {
 
 export async function GET() {
   try {
-    await ensureTable();
     const result = await pool.query(
       `SELECT ${RETURNING} FROM donations ORDER BY created_at DESC, id DESC`
     );
@@ -53,7 +35,6 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
-    await ensureTable();
     const body = await request.json();
     const { guest_id, guest_name, fund_item_id, fund_item_title, event, co_donors } = body;
     const { amount, gift, valid } = normalize(body);
@@ -79,7 +60,6 @@ export async function POST(request: Request) {
 
 export async function PUT(request: Request) {
   try {
-    await ensureTable();
     const body = await request.json();
     const { id, guest_id, guest_name, fund_item_id, fund_item_title, event, co_donors } = body;
     const { amount, gift, valid } = normalize(body);
@@ -111,7 +91,6 @@ export async function PUT(request: Request) {
 // Bulk-set the thank-you flag on the selected rows.
 export async function PATCH(request: Request) {
   try {
-    await ensureTable();
     const { ids, thank_you_sent } = await request.json();
     const cleanIds = (Array.isArray(ids) ? ids : []).map(Number).filter(n => Number.isInteger(n));
     if (cleanIds.length === 0) {
@@ -135,7 +114,6 @@ export async function PATCH(request: Request) {
 
 export async function DELETE(request: Request) {
   try {
-    await ensureTable();
     const { id } = await request.json();
     if (!id) {
       return NextResponse.json({ error: 'ID ist erforderlich' }, { status: 400 });
