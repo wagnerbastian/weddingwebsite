@@ -59,6 +59,12 @@ UPDATE guest_list SET kind = 'guest' WHERE kind IS NULL;
 -- the bar line on the budget, which counts drinkers rather than adults.
 ALTER TABLE guest_list ADD COLUMN IF NOT EXISTS under_21 BOOLEAN DEFAULT false;
 ALTER TABLE rsvps ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP DEFAULT NOW();
+-- A third RSVP state: no answer. The guest list editor stores a household's
+-- dietary answers on its RSVP row, and a household that has not replied has no
+-- Zusage or Absage to put there — so `attending` NULL means "food only, not a
+-- reply". Everything that counts replies or guests leaves those rows out.
+-- (Idempotent: dropping NOT NULL from a column that has none is a no-op.)
+ALTER TABLE rsvps ALTER COLUMN attending DROP NOT NULL;
 -- Per-page "hidden from the nav" flag, added with the WIP controls. Lives here
 -- and only here: /api/wip-status, the dashboard and the toggles route each used
 -- to run this ALTER on every request, and an ALTER takes an ACCESS EXCLUSIVE
@@ -349,6 +355,51 @@ UPDATE seat_assignments sa
    AND BTRIM(REGEXP_REPLACE(REGEXP_REPLACE(COALESCE(g.party_members->0->>'name', ''), '\([^)]*\)', '', 'g'), '\s+', ' ', 'g')) <> ''
    AND LOWER(BTRIM(REGEXP_REPLACE(REGEXP_REPLACE(g.party_members->0->>'name', '\([^)]*\)', '', 'g'), '\s+', ' ', 'g')))
     <> LOWER(BTRIM(REGEXP_REPLACE(REGEXP_REPLACE(sa.display_name, '\([^)]*\)', '', 'g'), '\s+', ' ', 'g')));
+
+-- ---------------------------------------------------------------------------
+-- Repair: RSVP rows and chairs the guest list edits used to leave behind.
+--
+-- 1. Deleting a household removed its guest_list row and nothing else, so its
+--    chairs stayed on the seating plan. `party_group_id` has no foreign key (a
+--    seat can belong to a household whose guest has no chair of their own), so
+--    nothing cleaned them up. A chair that names a household that no longer
+--    exists, and holds no guest_list_id of its own (that one is SET NULL on
+--    delete, which is how a chair loses it), belongs to nobody. A custom-named
+--    chair with no party_group_id at all is not touched.
+--
+-- 2. Changing a household's status in the guest list updated `rsvp_status` and
+--    never the RSVP, and the admin's dietary editor created RSVP rows as
+--    attending for households that had not answered. The public form writes
+--    both together and only ever 'attending' or 'declined', so a household with
+--    no status or "wahrscheinlich nicht" and an RSVP that says it is coming can
+--    only be one of those: it becomes "no answer" with no guests. RSVP rows with
+--    no household on the list are *not* deleted here — the Rückmeldungen tab
+--    flags them for a person to remove.
+--
+-- Idempotent: both stop matching once repaired.
+-- ---------------------------------------------------------------------------
+DELETE FROM seat_assignments sa
+ WHERE sa.guest_list_id IS NULL
+   AND sa.party_group_id IS NOT NULL
+   AND NOT EXISTS (SELECT 1 FROM guest_list g WHERE g.id = sa.party_group_id);
+
+UPDATE rsvps r
+   SET attending = NULL,
+       number_of_guests = 0,
+       updated_at = NOW()
+ WHERE r.attending = true
+   AND EXISTS (
+         SELECT 1 FROM guest_list g
+          WHERE LOWER(BTRIM(REGEXP_REPLACE(REGEXP_REPLACE(g.guest_name, '\([^)]*\)', '', 'g'), '\s+', ' ', 'g')))
+              = LOWER(BTRIM(REGEXP_REPLACE(REGEXP_REPLACE(r.guest_name, '\([^)]*\)', '', 'g'), '\s+', ' ', 'g')))
+            AND COALESCE(g.rsvp_status, '') IN ('', 'likely_not_coming')
+       )
+   AND NOT EXISTS (
+         SELECT 1 FROM guest_list g
+          WHERE LOWER(BTRIM(REGEXP_REPLACE(REGEXP_REPLACE(g.guest_name, '\([^)]*\)', '', 'g'), '\s+', ' ', 'g')))
+              = LOWER(BTRIM(REGEXP_REPLACE(REGEXP_REPLACE(r.guest_name, '\([^)]*\)', '', 'g'), '\s+', ' ', 'g')))
+            AND COALESCE(g.rsvp_status, '') NOT IN ('', 'likely_not_coming')
+       );
 
 CREATE TABLE IF NOT EXISTS floor_plan_room (
   id SERIAL PRIMARY KEY,

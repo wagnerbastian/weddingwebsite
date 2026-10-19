@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import pool from '@/lib/db';
 import { cleanNameSql } from '@/lib/names';
 import { type DietaryEntry } from '@/lib/dietary';
+import { attendingFromStatus } from '@/lib/rsvpSync';
 
 export const dynamic = 'force-dynamic';
 
@@ -31,10 +32,11 @@ export async function GET() {
  *
  * The answers live on the RSVP, which is the only place anything reads them
  * from, so this writes there — including for a household that never submitted
- * the form, where it creates the row. That has a consequence the editor states
- * before you save it: they then count as having answered, and `attending`
- * has to be *something*, so it is taken from the status the guest list already
- * carries rather than invented. A real submission later updates this same row
+ * the form, where it creates the row. `attending` is then taken from the status
+ * the guest list already carries rather than invented: Zusage and Absage carry
+ * over, and a household with no answer (or "wahrscheinlich nicht") gets NULL — a
+ * row that holds food and no reply. It is left out of every count of replies and
+ * guests, and the editor says so. A real submission later updates this same row
  * (`/api/rsvp` matches on the name), so nothing is duplicated.
  */
 export async function PUT(request: Request) {
@@ -75,14 +77,11 @@ export async function PUT(request: Request) {
             return NextResponse.json({ error: 'Gast nicht gefunden' }, { status: 404 });
         }
         const { email, phone, rsvp_status } = household.rows[0];
-        // Every stored entry is a person who is coming — that is what the array
-        // means everywhere else — so it is also the headcount.
-        const attending = rsvp_status !== 'declined' && rsvp_status !== 'likely_not_coming';
-
+        const attending = attendingFromStatus(rsvp_status);
         await client.query(
             `INSERT INTO rsvps (guest_name, email, phone, attending, number_of_guests, dietary_restrictions, message)
              VALUES ($1, $2, $3, $4, $5, $6::jsonb, '')`,
-            [guest_name.trim(), email ?? '', phone ?? '', attending, attending ? entries.length : 0, JSON.stringify(entries)],
+            [guest_name.trim(), email ?? '', phone ?? '', attending, attending === true ? entries.length : 0, JSON.stringify(entries)],
         );
         return NextResponse.json({ success: true, created: true });
     } catch (error) {

@@ -11,6 +11,21 @@ All notable changes to this project are documented here, newest at the top.
 > renders those three as coloured badges. Bump the patch on every deploy, the minor when
 > asked. Entries predating this convention carry a date but no time.
 
+## v0.10.7 — [Unreleased] Geister-Zusagen, verwaiste Rückmeldungen und ein hängender Server (`claude/modest-hawking-wzjlh5`, 2026-10-19 08:24)
+
+Ein Kindermenü bei einer Gruppe ohne Antwort zeigte von da an 3 Zusagen, die weder Absage noch „Keine Antwort“ wegbekam; nach dem Löschen der Gruppe stand sie weiter unter „Rückmeldungen“, und die Seite war bis zu einem Neustart nicht erreichbar.
+
+### Fixed
+- **Ein Ernährungshinweis macht aus „Keine Antwort“ keine Zusage mehr.** Wer in der Gästeliste für eine Gruppe ohne Antwort ein Kindermenü (oder einen anderen Hinweis) speichert, bekommt eine Rückmeldung angelegt, in der die Angaben liegen — bisher als Zusage mit allen Personen der Gruppe. `rsvps.attending` kennt jetzt einen dritten Wert, `NULL`: „nur Ernährungsangaben, keine Antwort“. Solche Zeilen zählen weder als Zusage noch als Absage, nicht im Rückmeldungen-Tab, nicht im Dashboard, nicht im Aktivitätsverlauf, und das öffentliche Formular behandelt die Gruppe als „noch nicht geantwortet“ (mit vorausgefüllten Ernährungsangaben).
+- **Der Status in der Gästeliste gilt auch für die Rückmeldung.** Zusage, Absage, „Keine Antwort“ und „Kommt wohl nicht“ — einzeln wie per Sammelbearbeitung — werden in derselben Transaktion auf die Rückmeldung der Gruppe übertragen (`src/lib/rsvpSync.ts`); bisher änderte sich nur die Gästeliste, und die Zusage blieb stehen. Eine Rückmeldung wird dabei nie neu angelegt.
+- **Eine gelöschte Gruppe nimmt ihre Rückmeldung und ihre Plätze im Sitzplan mit.** Bisher blieb die Rückmeldung verwaist zurück (und zählte weiter), ebenso die Stühle der Gruppe.
+- **Ein hängender Datenbankaufruf legt nicht mehr die ganze Seite lahm.** Der Verbindungspool hatte keine Zeitlimits und keinen Fehler-Handler: Zehn hängende Abfragen blockierten jede weitere Anfrage, und ein abgerissener Verbindungsfehler konnte den Prozess beenden. Jetzt: 10 s auf eine Verbindung, 30 s pro Abfrage, 60 s für eine liegengebliebene Transaktion (per `DB_CONNECTION_TIMEOUT_MS`, `DB_STATEMENT_TIMEOUT_MS`, `DB_IDLE_IN_TRANSACTION_TIMEOUT_MS` änderbar, 0 schaltet ab), und Verbindungsfehler werden nur protokolliert.
+- **Die WIP-Abfrage der Middleware hat ein Zeitlimit von 2 s** und wird von gleichzeitigen Seitenaufrufen geteilt; hing sie bisher, hing jede öffentliche Seite mit.
+
+### Changed
+- `/api/wip-status`, das Dashboard, die WIP-Schalter und die Spenden-Route führen kein `ALTER TABLE` mehr bei jedem Aufruf aus — jedes davon sperrte die ganze Tabelle. Das Schema steht, wie alles andere, nur noch in `database/init.sql`.
+- `database/init.sql` repariert beim Start einmalig: Rückmeldungen mit Zusage für Gruppen ohne Status (oder „Kommt wohl nicht“) werden zu „keine Antwort“, Stühle von nicht mehr existierenden Gruppen werden entfernt. Verwaiste Rückmeldungen werden **nicht** automatisch gelöscht, sondern im Rückmeldungen-Tab als „Nicht in der Gästeliste“ markiert und lassen sich dort löschen.
+
 ## v0.10.6 — [Unreleased] Tische drehen (`ccr-b8dc6d9b-ub1z66`, 2026-10-07 13:56)
 
 „Können wir eine Funktion hinzufügen, die Tische zu drehen? Damit nicht alle horizontal sind.“
