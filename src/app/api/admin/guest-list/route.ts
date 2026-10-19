@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import pool from '@/lib/db';
 import { cleanNameSql } from '@/lib/names';
 import { renamesBetween } from '@/lib/seating';
+import { syncRsvpsToStatus } from '@/lib/rsvpSync';
 
 export async function GET() {
   try {
@@ -188,6 +189,10 @@ export async function PUT(request: Request) {
       if (renames.length > 0) await carryRenames(client, id, before.guest_name, renames);
     }
 
+    // The status is also written on the household's RSVP; after the rename, so
+    // it is the row carryRenames just moved that gets updated.
+    if (result.rows.length > 0) await syncRsvpsToStatus(client, [id]);
+
     await client.query('COMMIT');
     return NextResponse.json(result.rows[0]);
   } catch (error) {
@@ -261,27 +266,76 @@ export async function PATCH(request: Request) {
       return NextResponse.json({ error: 'Keine Felder zum Aktualisieren' }, { status: 400 });
     }
 
-    const result = await pool.query(
-      `UPDATE guest_list SET ${sets.join(', ')}, updated_at = NOW()
-       WHERE id = ANY(${push(targets)})
-       RETURNING id`,
-      params
-    );
+    // The status lives on the RSVP too, so the two are written together or not
+    // at all.
+    const client = await pool.connect();
+    let updated = 0;
+    try {
+      await client.query('BEGIN');
+      const result = await client.query(
+        `UPDATE guest_list SET ${sets.join(', ')}, updated_at = NOW()
+         WHERE id = ANY(${push(targets)})
+         RETURNING id`,
+        params
+      );
+      if (rsvp_status !== undefined) {
+        await syncRsvpsToStatus(client, result.rows.map(r => r.id as number));
+      }
+      updated = result.rowCount ?? 0;
+      await client.query('COMMIT');
+    } catch (error) {
+      await client.query('ROLLBACK').catch(() => {});
+      throw error;
+    } finally {
+      client.release();
+    }
 
-    return NextResponse.json({ success: true, updated: result.rowCount });
+    return NextResponse.json({ success: true, updated });
   } catch (error) {
     console.error('Error updating guests:', error);
     return NextResponse.json({ error: 'Gäste konnten nicht aktualisiert werden' }, { status: 500 });
   }
 }
 
+// A household's name is the only thing tying it to its RSVP, so deleting it has
+// to take the RSVP with it — otherwise the reply stays behind in the Rückmeldungen
+// tab and in every total, belonging to nobody. Its seats go too: `party_group_id`
+// has no foreign key, so a chair filed under the household would outlive it.
 export async function DELETE(request: Request) {
+  const client = await pool.connect();
   try {
     const { id } = await request.json();
-    await pool.query('DELETE FROM guest_list WHERE id = $1', [id]);
+    await client.query('BEGIN');
+
+    const found = await client.query('SELECT guest_name FROM guest_list WHERE id = $1', [id]);
+
+    await client.query(
+      'DELETE FROM seat_assignments WHERE party_group_id = $1 OR guest_list_id = $1',
+      [id],
+    );
+    await client.query('DELETE FROM guest_list WHERE id = $1', [id]);
+
+    // Unless another household reads as the same name (they match on the name
+    // with its note taken off), in which case the RSVP is still theirs.
+    if (found.rows.length > 0) {
+      await client.query(
+        `DELETE FROM rsvps
+          WHERE ${cleanNameSql('guest_name')} = ${cleanNameSql('$1::text')}
+            AND NOT EXISTS (
+              SELECT 1 FROM guest_list g
+               WHERE ${cleanNameSql('g.guest_name')} = ${cleanNameSql('$1::text')}
+            )`,
+        [found.rows[0].guest_name],
+      );
+    }
+
+    await client.query('COMMIT');
     return NextResponse.json({ success: true });
   } catch (error) {
+    await client.query('ROLLBACK').catch(() => {});
     console.error('Error deleting guest:', error);
     return NextResponse.json({ error: 'Gast konnte nicht gelöscht werden' }, { status: 500 });
+  } finally {
+    client.release();
   }
 }

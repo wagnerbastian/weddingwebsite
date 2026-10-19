@@ -32,7 +32,7 @@ interface VerifiedGuest {
 
 interface ExistingRsvp {
     id?: number | null;
-    attending?: boolean;
+    attending?: boolean | null;
     guestCount?: number;
     email?: string | null;
     phone?: string | null;
@@ -178,19 +178,24 @@ export default function RSVPForm({ coupleNames = '', roomBlockHotel = '', roomBl
             if (data.verified) {
                 setVerifiedGuest(data.guest);
                 setMatched(data.matched || null);
-                setExistingRsvp(data.existingRsvp);
+                // A row with no `attending` is not a reply: the admin recorded this
+                // household's dietary answers before they answered. Its food
+                // pre-fills the form, but they are answering for the first time.
+                const answered: ExistingRsvp | null =
+                    typeof data.existingRsvp?.attending === 'boolean' ? data.existingRsvp : null;
+                setExistingRsvp(answered);
 
                 const existingDietary = Array.isArray(data.existingRsvp?.dietaryRestrictions)
                     ? data.existingRsvp.dietaryRestrictions
                     : [];
 
-                setCards(buildCards(data.guest.name, data.guest.party_members || [], existingDietary, !!data.existingRsvp));
+                setCards(buildCards(data.guest.name, data.guest.party_members || [], existingDietary, !!answered));
 
                 setFormData({
                     guestName: data.guest.name,
                     email: data.existingRsvp?.email || data.guest.email || '',
                     phone: data.existingRsvp?.phone || data.guest.phone || '',
-                    attending: data.existingRsvp ? (data.existingRsvp.attending ? 'yes' : 'no') : 'yes',
+                    attending: answered ? (answered.attending ? 'yes' : 'no') : 'yes',
                     message: data.existingRsvp?.message || '',
                 });
 

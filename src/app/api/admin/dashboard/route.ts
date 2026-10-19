@@ -30,10 +30,11 @@ export async function GET() {
     const photos: { id?: unknown; hearted?: boolean; title?: unknown; alt?: unknown; filename?: unknown }[] = photosData.photos || [];
     const milestones: { id?: unknown; title?: unknown; date?: unknown }[] = timelineData.milestones || [];
 
-    // RSVP stats
+    // RSVP stats. A row with a NULL `attending` holds a household's dietary
+    // answers and no reply, so it is not one of the RSVPs counted here.
     const rsvpResult = await client.query(`
       SELECT
-        COUNT(*)::int AS total,
+        COUNT(*) FILTER (WHERE attending IS NOT NULL)::int AS total,
         COUNT(*) FILTER (WHERE attending = true)::int AS attending,
         COUNT(*) FILTER (WHERE attending = false)::int AS declined,
         COALESCE(SUM(number_of_guests) FILTER (WHERE attending = true), 0)::int AS total_guests
@@ -58,6 +59,7 @@ export async function GET() {
     const recentResult = await client.query(`
       SELECT guest_name, attending, number_of_guests, created_at
       FROM rsvps
+      WHERE attending IS NOT NULL
       ORDER BY created_at DESC
       LIMIT 5
     `);

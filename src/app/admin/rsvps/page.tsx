@@ -28,7 +28,9 @@ interface RSVP {
     plus_one_name?: string;
     email: string;
     phone: string;
-    attending: boolean;
+    // null = no reply: a row that only holds a household's dietary answers (the
+    // guest list editor creates one for a household that has not answered).
+    attending: boolean | null;
     number_of_guests: number;
     dietary_restrictions: DietaryEntry[] | string | null;
     message: string;
@@ -578,6 +580,8 @@ export default function RSVPDashboard() {
                     dietary: [],
                 });
                 fetchGuests();
+                // The guest list's status edit is carried to the household's RSVP.
+                fetchRsvps();
             }
         } catch (error) {
             console.error('Error saving guest:', error);
@@ -596,6 +600,8 @@ export default function RSVPDashboard() {
 
             if (response.ok) {
                 fetchGuests();
+                // Their RSVP goes with them.
+                fetchRsvps();
             }
         } catch (error) {
             console.error('Error deleting guest:', error);
@@ -682,6 +688,7 @@ export default function RSVPDashboard() {
                 body: JSON.stringify({ ...guest, rsvp_status: newStatus }),
             });
             fetchGuests();
+            fetchRsvps();
         } catch (error) {
             console.error('Error updating guest status:', error);
         }
@@ -821,6 +828,7 @@ export default function RSVPDashboard() {
             setSelectedGuests([]);
             setBulkResult(`${n} ${n === 1 ? 'Gast' : 'Gäste'} aktualisiert`);
             fetchGuests();
+            fetchRsvps();
         } catch (error) {
             console.error('Error bulk editing guests:', error);
             setBulkResult(error instanceof Error ? error.message : 'Die ausgewählten Gäste konnten nicht aktualisiert werden');
@@ -845,6 +853,7 @@ export default function RSVPDashboard() {
             );
             setSelectedGuests([]);
             fetchGuests();
+            fetchRsvps();
         } catch (error) {
             console.error('Error deleting guests:', error);
         }
@@ -964,14 +973,21 @@ export default function RSVPDashboard() {
     const coupleNames = new Set(
         guests.filter(g => !isGuestRow(g)).map(g => cleanName(g.guest_name).toLowerCase()),
     );
-    const guestRsvps = rsvps.filter(r => !coupleNames.has(cleanName(r.guest_name).toLowerCase()));
+    // A row with no `attending` holds food and no reply — dietary answers for a
+    // household that has not answered — so it is not a Rückmeldung and counts for
+    // nothing here. It is still in `rsvps`, which is where the guest list reads
+    // its restrictions from.
+    const guestRsvps = rsvps.filter(r => r.attending !== null && !coupleNames.has(cleanName(r.guest_name).toLowerCase()));
+    // An RSVP whose household is no longer on the guest list — left behind by a
+    // deletion made before the guest list took its RSVP with it.
+    const listedNames = new Set(guests.map(g => cleanName(g.guest_name).toLowerCase()));
 
-    const totalGuests = guestRsvps.reduce((acc, curr) => acc + (curr.attending ? curr.number_of_guests : 0), 0);
+    const totalGuests = guestRsvps.reduce((acc, curr) => acc + (curr.attending === true ? curr.number_of_guests : 0), 0);
     // A declined RSVP is stored with number_of_guests = 0, so count the household
     // from the guest list (falling back to 1 when the name isn't on it).
     const partySizeByName = new Map(guests.map(g => [g.guest_name.trim().toLowerCase(), g.party_size || 1]));
     const totalDeclinedGuests = guestRsvps
-        .filter(r => !r.attending)
+        .filter(r => r.attending === false)
         .reduce((acc, curr) => acc + (partySizeByName.get(curr.guest_name.trim().toLowerCase()) ?? 1), 0);
     // Every statistic counts guests and only guests. The couple are on this list
     // so they can be seated and fed, but they were not invited to their own
@@ -1396,6 +1412,14 @@ export default function RSVPDashboard() {
                                                 <tr className="group hover:bg-gray-50 relative">
                                                     <td className="px-6 py-4 whitespace-nowrap overflow-hidden">
                                                         <div className="text-sm font-medium text-gray-900 truncate">{rsvp.guest_name}</div>
+                                                        {!listedNames.has(cleanName(rsvp.guest_name).toLowerCase()) && (
+                                                            <span
+                                                                title="Der Haushalt steht nicht mehr auf der Gästeliste – diese Rückmeldung kann gelöscht werden."
+                                                                className="inline-flex text-[10px] leading-4 font-semibold px-2 rounded-full bg-amber-100 text-amber-800"
+                                                            >
+                                                                Nicht in der Gästeliste
+                                                            </span>
+                                                        )}
                                                         <div className="text-xs text-gray-400 truncate">{rsvp.email}</div>
                                                         {rsvp.phone && <div className="text-xs text-gray-400 truncate">{rsvp.phone}</div>}
                                                     </td>
@@ -2362,13 +2386,13 @@ export default function RSVPDashboard() {
                                 ))}
 
                                 {/* Saving a restriction for a household that never
-                                    answered has to create their RSVP — say so before
-                                    it happens, not after. */}
+                                    answered creates an RSVP row to hold it — say what
+                                    that does and does not mean before it happens. */}
                                 {!rsvpFor(guestForm.guest_name) && guestForm.dietary.some(e => !isEmptyEntry(e)) && (
                                     <p className="text-xs text-amber-700 bg-amber-50 border border-amber-100 rounded-2xl px-4 py-3">
-                                        Für diese Gruppe liegt keine Rückmeldung vor. Beim Speichern eines Ernährungshinweises wird eine angelegt,
-                                        sodass sie als beantwortet zählt – in der Übersicht, in der Kopfzahl des Budgets
-                                        und auf der Rückmeldungsseite, falls sie diese besuchen.
+                                        Für diese Gruppe liegt keine Rückmeldung vor. Der Ernährungshinweis wird trotzdem gespeichert,
+                                        zählt aber nicht als Rückmeldung – Zusagen und Absagen richten sich allein nach dem Status
+                                        der Gästeliste.
                                     </p>
                                 )}
                             </div>
