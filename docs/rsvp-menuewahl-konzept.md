@@ -1,6 +1,6 @@
 # Menüwahl in der Rückmeldung — Konzept
 
-**Stand:** 2026-10-24 · **Status:** Entwurf, noch nichts gebaut · **Bezug:** SEAT-1 in
+**Stand:** 2026-10-24 · **Status:** entschieden, bereit zur Umsetzung (noch nichts gebaut) · **Bezug:** SEAT-1 in
 `docs/parkinglot.md` · **Mockup:** `docs/mockups/rsvp-menuewahl.html` (klickbar, ohne
 Server zu öffnen)
 
@@ -334,16 +334,18 @@ SEAT-1 im Parking Lot durchstreichen, Vault-Eintrag.
 optionId>` neben `meal`; die Settings-Liste wird zu Listen pro Gang. Nichts im
 Konzept legt sich dagegen fest, aber nichts davon ist jetzt nötig.
 
-## 13. Offene Entscheidungen
+## 13. Entscheidungen
 
-Das sind die Punkte, die nicht aus dem Code folgen. Empfehlung jeweils zuerst.
+Das sind die Punkte, die nicht aus dem Code folgen. 1 bis 3 hat Bastian am
+2026-10-24 entschieden, jeweils wie empfohlen; 4 und 5 bleiben Empfehlungen, die
+gelten, bis jemand widerspricht.
 
-| # | Frage | Empfehlung | Alternative |
+| # | Frage | Entscheidung / Empfehlung | Alternative (verworfen) |
 |---|---|---|---|
-| 1 | **Pflicht oder optional?** | **Pflicht**, solange die Wahl eingeschaltet ist. Der Zweck ist, die Zahl zu haben; ein „weiß ich noch nicht“ ist eine Rückfrage später. | Ein zweiter Schalter *„Wahl ist Pflicht“*; aus = Gäste dürfen ohne senden, die Karte *Hauptgang* zählt die Offenen trotzdem. |
-| 2 | **Kindermenü als eigene Option oder als Hinweis lassen?** | **Als Option** in der Einzelauswahl (es entscheidet den Teller). Gespeichert wird es unverändert als `kids_meal`. | Kästchen lassen; dann muss das Formular den Hauptgang bei Kindermenü ausblenden, zwei Stellen für eine Regel. |
-| 3 | **Dienstleister wählen mit?** | **Ja, optional.** Dieselbe Komponente, null Mehraufwand, und der Caterer sieht es in derselben Reihe. | Weglassen; Dienstleister-Essen läuft oft über einen eigenen Vertrag. |
+| 1 | **Pflicht oder optional?** | ✅ **Pflicht für Gäste**, solange die Wahl eingeschaltet ist. Der Zweck ist, die Zahl zu haben; ein „weiß ich noch nicht“ ist eine Rückfrage später. | Ein zweiter Schalter *„Wahl ist Pflicht“*; aus = Gäste dürfen ohne senden, die Karte *Hauptgang* zählt die Offenen trotzdem. |
+| 2 | **Kindermenü als eigene Option oder als Hinweis lassen?** | ✅ **Als Option** in der Einzelauswahl (es entscheidet den Teller). Gespeichert wird es unverändert als `kids_meal`. | Kästchen lassen; dann muss das Formular den Hauptgang bei Kindermenü ausblenden, zwei Stellen für eine Regel. |
+| 3 | **Dienstleister wählen mit?** | ✅ **Ja, optional**, mit denselben Pills im Dienstleister-Tab. Ein Dienstleister ohne Eintrag zählt als *ohne Wahl*, nie als *fehlt*. | Weglassen; Dienstleister-Essen läuft oft über einen eigenen Vertrag. |
 | 4 | **Wann einschalten?** | Erst wenn das Menü feststeht, dann einmal nachfassen. | Sofort mit Platzhaltern einschalten; dann wählen die ersten Gäste Gerichte, die sich noch ändern. |
 | 5 | **Tags am Gericht?** | **Ja** (vegetarisch/vegan/glutenfrei als Anzeige). Hilft genau den Gästen, die ohnehin einen Hinweis setzen. | Weglassen; Beschreibungstext reicht. |
 
-Steht 1 und 2 fest, ist der Rest Bauarbeit.
+Damit ist der Rest Bauarbeit; die Reihenfolge steht in Abschnitt 12.
