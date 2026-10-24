@@ -1,6 +1,6 @@
 # Menüwahl in der Rückmeldung — Konzept
 
-**Stand:** 2026-10-24 · **Status:** entschieden, bereit zur Umsetzung (noch nichts gebaut) · **Bezug:** SEAT-1 in
+**Stand:** 2026-10-24 · **Status:** umgesetzt in v0.10.8 (Branch `ccr-faf6fedc-dn5rkl`) · **Bezug:** SEAT-1 in
 `docs/parkinglot.md` · **Mockup:** `docs/mockups/rsvp-menuewahl.html` (klickbar, ohne
 Server zu öffnen)
 

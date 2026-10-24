@@ -2,7 +2,10 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import DietaryPills from '@/components/admin/DietaryPills';
-import { DIET_CODES, dietCodes, dietNote, isEmptyEntry, type DietaryEntry } from '@/lib/dietary';
+import {
+    DIET_CODES, dietCodes, dietNote, isEmptyEntry, mealLabel, menuActive, menuTitle,
+    type DietaryEntry, type RsvpMenu,
+} from '@/lib/dietary';
 import { DIET_LABELS } from '@/lib/dietary';
 
 /**
@@ -68,7 +71,10 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
     return <div><label className={LABEL}>{label}</label>{children}</div>;
 }
 
-export default function VendorsTab() {
+export default function VendorsTab({ menu = null }: {
+    /** The couple's dishes. A vendor may be given one too — optional, never "missing". */
+    menu?: RsvpMenu | null;
+}) {
     const [vendors, setVendors] = useState<Vendor[]>([]);
     const [loading, setLoading] = useState(true);
     const [form, setForm] = useState<VendorForm | null>(null);
@@ -188,6 +194,7 @@ export default function VendorsTab() {
                         <tbody className="divide-y divide-gray-100">
                             {vendors.map(vendor => {
                                 const codes = dietCodes(vendor.dietary);
+                                const meal = menuActive(menu) && vendor.needs_meal !== false ? mealLabel(vendor.dietary, menu) : null;
                                 return (
                                     <tr key={vendor.id} className="hover:bg-gray-50/70 transition-colors">
                                         <td className="px-4 sm:px-6 py-4 text-sm text-gray-500 whitespace-nowrap">
@@ -219,10 +226,13 @@ export default function VendorsTab() {
                                             </span>
                                         </td>
                                         <td className="px-4 sm:px-6 py-4">
-                                            {codes.length === 0 ? (
+                                            {codes.length === 0 && !meal ? (
                                                 <span className="text-xs text-gray-300">—</span>
                                             ) : (
                                                 <div className="flex flex-wrap gap-1">
+                                                    {meal && (
+                                                        <span className="px-2 py-0.5 rounded-full text-[11px] font-medium bg-gray-900 text-white">{meal}</span>
+                                                    )}
                                                     {codes.map(code => (
                                                         <span
                                                             key={code}
@@ -359,11 +369,14 @@ export default function VendorsTab() {
                                     <DietaryPills
                                         entry={form.dietary}
                                         codes={DIET_CODES}
+                                        menu={menu}
                                         onChange={entry => setForm({ ...form, dietary: entry })}
                                     />
                                     {isEmptyEntry(form.dietary) && (
                                         <p className="mt-2 text-xs text-gray-400">
-                                            Ohne Auswahl gibt es das Standardgericht – Hähnchen.
+                                            {menuActive(menu)
+                                                ? `Ohne ${menuTitle(menu)} steht die Person im Export unter „ohne Wahl“ – für Dienstleister ist die Wahl freiwillig.`
+                                                : 'Ohne Auswahl gibt es das Standardgericht – Hähnchen.'}
                                         </p>
                                     )}
                                 </div>

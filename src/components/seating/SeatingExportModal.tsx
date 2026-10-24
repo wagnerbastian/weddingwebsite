@@ -8,6 +8,7 @@ import {
     exportFilename, fitScale, pageCount, seatedPeople,
     type ExportOptions, type SeatingExportData,
 } from '@/lib/seatingExport';
+import { menuActive } from '@/lib/dietary';
 import SeatingExportSheet from './SeatingExportSheet';
 
 /**
@@ -133,7 +134,7 @@ export default function SeatingExportModal({ onClose }: { onClose: () => void })
 
     const downloadCsv = useCallback(() => {
         if (!data) return;
-        const csv = toCsv(csvHeaders(options), csvRows(data, options));
+        const csv = toCsv(csvHeaders(options, data.menu), csvRows(data, options));
         const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8;' }));
         const a = document.createElement('a');
         a.href = url;
@@ -251,11 +252,15 @@ export default function SeatingExportModal({ onClose }: { onClose: () => void })
                                 />
                                 <Check checked={options.pageBreak} onChange={v => set('pageBreak', v)} label="Neue Seite pro Tisch" />
                                 <Check
-                                    checked={false}
-                                    onChange={() => {}}
-                                    disabled
+                                    checked={options.meals && menuActive(data?.menu)}
+                                    onChange={v => set('meals', v)}
+                                    disabled={!data || !menuActive(data.menu)}
                                     label="Menüwahl"
-                                    hint="Wird nicht erfasst – die Rückmeldung fragt nur Ernährungshinweise ab"
+                                    hint={
+                                        data && menuActive(data.menu)
+                                            ? 'Hauptgang je Person und je Tisch'
+                                            : 'Wird nicht erfasst – die Rückmeldung fragt nur Ernährungshinweise ab'
+                                    }
                                 />
                             </div>
                             <Segment
@@ -278,11 +283,11 @@ export default function SeatingExportModal({ onClose }: { onClose: () => void })
                                     <p className="font-medium text-gray-800 mb-2">{exportFilename('csv')}</p>
                                     <p className="mb-3">
                                         Eine Zeile pro Person – {csvRows(data, options).length} Zeilen,{' '}
-                                        {csvHeaders(options).length} Spalten. Jeder Ernährungshinweis hat eine eigene
+                                        {csvHeaders(options, data.menu).length} Spalten. Jeder Ernährungshinweis hat eine eigene
                                         Ja/leer-Spalte, sodass eine Pivot-Tabelle dieselben Zahlen liefert wie das gedruckte Blatt.
                                     </p>
                                     <pre className="bg-gray-50 rounded p-3 overflow-x-auto font-mono text-[10px] leading-5">
-{[csvHeaders(options).join(','), ...csvRows(data, options).slice(0, 8).map(r => r.join(','))].join('\n')}
+{[csvHeaders(options, data.menu).join(','), ...csvRows(data, options).slice(0, 8).map(r => r.join(','))].join('\n')}
 {csvRows(data, options).length > 8 ? `\n… ${csvRows(data, options).length - 8} weitere Zeilen` : ''}
                                     </pre>
                                 </div>

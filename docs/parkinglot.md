@@ -28,7 +28,7 @@ and are not repeated here.
 | OPS-1 | Deploy | `JWT_SECRET` not set in the Portainer stack | Needs Austin at Portainer | XS |
 | OPS-2 | Deploy | `GEOCODER_USER_AGENT` not set, so OpenStreetMap can block the server | Needs Austin at Portainer | XS |
 | HM-1 | Honeymoon / Finance | The honeymoon total is not a line in the wedding budget | Design call — which side owns the number | S |
-| SEAT-1 | RSVP / Seating | No entrée choice, so the export cannot count "7 chicken, 3 fish" | Needs a new RSVP question and re-asking everyone who already answered | M |
+| ~~SEAT-1~~ | ~~RSVP / Seating~~ | ~~No entrée choice, so the export cannot count "7 chicken, 3 fish"~~ | **Shipped v0.10.8** — a menu in Settings, one dish per attending person on the form, counted on the sheet; the households that answered earlier are the *Menü fehlt* filter | — |
 | ~~SEAT-3~~ | ~~Seating~~ | ~~The couple and the vendors are on no list, so neither can be seated or counted~~ | **Shipped v0.9.94** | — |
 | SEAT-2 | Seating | The export prints rosters, never the room | The floor plan is a React Flow canvas; printing it is a different job | M |
 
@@ -36,7 +36,13 @@ Effort: XS = minutes, S = under an hour, M = an afternoon.
 
 ## Details
 
-### SEAT-1 — An entrée choice the kitchen can count
+### ~~SEAT-1 — An entrée choice the kitchen can count~~ — shipped v0.10.8
+Built as the concept below describes: `rsvpMenu` in `site.json`, `meal` on each
+person's answer, the plate question on the form (required while the menu is on),
+a *Hauptgang* column, card and filter in the admin, two rows of kitchen tiles and
+a *Hauptgang* column in the export. The "re-asking" half is the *Menü fehlt*
+filter plus the CSV export; it is the couple's job, not the code's.
+
 The seating export (v0.9.87) totals dietary *restrictions* — vegetarian, vegan,
 gluten free, nut allergy, other — because that is all the RSVP form has ever
 asked. A caterer usually wants the other number too: how many chicken, how many

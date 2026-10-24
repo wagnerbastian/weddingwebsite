@@ -5,6 +5,7 @@ import path from 'path';
 // editor is a client component that needs the type without `fs` behind it.
 export type { ScheduleEvent } from './schedule';
 import type { ScheduleEvent } from './schedule';
+import type { RsvpMenu } from './dietary';
 
 export interface FAQItem {
     question: string;
@@ -55,6 +56,11 @@ export interface SiteConfig {
     rsvpDeadline?: string;
     /** Shown on the RSVP page for guests having trouble. */
     contactEmail?: string;
+    /**
+     * The dishes guests choose from on the RSVP form (`src/lib/dietary.ts`).
+     * Off until the couple switches it on; answers live on the RSVP, not here.
+     */
+    rsvpMenu?: RsvpMenu;
     // Accommodations / room block (shown on RSVP confirmation)
     roomBlockHotel?: string;
     roomBlockUrl?: string;

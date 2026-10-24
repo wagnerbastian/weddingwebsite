@@ -32,6 +32,21 @@ export const DEMO_WEDDING_ISO = '2027-06-12';
 /* Site configuration                                                  */
 /* ------------------------------------------------------------------ */
 
+/**
+ * The demo's menu, so the plate question shows with answers behind it. German
+ * like the rest of the interface; the dishes are what the demo's FAQ promises.
+ */
+export const DEMO_MENU = {
+    enabled: true,
+    title: 'Hauptgang',
+    hint: 'Drei Gänge. Vorspeise und Dessert sind für alle gleich, den Hauptgang wählt ihr.',
+    options: [
+        { id: 'lamm', label: 'Lammkeule', description: 'mit Rosmarinkartoffeln und grünen Bohnen', diet: [] as string[] },
+        { id: 'forelle', label: 'Forelle', description: 'aus dem Bach unterhalb des Hofs, mit Zitronenrisotto', diet: ['gluten_free'] },
+        { id: 'risotto', label: 'Pilzrisotto', description: 'mit Parmesan und Trüffelöl', diet: ['vegetarian', 'gluten_free'] },
+    ],
+};
+
 export const DEMO_FAQS = [
     {
         question: 'What should we wear?',

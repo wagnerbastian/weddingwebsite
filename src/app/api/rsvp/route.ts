@@ -2,6 +2,10 @@ import { NextResponse } from 'next/server';
 import pool from '@/lib/db';
 import nodemailer from 'nodemailer';
 import { getSiteConfig } from '@/lib/config';
+import {
+    answerParts, carryMeals, menuActive, menuOf, sanitiseEntries,
+    type DietaryEntry, type RsvpMenu,
+} from '@/lib/dietary';
 
 /**
  * Escape a value before it goes into an HTML email body.
@@ -29,7 +33,8 @@ interface RsvpInput {
     phone: string;
     attending: boolean;
     guestCount: number;
-    dietaryJson: string | null;
+    /** One answer per attending person, checked; null when the form sent none. */
+    entries: DietaryEntry[] | null;
     message: string | null;
     resolvedMembers: { name: string | null; attending: boolean | null }[] | null;
 }
@@ -39,7 +44,7 @@ interface RsvpInput {
  * hand-built request cannot write a negative headcount, a non-boolean
  * attendance or a JSON-invalid string into the JSONB column.
  */
-function parseInput(body: unknown): RsvpInput | string {
+function parseInput(body: unknown, menu: RsvpMenu): RsvpInput | string {
     if (!body || typeof body !== 'object') return 'Ungültige Anfrage';
     const b = body as Record<string, unknown>;
     const guestName = typeof b.guestName === 'string' ? b.guestName.trim() : '';
@@ -54,9 +59,10 @@ function parseInput(body: unknown): RsvpInput | string {
     const rawCount = Number(b.guestCount);
     const guestCount = Number.isInteger(rawCount) && rawCount >= 0 ? rawCount : (b.attending ? 1 : 0);
 
-    const dietaryJson = Array.isArray(b.dietaryRestrictions)
-        ? JSON.stringify(b.dietaryRestrictions.slice(0, 50))
-        : null;
+    // Every field typed, and a dish checked against the menu while it is being
+    // asked — `sanitiseEntries` says why. Not sent at all stays null.
+    const entries = Array.isArray(b.dietaryRestrictions) ? sanitiseEntries(b.dietaryRestrictions, menu) : null;
+    if (typeof entries === 'string') return entries;
 
     const message = typeof b.message === 'string' ? b.message.slice(0, 5000) : null;
 
@@ -72,7 +78,7 @@ function parseInput(body: unknown): RsvpInput | string {
         })
         : null;
 
-    return { guestName, email, phone, attending: b.attending, guestCount, dietaryJson, message, resolvedMembers };
+    return { guestName, email, phone, attending: b.attending, guestCount, entries, message, resolvedMembers };
 }
 
 /**
@@ -111,12 +117,19 @@ async function saveRsvp(input: RsvpInput): Promise<{ id: number; isUpdate: boole
         const count = input.attending ? Math.max(1, input.guestCount) : 0;
 
         const existing = await client.query(
-            'SELECT id FROM rsvps WHERE LOWER(TRIM(guest_name)) = LOWER(TRIM($1)) ORDER BY created_at DESC LIMIT 1',
+            `SELECT id, dietary_restrictions FROM rsvps
+              WHERE LOWER(TRIM(guest_name)) = LOWER(TRIM($1)) ORDER BY created_at DESC LIMIT 1`,
             [guest.guest_name],
         );
 
         let id: number;
         const isUpdate = existing.rows.length > 0;
+        // A dish the form did not speak to (the menu was off) is kept from the
+        // row being replaced, so editing a phone number never loses a meal.
+        const entries = input.entries
+            ? carryMeals(input.entries, isUpdate ? existing.rows[0].dietary_restrictions : null)
+            : null;
+        const dietaryJson = entries ? JSON.stringify(entries) : null;
         if (isUpdate) {
             id = existing.rows[0].id;
             await client.query(
@@ -124,13 +137,13 @@ async function saveRsvp(input: RsvpInput): Promise<{ id: number; isUpdate: boole
                     SET email = $1, phone = $2, attending = $3, number_of_guests = $4,
                         dietary_restrictions = $5, message = $6, updated_at = NOW()
                   WHERE id = $7`,
-                [input.email, input.phone, input.attending, count, input.dietaryJson, input.message, id],
+                [input.email, input.phone, input.attending, count, dietaryJson, input.message, id],
             );
         } else {
             const inserted = await client.query(
                 `INSERT INTO rsvps (guest_name, email, phone, attending, number_of_guests, dietary_restrictions, message)
                  VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id`,
-                [guest.guest_name, input.email, input.phone, input.attending, count, input.dietaryJson, input.message],
+                [guest.guest_name, input.email, input.phone, input.attending, count, dietaryJson, input.message],
             );
             id = inserted.rows[0].id;
         }
@@ -156,12 +169,33 @@ async function saveRsvp(input: RsvpInput): Promise<{ id: number; isUpdate: boole
     }
 }
 
+/**
+ * Who is coming and what each of them asked for, one line per person — the
+ * plate first, then the restrictions. Empty for a decline, and for an answer
+ * that said nothing about anybody.
+ */
+function personLines(input: RsvpInput, menu: RsvpMenu): string[] {
+    if (!input.attending || !input.entries) return [];
+    return input.entries
+        .filter(e => (e.name ?? '').trim())
+        .map(e => {
+            const parts = answerParts(e, menu);
+            if (parts.length === 0 && menuActive(menu)) parts.push('Hauptgang noch offen');
+            return `${(e.name ?? '').trim()}: ${parts.length ? parts.join(', ') : 'keine Angaben'}`;
+        });
+}
+
 async function sendEmails(input: RsvpInput) {
     if (!process.env.SMTP_HOST || !process.env.SMTP_USER) return;
     const config = getSiteConfig();
     const couple = config.brideName && config.groomName
         ? `${config.brideName} & ${config.groomName}`
         : 'Das Brautpaar';
+    const lines = personLines(input, menuOf(config));
+    const linesText = lines.length ? `\n\nEure Angaben:\n${lines.map(l => `- ${l}`).join('\n')}` : '';
+    const linesHtml = lines.length
+        ? `<p>Eure Angaben:</p><ul>${lines.map(l => `<li>${escapeHtml(l)}</li>`).join('')}</ul>`
+        : '';
     const port = parseInt(process.env.SMTP_PORT || '587', 10);
     try {
         const transporter = nodemailer.createTransport({
@@ -177,8 +211,8 @@ async function sendEmails(input: RsvpInput) {
             from: `"${couple.replace(/"/g, '')}" <${process.env.SMTP_USER}>`,
             to: input.email,
             subject: 'Wir haben eure Rückmeldung erhalten!',
-            text: `Hallo ${input.guestName},\n\nvielen Dank für eure Rückmeldung zu unserer Hochzeit. Wir haben eure Antwort bestätigt: ${status}.\n\nWir können es kaum erwarten, mit euch zu feiern!\n\nHerzliche Grüße\n${couple}`,
-            html: `<h1>Bestätigung eurer Rückmeldung</h1><p>Hallo ${escapeHtml(input.guestName)},</p><p>vielen Dank für eure Rückmeldung zu unserer Hochzeit. Wir haben eure Antwort bestätigt: <strong>${status}</strong>.</p><p>Herzliche Grüße<br>${escapeHtml(couple)}</p>`,
+            text: `Hallo ${input.guestName},\n\nvielen Dank für eure Rückmeldung zu unserer Hochzeit. Wir haben eure Antwort bestätigt: ${status}.${linesText}\n\nWir können es kaum erwarten, mit euch zu feiern!\n\nHerzliche Grüße\n${couple}`,
+            html: `<h1>Bestätigung eurer Rückmeldung</h1><p>Hallo ${escapeHtml(input.guestName)},</p><p>vielen Dank für eure Rückmeldung zu unserer Hochzeit. Wir haben eure Antwort bestätigt: <strong>${status}</strong>.</p>${linesHtml}<p>Herzliche Grüße<br>${escapeHtml(couple)}</p>`,
         });
 
         if (process.env.NOTIFICATION_EMAIL) {
@@ -186,7 +220,7 @@ async function sendEmails(input: RsvpInput) {
                 from: `"Hochzeits-Bot" <${process.env.SMTP_USER}>`,
                 to: process.env.NOTIFICATION_EMAIL,
                 subject: `Neue Rückmeldung von ${input.guestName}`,
-                text: `Name: ${input.guestName}\nZusage: ${input.attending ? 'Ja' : 'Nein'}\nPersonen: ${input.attending ? input.guestCount : 0}\nE-Mail: ${input.email}\nTelefon: ${input.phone}\nNachricht: ${input.message ?? ''}`,
+                text: `Name: ${input.guestName}\nZusage: ${input.attending ? 'Ja' : 'Nein'}\nPersonen: ${input.attending ? input.guestCount : 0}\nE-Mail: ${input.email}\nTelefon: ${input.phone}\nNachricht: ${input.message ?? ''}${lines.length ? `\n\nAngaben:\n${lines.map(l => `- ${l}`).join('\n')}` : ''}`,
             });
         }
     } catch (emailError) {
@@ -201,7 +235,7 @@ async function handle(request: Request) {
     } catch {
         return NextResponse.json({ error: 'Ungültiges JSON' }, { status: 400 });
     }
-    const input = parseInput(body);
+    const input = parseInput(body, menuOf(getSiteConfig()));
     if (typeof input === 'string') return NextResponse.json({ error: input }, { status: 400 });
 
     try {

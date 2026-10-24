@@ -6,8 +6,9 @@ import AddressReconcileModal from '@/components/admin/AddressReconcileModal';
 import { MAILING_HEADERS, mailingRows, toCsv } from '@/lib/mailing';
 import { SaveStatus, useAutosave } from '@/components/admin/useAutosave';
 import {
-    alignEntries, dietCodes, entriesToStore, isEmptyEntry, signature,
-    type DietCode, type DietaryEntry,
+    alignEntries, dietCodes, entriesToStore, entryFor, isEmptyEntry, mealCode, mealLabel, mealMissing,
+    menuActive, menuOf, menuTitle, signature,
+    type DietCode, type DietaryEntry, type RsvpMenu,
 } from '@/lib/dietary';
 import { cleanName } from '@/lib/names';
 import DietaryPills from '@/components/admin/DietaryPills';
@@ -99,7 +100,7 @@ interface Donation {
 }
 
 type Tab = 'rsvps' | 'guestlist' | 'vendors' | 'donations';
-type GuestFilter = 'all' | 'no_response' | 'attending' | 'declined' | 'likely_not_coming' | 'invited' | 'not_invited' | 'bride' | 'groom' | 'noted' | 'issue' | 'need' | 'kids_meal';
+type GuestFilter = 'all' | 'no_response' | 'attending' | 'declined' | 'likely_not_coming' | 'invited' | 'not_invited' | 'bride' | 'groom' | 'noted' | 'issue' | 'need' | 'kids_meal' | 'meal_missing';
 
 /** Donation events are stored under their English names; these are what the page shows. */
 const EVENT_LABELS: Record<string, string> = {
@@ -618,6 +619,11 @@ export default function RSVPDashboard() {
     const dietaryOf = (rsvp: RSVP | undefined): DietaryEntry[] =>
         (Array.isArray(rsvp?.dietary_restrictions) ? rsvp.dietary_restrictions : []);
 
+    // The couple's dishes, read with the rest of the config. Off: no column, no
+    // card, no filter — this page looks as it did before there was a menu.
+    const menu: RsvpMenu = menuOf(config);
+    const askMeal = menuActive(menu);
+
     /**
      * Store the household's restrictions on its RSVP.
      *
@@ -1014,12 +1020,54 @@ export default function RSVPDashboard() {
     const householdHas = (guest: Guest, code: DietCode): boolean =>
         dietaryOf(rsvpFor(guest.guest_name)).some(entry => dietCodes(entry).includes(code));
 
+    /**
+     * Is anyone coming on this invitation still to choose a plate?
+     *
+     * The people are the household's attendees as the guest list knows them —
+     * the guest and every member not marked as declined — and the answers are
+     * on the RSVP, by name, so an unnamed companion cannot be asked. A household
+     * the admin marked attending, with no form behind it, is everyone open.
+     */
+    const householdMealMissing = (guest: Guest): boolean => {
+        if (!askMeal || guest.rsvp_status !== 'attending') return false;
+        const entries = dietaryOf(rsvpFor(guest.guest_name));
+        const names = [
+            guest.guest_name,
+            ...(guest.party_members || []).filter(m => m.attending !== false).map(m => m.name || ''),
+        ];
+        return names.some(name => name.trim() !== '' && mealMissing(entryFor(entries, name), menu));
+    };
+
+    // The plates among the Zusagen, for the card under the statistics. Open
+    // also counts the people a reply says are coming but names no answer for —
+    // a Zusage recorded from the guest list, with no form behind it.
+    const mealStats = (() => {
+        const dishes: Record<string, number> = {};
+        let kid = 0, nom = 0, open = 0, total = 0;
+        for (const r of guestRsvps) {
+            if (r.attending !== true) continue;
+            const entries = dietaryOf(r);
+            const coming = Number(r.number_of_guests) || 0;
+            total += Math.max(coming, entries.length);
+            open += Math.max(0, coming - entries.length);
+            for (const entry of entries) {
+                const code = mealCode(entry, menu);
+                if (code === 'KID') kid += 1;
+                else if (code === 'NOM') nom += 1;
+                else if (code) dishes[code] = (dishes[code] ?? 0) + 1;
+                else open += 1;
+            }
+        }
+        return { dishes, kid, nom, open, total, plates: total - nom };
+    })();
+
     const filteredGuests = guests.filter(g => {
         const memberNames = (g.party_members || []).map(m => m.name || '').join(' ');
         const matchesSearch = !guestSearch || g.guest_name.toLowerCase().includes(guestSearch.toLowerCase()) || memberNames.toLowerCase().includes(guestSearch.toLowerCase());
         if (!matchesSearch) return false;
         switch (guestFilter) {
             case 'kids_meal': return householdHas(g, 'KID');
+            case 'meal_missing': return householdMealMissing(g);
             case 'no_response': return g.invited && !g.rsvp_status;
             case 'attending': return g.rsvp_status === 'attending';
             case 'declined': return g.rsvp_status === 'declined';
@@ -1350,6 +1398,45 @@ export default function RSVPDashboard() {
                         </div>
                     </div>
 
+                    {/* The plates, once there is a menu: one line of numbers in the
+                        couple's order, and the open ones as the way to the
+                        follow-up list. */}
+                    {askMeal && (
+                        <div className="mb-8 bg-white p-6 rounded-2xl shadow-lg border border-gray-200">
+                            <div className="flex flex-wrap items-baseline gap-x-6 gap-y-2">
+                                <p className="text-sm font-medium text-gray-500">{menuTitle(menu)}</p>
+                                {menu.options.map(option => (
+                                    <span key={option.id} className="text-sm text-gray-600">
+                                        <span className="text-2xl font-bold text-gray-900 tabular-nums">{mealStats.dishes[option.id] ?? 0}</span>
+                                        {' '}{option.label}
+                                    </span>
+                                ))}
+                                <span className="text-sm text-gray-600">
+                                    <span className="text-2xl font-bold text-gray-900 tabular-nums">{mealStats.kid}</span> Kindermenü
+                                </span>
+                                <span className="text-sm text-gray-600">
+                                    <span className="text-2xl font-bold text-gray-900 tabular-nums">{mealStats.nom}</span> isst nicht mit
+                                </span>
+                                <button
+                                    type="button"
+                                    onClick={() => { setActiveTab('guestlist'); setGuestFilter('meal_missing'); }}
+                                    title="Die Gästeliste mit dem Filter „Menü fehlt“ öffnen"
+                                    className={`text-sm font-semibold rounded-full px-3 py-1 border transition-colors ${
+                                        mealStats.open > 0
+                                            ? 'text-amber-700 bg-amber-50 border-amber-200 hover:bg-amber-100'
+                                            : 'text-gray-400 bg-gray-50 border-gray-100'
+                                    }`}
+                                >
+                                    {mealStats.open} offen
+                                </button>
+                            </div>
+                            <p className="mt-2 text-xs text-gray-400">
+                                {mealStats.plates} Mahlzeiten bei den Zusagen. „Offen“ öffnet die Gästeliste mit dem Filter
+                                „Menü fehlt“ – das ist die Liste zum Nachfassen.
+                            </p>
+                        </div>
+                    )}
+
                     {/* RSVP Table */}
                     <div className="bg-white shadow-lg border border-gray-200 rounded-2xl overflow-hidden">
                         <div className="overflow-x-auto">
@@ -1376,6 +1463,7 @@ export default function RSVPDashboard() {
                                         {rsvpHeader('name', 'Name')}
                                         {rsvpHeader('status', 'Status')}
                                         {rsvpHeader('guests', 'Gäste')}
+                                        {askMeal && rsvpHeader('meal', menuTitle(menu))}
                                         {/* Dietary hands roughly a third of its width to the
                                             message beside it: it holds a few short flags, and the
                                             message is the column anyone actually leans in to read. */}
@@ -1401,10 +1489,19 @@ export default function RSVPDashboard() {
                                                 entry.gluten_free && 'Glutenfrei',
                                                 entry.nut_allergy && 'Nussallergie',
                                                 entry.other && (entry.other_text || 'Sonstiges'),
-                                                entry.kids_meal && 'Kindermenü',
-                                                entry.no_meal && 'Isst nicht mit',
+                                                // With a menu these two are the plate column's to say.
+                                                !askMeal && entry.kids_meal && 'Kindermenü',
+                                                !askMeal && entry.no_meal && 'Isst nicht mit',
                                             ].filter(Boolean);
                                             return flags.length ? flags.join(', ') : '-';
+                                        };
+                                        // The plate, or that it is still to be chosen — only for a Zusage.
+                                        const mealCell = (entry: DietaryEntry | null) => {
+                                            const label = mealLabel(entry, menu);
+                                            if (label) return label;
+                                            return rsvp.attending === true
+                                                ? <span className="inline-flex text-[10px] leading-4 font-semibold px-2 rounded-full bg-amber-100 text-amber-800">fehlt</span>
+                                                : '-';
                                         };
                                         return (
                                             <React.Fragment key={rsvp.id}>
@@ -1431,6 +1528,11 @@ export default function RSVPDashboard() {
                                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                                         {rsvp.attending ? rsvp.number_of_guests : '-'}
                                                     </td>
+                                                    {askMeal && (
+                                                        <td className="px-6 py-4 text-sm text-gray-700 whitespace-nowrap">
+                                                            {mealCell(primaryDietary)}
+                                                        </td>
+                                                    )}
                                                     <td className="px-6 py-4 text-sm text-gray-500">
                                                         {dietaryFlags(primaryDietary)}
                                                     </td>
@@ -1463,6 +1565,7 @@ export default function RSVPDashboard() {
                                                             <span className="px-2 inline-flex text-xs leading-5 font-medium rounded-full bg-gray-100 text-gray-500">Zusage</span>
                                                         </td>
                                                         <td className="px-6 py-1.5 text-xs text-gray-300">—</td>
+                                                        {askMeal && <td className="px-6 py-1.5 text-xs text-gray-500 whitespace-nowrap">{mealCell(member)}</td>}
                                                         <td className="px-6 py-1.5 text-xs text-gray-400">{dietaryFlags(member)}</td>
                                                         <td className="px-6 py-1.5 text-xs text-gray-300">—</td>
                                                         <td className="px-6 py-1.5 text-xs text-gray-300">—</td>
@@ -1703,6 +1806,7 @@ export default function RSVPDashboard() {
                                 { key: 'bride', label: `Seite von ${config?.brideName || 'Braut'}`, color: 'pink' },
                                 { key: 'groom', label: `Seite von ${config?.groomName || 'Bräutigam'}`, color: 'blue' },
                                 { key: 'kids_meal', label: '🧒 Kindermenü', color: 'blue' },
+                                ...(askMeal ? [{ key: 'meal_missing', label: '🍽 Menü fehlt', color: 'amber' }] : []),
                                 { key: 'noted', label: '📝 Mit Notiz', color: 'indigo' },
                                 { key: 'issue', label: '⚠️ Problem', color: 'red' },
                                 { key: 'need', label: '📌 Nachfassen', color: 'amber' },
@@ -1779,13 +1883,15 @@ export default function RSVPDashboard() {
                                         const dietaryFlags = (entry: DietaryEntry | null | undefined) => {
                                             if (!entry) return null;
                                             const flags = [
+                                                // The plate first, or that it is still to be chosen.
+                                                askMeal && (mealLabel(entry, menu) ?? `${menuTitle(menu)} fehlt`),
                                                 entry.vegetarian && 'Vegetarisch',
                                                 entry.vegan && 'Vegan',
                                                 entry.gluten_free && 'Glutenfrei',
                                                 entry.nut_allergy && 'Nussallergie',
                                                 entry.other && (entry.other_text || 'Sonstiges'),
-                                                entry.kids_meal && 'Kindermenü',
-                                                entry.no_meal && 'Isst nicht mit',
+                                                !askMeal && entry.kids_meal && 'Kindermenü',
+                                                !askMeal && entry.no_meal && 'Isst nicht mit',
                                             ].filter(Boolean);
                                             return flags.length ? flags.join(', ') : null;
                                         };
@@ -1941,7 +2047,7 @@ export default function RSVPDashboard() {
 
             {activeTab === 'vendors' && (
                 <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6">
-                    <VendorsTab />
+                    <VendorsTab menu={menu} />
                 </div>
             )}
 
@@ -2302,6 +2408,8 @@ export default function RSVPDashboard() {
                                     />
                                     <DietaryPills
                                         entry={guestForm.dietary[0] ?? {}}
+                                        menu={menu}
+                                        mealRequired
                                         onChange={entry => {
                                             const dietary = [...guestForm.dietary];
                                             dietary[0] = entry;
@@ -2362,6 +2470,8 @@ export default function RSVPDashboard() {
                                             <>
                                                 <DietaryPills
                                                     entry={guestForm.dietary[i + 1] ?? {}}
+                                                    menu={menu}
+                                                    mealRequired
                                                     onChange={entry => {
                                                         const dietary = [...guestForm.dietary];
                                                         while (dietary.length <= i + 1) dietary.push({});

@@ -21,7 +21,7 @@ import { ensureFinanceTables } from '../src/lib/financeDb';
 import { ensureHoneymoonTables } from '../src/lib/honeymoonDb';
 import {
     DEMO_BRIDE_PARTY, DEMO_COUPLE, DEMO_DAYS, DEMO_FAQS, DEMO_FINANCE, DEMO_FUND_ITEMS,
-    DEMO_GROOM_PARTY, DEMO_MESSAGES, DEMO_NOTES, DEMO_PHOTO_CAPTIONS, DEMO_PLACES,
+    DEMO_GROOM_PARTY, DEMO_MENU, DEMO_MESSAGES, DEMO_NOTES, DEMO_PHOTO_CAPTIONS, DEMO_PLACES,
     DEMO_REGIONS, DEMO_REGISTRY_ITEMS, DEMO_SCHEDULE, DEMO_TIMELINE, DEMO_TODOS,
     DEMO_RSVP_DEADLINE, DEMO_WEDDING_DATE, demoGuests,
 } from '../src/lib/demoSeed';
@@ -181,6 +181,7 @@ function writeConfig(photos: PhotoRow[]) {
         accentDarkColor: '#5B4C31',
         weddingColorPalette: ['#7C6A46', '#E8DFC9', '#4F5D52', '#B4796C', '#2F2A25'],
         faqs: DEMO_FAQS,
+        rsvpMenu: DEMO_MENU,
         scheduleEvents: DEMO_SCHEDULE,
         weddingParty: {
             brideParty: party(DEMO_BRIDE_PARTY, 0),
@@ -300,6 +301,37 @@ async function seedGuests() {
         ids.push(res.rows[0].id);
     }
 
+    /**
+     * The household's answers, one per attending person, each with a dish —
+     * the demo's menu is on. Every seventh household answered before there
+     * was a menu and is still open, which is what the "Menü fehlt" filter and
+     * the "ohne Wahl" tile are for.
+     */
+    const demoEntries = (guest: ReturnType<typeof demoGuests>[number], index: number) => {
+        if (guest.rsvp_status !== 'attending') return [];
+        const people: { name: string; dietary?: string }[] = [
+            { name: guest.guest_name },
+            ...guest.party_members.filter((m) => m.attending && m.name),
+        ];
+        return people.map((p, i) => {
+            const veg = p.dietary === 'Vegetarian' || p.dietary === 'Vegan';
+            return {
+                name: p.name,
+                vegetarian: p.dietary === 'Vegetarian',
+                vegan: p.dietary === 'Vegan',
+                gluten_free: p.dietary === 'Gluten free',
+                nut_allergy: false,
+                other: p.dietary === 'No shellfish',
+                other_text: p.dietary === 'No shellfish' ? 'No shellfish' : '',
+                kids_meal: false,
+                no_meal: false,
+                meal: index % 7 === 3
+                    ? null
+                    : veg ? 'risotto' : DEMO_MENU.options[(index + i) % DEMO_MENU.options.length].id,
+            };
+        });
+    };
+
     // RSVPs only for guests whose status says they answered, so the two agree.
     let message = 0;
     let rsvps = 0;
@@ -315,9 +347,7 @@ async function seedGuests() {
                 // The headcount is the people actually coming, not the party's size.
                 attending ? 1 + guest.party_members.filter((m) => m.attending).length : 0,
                 index % 3 === 0 ? DEMO_MESSAGES[message++ % DEMO_MESSAGES.length] : null,
-                JSON.stringify(guest.party_members
-                    .filter((m) => m.dietary)
-                    .map((m) => ({ name: m.name, restriction: m.dietary })))],
+                JSON.stringify(demoEntries(guest, index))],
         );
         rsvps += 1;
     }

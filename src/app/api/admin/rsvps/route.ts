@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server';
 import pool from '@/lib/db';
 import { cleanNameSql } from '@/lib/names';
-import { type DietaryEntry } from '@/lib/dietary';
+import { carryMeals, menuOf, sanitiseEntries } from '@/lib/dietary';
+import { getSiteConfig } from '@/lib/config';
 import { attendingFromStatus } from '@/lib/rsvpSync';
 
 export const dynamic = 'force-dynamic';
@@ -50,22 +51,27 @@ export async function PUT(request: Request) {
         if (!Array.isArray(dietary_restrictions)) {
             return NextResponse.json({ error: 'Ernährungshinweise müssen eine Liste sein' }, { status: 400 });
         }
-        const entries = dietary_restrictions as DietaryEntry[];
+        // Same checks as the public form's route: typed fields, and a dish that
+        // is on the menu while the menu is being asked.
+        const checked = sanitiseEntries(dietary_restrictions, menuOf(getSiteConfig()));
+        if (typeof checked === 'string') return NextResponse.json({ error: checked }, { status: 400 });
 
         const existing = await client.query(
-            `SELECT id FROM rsvps
+            `SELECT id, dietary_restrictions FROM rsvps
               WHERE ${cleanNameSql('guest_name')} = ${cleanNameSql('$1::text')}
               ORDER BY created_at DESC LIMIT 1`,
             [guest_name],
         );
 
         if (existing.rows.length > 0) {
+            const entries = carryMeals(checked, existing.rows[0].dietary_restrictions);
             await client.query(
                 `UPDATE rsvps SET dietary_restrictions = $1::jsonb, updated_at = NOW() WHERE id = $2`,
                 [JSON.stringify(entries), existing.rows[0].id],
             );
             return NextResponse.json({ success: true, created: false });
         }
+        const entries = carryMeals(checked, null);
 
         const household = await client.query(
             `SELECT email, phone, rsvp_status FROM guest_list
