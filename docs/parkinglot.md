@@ -50,6 +50,12 @@ would have chosen the fish is currently indistinguishable from one who wanted th
 chicken. The constant to change when the question does land is
 `NO_RESTRICTION_LABEL` in `src/lib/seatingExport.ts`.
 
+**Konzept (2026-10-24):** `docs/rsvp-menuewahl-konzept.md`, mit klickbarem Mockup
+in `docs/mockups/rsvp-menuewahl.html` — eine Einzelauswahl „Hauptgang“ pro Person,
+die Gerichte in `site.json` (`rsvpMenu`), gespeichert als `meal` im bestehenden
+`dietary_restrictions`-JSONB, kein SQL; Abschnitt 10 dort ist der Plan für die
+Haushalte, die schon geantwortet haben.
+
 **Do:** add a meal question to the RSVP form per attending person, stored alongside the restriction flags in
 `rsvps.dietary_restrictions`; add the options to the admin's settings so the
 couple names their own menu; surface it as a column in the admin's RSVP table;
