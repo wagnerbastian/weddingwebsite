@@ -28,7 +28,7 @@ and are not repeated here.
 | OPS-1 | Deploy | `JWT_SECRET` not set in the Portainer stack | Needs Austin at Portainer | XS |
 | OPS-2 | Deploy | `GEOCODER_USER_AGENT` not set, so OpenStreetMap can block the server | Needs Austin at Portainer | XS |
 | HM-1 | Honeymoon / Finance | The honeymoon total is not a line in the wedding budget | Design call — which side owns the number | S |
-| SEAT-1 | RSVP / Seating | No entrée choice, so the export cannot count "7 chicken, 3 fish" | Needs a new RSVP question and re-asking everyone who already answered | M |
+| ~~SEAT-1~~ | ~~RSVP / Seating~~ | ~~No entrée choice, so the export cannot count "7 chicken, 3 fish"~~ | **Shipped v0.10.8** — a menu in Settings, one dish per attending person on the form, counted on the sheet; the households that answered earlier are the *Menü fehlt* filter | — |
 | ~~SEAT-3~~ | ~~Seating~~ | ~~The couple and the vendors are on no list, so neither can be seated or counted~~ | **Shipped v0.9.94** | — |
 | SEAT-2 | Seating | The export prints rosters, never the room | The floor plan is a React Flow canvas; printing it is a different job | M |
 
@@ -36,7 +36,13 @@ Effort: XS = minutes, S = under an hour, M = an afternoon.
 
 ## Details
 
-### SEAT-1 — An entrée choice the kitchen can count
+### ~~SEAT-1 — An entrée choice the kitchen can count~~ — shipped v0.10.8
+Built as the concept below describes: `rsvpMenu` in `site.json`, `meal` on each
+person's answer, the plate question on the form (required while the menu is on),
+a *Hauptgang* column, card and filter in the admin, two rows of kitchen tiles and
+a *Hauptgang* column in the export. The "re-asking" half is the *Menü fehlt*
+filter plus the CSV export; it is the couple's job, not the code's.
+
 The seating export (v0.9.87) totals dietary *restrictions* — vegetarian, vegan,
 gluten free, nut allergy, other — because that is all the RSVP form has ever
 asked. A caterer usually wants the other number too: how many chicken, how many
@@ -49,6 +55,12 @@ anything. It does not give the kitchen a fish count, and it cannot: a guest who
 would have chosen the fish is currently indistinguishable from one who wanted the
 chicken. The constant to change when the question does land is
 `NO_RESTRICTION_LABEL` in `src/lib/seatingExport.ts`.
+
+**Konzept (2026-10-24):** `docs/rsvp-menuewahl-konzept.md`, mit klickbarem Mockup
+in `docs/mockups/rsvp-menuewahl.html` — eine Einzelauswahl „Hauptgang“ pro Person,
+die Gerichte in `site.json` (`rsvpMenu`), gespeichert als `meal` im bestehenden
+`dietary_restrictions`-JSONB, kein SQL; Abschnitt 10 dort ist der Plan für die
+Haushalte, die schon geantwortet haben.
 
 **Do:** add a meal question to the RSVP form per attending person, stored alongside the restriction flags in
 `rsvps.dietary_restrictions`; add the options to the admin's settings so the

@@ -10,14 +10,14 @@
 
 import { sideLabel } from './seating';
 import {
-    ALL_DIET_CODES, DIET_CODES, DIET_LABELS, MEAL_CODES, dietCodes, dietNote,
-    type DietCode, type DietaryEntry,
+    ALL_DIET_CODES, DIET_CODES, DIET_LABELS, MEAL_CODES, dietCodes, dietNote, menuActive, menuOption,
+    type DietCode, type DietaryEntry, type RsvpMenu,
 } from './dietary';
 
 // The sheet and the spreadsheet both name and count these, so they are part of
 // this module's surface even though the answers themselves belong to `dietary`.
 export { ALL_DIET_CODES, DIET_CODES, DIET_LABELS, MEAL_CODES, dietCodes, dietNote };
-export type { DietCode, DietaryEntry };
+export type { DietCode, DietaryEntry, RsvpMenu };
 
 /** A person as they appear on the sheet. */
 export interface ExportPerson {
@@ -31,6 +31,8 @@ export interface ExportPerson {
     rsvp_status: string | null;
     diet: DietCode[];
     note: string;
+    /** The dish they chose, by id; null while open. The kids' plate and no plate are in `diet`. */
+    meal: string | null;
 }
 
 export interface ExportTable {
@@ -57,6 +59,8 @@ export interface ExportVendor {
     needs_meal: boolean;
     diet: DietCode[];
     note: string;
+    /** A dish, if one was chosen for them. Optional for a vendor, so null is "ohne Wahl", never "fehlt". */
+    meal: string | null;
 }
 
 /** Everything the sheet draws, as the export endpoint returns it. */
@@ -68,6 +72,8 @@ export interface SeatingExportData {
     /** Attending households holding no chairs, flattened to people. */
     unseated: ExportPerson[];
     vendors: ExportVendor[];
+    /** The couple's dishes. Absent, or switched off, the sheet says nothing about plates. */
+    menu?: RsvpMenu;
 }
 
 export interface ExportOptions {
@@ -86,6 +92,8 @@ export interface ExportOptions {
     vendors: boolean;
     /** Start each table on a fresh page. */
     pageBreak: boolean;
+    /** The dish per person and per table. Only ever shown while a menu is being asked. */
+    meals: boolean;
     format: 'print' | 'csv';
 }
 
@@ -99,8 +107,14 @@ export const DEFAULT_EXPORT_OPTIONS: ExportOptions = {
     unseated: true,
     vendors: false,
     pageBreak: false,
+    meals: true,
     format: 'print',
 };
+
+/** Is the sheet to show dishes — asked for, and there is a menu to show. */
+export function mealsOn(data: Pick<SeatingExportData, 'menu'> | null | undefined, opts: Pick<ExportOptions, 'meals'>): boolean {
+    return opts.meals && menuActive(data?.menu);
+}
 
 export type Tally = Record<DietCode, number> & {
     /** People — chairs, in a table's tally. Not the same as plates. */
@@ -122,6 +136,85 @@ export type Tally = Record<DietCode, number> & {
  * parking lot — this is the constant that stops being a constant.)
  */
 export const NO_RESTRICTION_LABEL = 'Hähnchen';
+
+/**
+ * What a plate still to be chosen prints as, once the question is being asked.
+ *
+ * The bucket the chicken used to be: with a menu on, a person carrying no dish
+ * is not "the standard plate" but an answer that has not come in yet, and the
+ * sheet says so rather than guessing on their behalf.
+ */
+export const OPEN_MEAL_LABEL = 'ohne Wahl';
+
+export interface MealTally {
+    /** Per dish id. Read through the menu for the order the couple set. */
+    dishes: Record<string, number>;
+    KID: number;
+    NOM: number;
+    /** Attending, eating, and no dish on the menu chosen. */
+    open: number;
+    total: number;
+    /** Everyone except the ones not eating — the same number `Tally.plates` is. */
+    plates: number;
+}
+
+/**
+ * Count a group of people by plate.
+ *
+ * Exclusive where the restrictions are not: each person is exactly one of a
+ * dish, the kids' plate, no plate, or open, so the parts add up to the
+ * headcount — which is what makes this the line a caterer orders from. Not
+ * eating wins over everything and the kids' plate over a dish, the way
+ * `mealCode()` reads one answer.
+ */
+export function mealTally(people: { meal: string | null; diet: DietCode[] }[], menu: RsvpMenu | null | undefined): MealTally {
+    const t: MealTally = { dishes: {}, KID: 0, NOM: 0, open: 0, total: people.length, plates: 0 };
+    for (const person of people) {
+        if (person.diet.includes('NOM')) { t.NOM += 1; continue; }
+        if (person.diet.includes('KID')) { t.KID += 1; continue; }
+        if (person.meal && menuOption(menu, person.meal)) {
+            t.dishes[person.meal] = (t.dishes[person.meal] ?? 0) + 1;
+            continue;
+        }
+        t.open += 1;
+    }
+    t.plates = t.total - t.NOM;
+    return t;
+}
+
+/** The plate one person is down for, in words. Null while open. */
+export function mealLabelFor(person: { meal: string | null; diet: DietCode[] }, menu: RsvpMenu | null | undefined): string | null {
+    if (person.diet.includes('NOM')) return DIET_LABELS.NOM;
+    if (person.diet.includes('KID')) return DIET_LABELS.KID;
+    return menuOption(menu, person.meal)?.label ?? null;
+}
+
+/**
+ * The tally line with the plates on it: the headcount, the dishes in the
+ * couple's order, the kids' plates, the ones not eating, then the restrictions,
+ * and last the open ones — in the place the chicken used to take. Zeroes are
+ * left out, as `tallyParts` leaves them out.
+ */
+export function mealTallyParts(
+    t: Tally,
+    m: MealTally,
+    menu: RsvpMenu,
+    seatCount: number | null = null,
+    lead = 'besetzt',
+): string[] {
+    const parts = [seatCount && seatCount > 0 ? `${t.total} ${lead} von ${seatCount}` : `${t.total} ${lead}`];
+    for (const option of menu.options) {
+        const n = m.dishes[option.id] ?? 0;
+        if (n > 0) parts.push(`${n} ${option.label}`);
+    }
+    if (m.KID > 0) parts.push(`${m.KID} ${DIET_LABELS.KID}`);
+    if (m.NOM > 0) parts.push(`${m.NOM} ${DIET_LABELS.NOM.toLowerCase()}`);
+    for (const code of DIET_CODES) {
+        if (t[code] > 0) parts.push(`${t[code]} ${DIET_LABELS[code].toLowerCase()}`);
+    }
+    parts.push(`${m.open} ${OPEN_MEAL_LABEL}`);
+    return parts;
+}
 
 /**
  * Count a group of people by restriction.
@@ -223,10 +316,12 @@ export function tableTypeLabel(type: string): string {
     return labels[type] ?? type;
 }
 
-/** One entry of the short tally. A null code is the no-restriction bucket. */
+/** One entry of the short tally. A null code is the no-restriction bucket — or, with a label, a dish. */
 export interface TallyChip {
     code: DietCode | null;
     count: number;
+    /** A dish's name, or the open bucket's; absent on a code chip and on the chicken. */
+    label?: string;
 }
 
 /**
@@ -246,6 +341,21 @@ export function tallyChips(t: Tally): TallyChip[] {
     return [
         ...ALL_DIET_CODES.filter(code => t[code] > 0).map(code => ({ code, count: t[code] })),
         { code: null, count: t.none },
+    ];
+}
+
+/**
+ * The short tally with the plates on it: dishes (named, since they have no
+ * code), then the two plate codes, then the restrictions, then the open ones.
+ */
+export function mealTallyChips(t: Tally, m: MealTally, menu: RsvpMenu): TallyChip[] {
+    return [
+        ...menu.options
+            .filter(option => (m.dishes[option.id] ?? 0) > 0)
+            .map(option => ({ code: null, label: option.label, count: m.dishes[option.id] })),
+        ...MEAL_CODES.filter(code => t[code] > 0).map(code => ({ code, count: t[code] })),
+        ...DIET_CODES.filter(code => t[code] > 0).map(code => ({ code, count: t[code] })),
+        { code: null, label: OPEN_MEAL_LABEL, count: m.open },
     ];
 }
 
@@ -332,7 +442,7 @@ export function alphabetical(data: SeatingExportData, includeUnseated: boolean):
  * plus anyone not seated yet, because the sheet counts chairs and the
  * spreadsheet counts people.
  */
-export function csvHeaders(opts: ExportOptions): string[] {
+export function csvHeaders(opts: ExportOptions, menu: RsvpMenu | null | undefined = null): string[] {
     return [
         'Tisch',
         'Platz',
@@ -341,6 +451,9 @@ export function csvHeaders(opts: ExportOptions): string[] {
         ...(opts.side ? ['Seite'] : []),
         ...(opts.vendors ? ['Rolle', 'Mahlzeit'] : []),
         'Rückmeldung',
+        // The dish by name, one column, so a pivot over it is the order to the
+        // caterer. The two plate codes keep their own yes/blank columns.
+        ...(mealsOn({ menu: menu ?? undefined }, opts) ? ['Hauptgang'] : []),
         ...ALL_DIET_CODES.map(code => DIET_LABELS[code]),
         'Notiz',
     ];
@@ -363,6 +476,7 @@ const RSVP_LABELS: Record<string, string> = {
  * them without anyone parsing anything.
  */
 export function csvRows(data: SeatingExportData, opts: ExportOptions): unknown[][] {
+    const withMeals = mealsOn(data, opts);
     const rows = (people: ExportPerson[]) => people.map(person => [
         person.table_name ?? 'Ohne Platz',
         person.seat ?? '',
@@ -372,6 +486,8 @@ export function csvRows(data: SeatingExportData, opts: ExportOptions): unknown[]
         // Not eating is the one guest row that is not a meal.
         ...(opts.vendors ? ['', person.diet.includes('NOM') ? 'nein' : 'ja'] : []),
         (person.rsvp_status && RSVP_LABELS[person.rsvp_status]) || person.rsvp_status || 'keine Antwort',
+        // A guest with no dish is a question still open; it says so.
+        ...(withMeals ? [mealLabelFor(person, data.menu) ?? 'offen'] : []),
         ...ALL_DIET_CODES.map(code => (person.diet.includes(code) ? 'ja' : '')),
         person.note,
     ]);
@@ -384,6 +500,8 @@ export function csvRows(data: SeatingExportData, opts: ExportOptions): unknown[]
         vendor.role ?? '',
         vendor.needs_meal ? 'ja' : 'nein',
         'Dienstleister',
+        // A vendor's dish is optional, so none is blank rather than open.
+        ...(withMeals ? [vendor.needs_meal ? (mealLabelFor(vendor, data.menu) ?? '') : ''] : []),
         ...ALL_DIET_CODES.map(code => (vendor.diet.includes(code) ? 'ja' : '')),
         vendor.note,
     ]);

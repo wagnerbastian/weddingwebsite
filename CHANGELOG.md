@@ -11,6 +11,25 @@ All notable changes to this project are documented here, newest at the top.
 > renders those three as coloured badges. Bump the patch on every deploy, the minor when
 > asked. Entries predating this convention carry a date but no time.
 
+## v0.10.8 — [Unreleased] Menüwahl in der Rückmeldung (`ccr-faf6fedc-dn5rkl`, 2026-10-24 20:54)
+
+„Ich möchte für die Rückmeldung auch das Essen auswählen lassen, damit wir die Info auch haben.“ — SEAT-1 aus dem Parking Lot; Konzept in `docs/rsvp-menuewahl-konzept.md`, Mockup in `docs/mockups/rsvp-menuewahl.html`.
+
+### Added
+- **Gäste wählen ihren Hauptgang.** Pro Person, die kommt, eine Einzelauswahl auf der Karte: die Gerichte aus den Einstellungen (mit Beschreibung und Tags wie „vegetarisch“), dazu *Kindermenü* und *Isst nicht mit*; darunter die Ernährungshinweise wie bisher. Die Wahl ist Pflicht, solange sie eingeschaltet ist: Karte gelb, Hinweis unter dem Formular, Senden gesperrt — dasselbe Muster wie bei einer fehlenden Zu-/Absage. Wer vor der Menüwahl geantwortet hat, sieht beim Öffnen „Neu seit eurer Rückmeldung: Bitte wählt für jede Person ein Gericht.“ Der Beleg nach dem Senden nennt pro Person Gericht und Hinweise.
+- **Einstellungen → Rückmeldungen → Menüwahl**: Schalter, Überschrift, Hinweistext über den Gerichten, bis zu acht Gerichte mit Beschreibung und Tags, Reihenfolge per Pfeil, ein Zähler je Gericht („12 Gäste“), und eine Nachfrage, bevor ein Gericht gelöscht wird, das schon gewählt wurde. Liegt in `site.json` als `rsvpMenu` und ist aus, bis ihr es einschaltet — bis dahin ändert sich nirgends etwas.
+- **Rückmeldungen-Tab**: eine Spalte *Hauptgang* (auch in den Unterzeilen der Gruppe), eine Karte mit den Zahlen je Gericht, Kindermenü, „isst nicht mit“ und „offen“, ein Filter **🍽 Menü fehlt** in der Gästeliste — zusammen mit *CSV exportieren* die Liste zum Nachfassen — und im Gästeeditor eine zweite Pill-Reihe für das Gericht (genau eins), um telefonische Antworten nachzutragen. Dienstleister bekommen dieselben Pills, freiwillig: ohne Wahl zählen sie als „ohne Wahl“, nie als „fehlt“.
+- **Küchenexport**: „Für die Küche“ hat zwei Reihen, *Hauptgang* (Mahlzeiten, je Gericht, Kindermenü, ohne Wahl) und *Hinweise*; die Zeile unter jedem Tisch nennt die Gerichte zuerst („4 Rinderfilet · 2 Lachsfilet · 1 Kindermenü · 1 glutenfrei · 0 ohne Wahl“); das Namensverzeichnis und die Tabelle bekommen eine Spalte *Hauptgang*; die Option *Menüwahl* im Export-Dialog ist aktiv, sobald ein Menü eingeschaltet ist.
+- Die Bestätigung an den Gast und die Benachrichtigung an euch nennen pro Person Gericht und Hinweise.
+- Die Demo hat ein Menü (Lammkeule, Forelle, Pilzrisotto) mit gewählten Gerichten; jeder siebte Haushalt ist absichtlich offen, damit der Filter etwas zu zeigen hat.
+- `check:seating`: 58 neue Assertionen (330) — Menü parsen, Kennungen aus Namen, Exklusivität, offen/gelöscht, Übernahme beim Speichern, was ein Request tragen darf, die Zählung, die Tischzeile, die Tabellenspalte.
+
+### Changed
+- `rsvps.dietary_restrictions` trägt pro Person `meal`, die Kennung des Gerichts (nie den Namen, damit Umbenennen keine Antwort verliert). Kein SQL, keine Migration: eine Antwort ohne das Feld ist „offen“, genau wie eine mit einem inzwischen gelöschten Gericht.
+- `/api/rsvp` und `/api/admin/rsvps` prüfen jeden Eintrag des Arrays auf seine Form (bisher wurde es ungeprüft gespeichert) und ein Gericht gegen das Menü. Schickt das Formular kein `meal` — die Menüwahl war aus —, bleibt das gespeicherte erhalten; nur ein ausdrückliches `null` löscht.
+- Die Kachel „Hähnchen“ (ein Teller ohne Hinweis ist das Standardgericht) gilt nur noch, solange die Menüwahl aus ist. Mit Menü heißt die letzte Kachel „ohne Wahl“ und zählt die Offenen, statt für sie zu raten.
+- Kindermenü und *Isst nicht mit* sind im Formular Teil der Einzelauswahl (sie entscheiden den Teller) und werden unverändert als `kids_meal` und `no_meal` gespeichert. Ohne Menü bleiben sie Kästchen wie bisher.
+
 ## v0.10.7 — [Unreleased] Geister-Zusagen, verwaiste Rückmeldungen und ein hängender Server (`claude/modest-hawking-wzjlh5`, 2026-10-19 08:24)
 
 Ein Kindermenü bei einer Gruppe ohne Antwort zeigte von da an 3 Zusagen, die weder Absage noch „Keine Antwort“ wegbekam; nach dem Löschen der Gruppe stand sie weiter unter „Rückmeldungen“, und die Seite war bis zu einem Neustart nicht erreichbar.

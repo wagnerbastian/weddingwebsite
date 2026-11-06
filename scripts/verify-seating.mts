@@ -21,12 +21,15 @@ import {
 import {
     DEFAULT_EXPORT_OPTIONS, NO_RESTRICTION_LABEL, alphabetical, csvHeaders, csvRows,
     A4_CONTENT_HEIGHT, ALL_DIET_CODES, dietCodes, dietNote, exportFilename, fitScale, freeSeats, grandTotal,
+    mealLabelFor, mealTally, mealTallyChips, mealTallyParts, mealsOn,
     pageCount, seatedPeople, sortedVendors, surname,
     tally, tallyChips, tallyParts, vendorMeals,
     type ExportOptions, type ExportPerson, type ExportVendor, type SeatingExportData,
 } from '../src/lib/seatingExport';
 import {
-    alignEntries, entriesToStore, isEmptyEntry, isOn, setNote, signature, toggleRestriction,
+    alignEntries, answerParts, carryMeals, entriesToStore, isEmptyEntry, isOn, mealCode, mealLabel, mealMissing,
+    menuActive, parseMenu, sanitiseEntries, setMeal, setNote, signature, slugFor, toggleRestriction,
+    type DietaryEntry,
 } from '../src/lib/dietary';
 
 let failures = 0;
@@ -791,6 +794,7 @@ console.log('\nExporting the chart');
         rsvp_status: 'attending',
         diet,
         note: '',
+        meal: null,
         ...extra,
     });
 
@@ -801,7 +805,8 @@ console.log('\nExporting the chart');
         role: string | null = null,
         diet: ExportVendor['diet'] = [],
         needs_meal = true,
-    ): ExportVendor => ({ id, name, role, company: null, needs_meal, diet, note: '' });
+        meal: string | null = null,
+    ): ExportVendor => ({ id, name, role, company: null, needs_meal, diet, note: '', meal });
 
     /* dietary answers → codes */
     check('an empty answer carries no codes', dietCodes(null).length === 0);
@@ -995,6 +1000,145 @@ console.log('\nExporting the chart');
         vendorRows.find(r => r[2] === 'Wes Okafor')?.[csvHeaders(withVendors).indexOf('Nussallergie')] === 'ja');
     check('a vendor is filed as a vendor, not as an unseated guest',
         vendorRows.find(r => r[2] === 'Ivy Lund')?.[0] === 'Dienstleister');
+
+    /* the menu: which plate */
+    {
+        const parsed = parseMenu({ enabled: true, title: 'Hauptgang', options: [
+            { id: 'rind', label: 'Rinderfilet' },
+            { id: 'lachs', label: 'Lachsfilet', diet: ['gluten_free'] },
+            { id: 'risotto', label: 'Pilzrisotto', diet: ['vegetarian', 'gluten_free', 'bogus'] },
+        ] });
+        check('a menu parses', typeof parsed !== 'string', String(parsed));
+        if (typeof parsed === 'string') throw new Error(parsed);
+        const menu = parsed;
+        check('unknown tags are dropped, known ones kept',
+            menu.options[2].diet?.join(',') === 'vegetarian,gluten_free');
+        check('no block at all is a menu that is off',
+            JSON.stringify(parseMenu(undefined)) === JSON.stringify({ enabled: false, options: [] }));
+        check('a dish without a name is refused',
+            typeof parseMenu({ enabled: true, options: [{ id: 'x', label: ' ' }] }) === 'string');
+        check('two dishes with one id are refused',
+            typeof parseMenu({ options: [{ id: 'a', label: 'A' }, { id: 'a', label: 'B' }] }) === 'string');
+        check('an id with spaces or capitals is refused',
+            typeof parseMenu({ options: [{ id: 'Rind Filet', label: 'A' }] }) === 'string');
+        check('nine dishes are one too many',
+            typeof parseMenu({ options: Array.from({ length: 9 }, (_, i) => ({ id: `d${i}`, label: `D${i}` })) }) === 'string');
+        check('a menu with no dishes is not active, even switched on', !menuActive({ enabled: true, options: [] }));
+        check('a menu switched off is not active, whatever it lists', !menuActive({ ...menu, enabled: false }));
+        check('ids come from names, umlauts spelled out',
+            slugFor('Käsespätzle mit Röstzwiebeln') === 'kaesespaetzle-mit-roestzwiebeln', slugFor('Käsespätzle mit Röstzwiebeln'));
+        check('a clash gets a number', slugFor('Lachs', ['lachs']) === 'lachs-2');
+        check('a name that leaves nothing is still an id', slugFor('???') === 'gericht');
+
+        const open: DietaryEntry = { name: 'Ada' };
+        check('no answer is open', mealCode(open, menu) === null && mealMissing(open, menu));
+        check('a dish is the answer',
+            mealCode({ name: 'Ada', meal: 'lachs' }, menu) === 'lachs' && mealLabel({ meal: 'lachs' }, menu) === 'Lachsfilet');
+        check('a dish no longer on the menu is open again', mealMissing({ meal: 'ente' }, menu));
+        check('a dish is nothing while the menu is off', mealCode({ meal: 'lachs' }, { ...menu, enabled: false }) === null);
+        check('and nobody is missing anything while it is off', !mealMissing({}, { ...menu, enabled: false }));
+        check('the kids plate answers the question',
+            mealCode({ kids_meal: true }, menu) === 'KID' && !mealMissing({ kids_meal: true }, menu));
+        check('not eating answers it too, and wins over a dish', mealCode({ no_meal: true, meal: 'lachs' }, menu) === 'NOM');
+
+        const chose = setMeal({ name: 'Bo', kids_meal: true, vegan: true }, 'lachs');
+        check('choosing a dish clears the kids plate and keeps the restriction',
+            chose.meal === 'lachs' && !chose.kids_meal && chose.vegan === true);
+        const kid = setMeal(chose, 'KID');
+        check('choosing the kids plate clears the dish and keeps the restriction',
+            kid.meal === null && kid.kids_meal === true && kid.vegan === true);
+        const nom = setMeal(kid, 'NOM');
+        check('not eating clears everything', nom.no_meal === true && !nom.kids_meal && nom.meal === null && !nom.vegan);
+        check('a restriction ticked afterwards turns not eating off', !toggleRestriction(nom, 'GF').no_meal);
+        check('toggling the kids plate on clears the dish', toggleRestriction({ meal: 'lachs' }, 'KID').meal === null);
+        check('a dish is part of the answer\'s signature',
+            signature([{ name: 'A', meal: 'lachs' }]) !== signature([{ name: 'A', meal: 'rind' }]));
+        check('a dish makes an entry non-empty', !isEmptyEntry({ meal: 'lachs' }));
+        check('the answer in words puts the plate first',
+            answerParts({ meal: 'lachs', gluten_free: true }, menu).join(' · ') === 'Lachsfilet · Glutenfrei',
+            answerParts({ meal: 'lachs', gluten_free: true }, menu).join(' · '));
+        check('the kids plate is said once',
+            answerParts({ kids_meal: true, nut_allergy: true }, menu).join(' · ') === 'Kindermenü · Nussallergie');
+        check('entriesToStore carries the dish', entriesToStore([{ entry: { meal: 'lachs' }, name: 'A' }])[0].meal === 'lachs');
+
+        /* what a request may carry */
+        const ok = sanitiseEntries([{ name: 'Ada', meal: 'lachs', vegan: 'yes' }], menu);
+        check('a request is typed on the way in', Array.isArray(ok) && ok[0].vegan === false && ok[0].meal === 'lachs');
+        check('a dish not on the menu is refused while the menu is on',
+            sanitiseEntries([{ name: 'Ada', meal: 'ente' }], menu) === 'Ungültige Menüwahl');
+        const off = sanitiseEntries([{ name: 'Ada', meal: 'ente' }], { ...menu, enabled: false });
+        check('and kept as is while it is off', Array.isArray(off) && off[0].meal === 'ente');
+        const absent = sanitiseEntries([{ name: 'Ada' }], menu);
+        check('a dish not mentioned stays unmentioned', Array.isArray(absent) && !('meal' in absent[0]));
+        const contradictory = sanitiseEntries([{ name: 'Ada', no_meal: true, meal: 'lachs', vegan: true }], menu);
+        check('not eating wins at the boundary too',
+            Array.isArray(contradictory) && contradictory[0].meal === null && contradictory[0].vegan === false);
+        const carried = carryMeals(
+            [{ name: 'Ada' }, { name: 'Bo', meal: null }, { name: 'Cy', meal: 'rind' }],
+            [{ name: 'Ada', meal: 'lachs' }, { name: 'Bo', meal: 'lachs' }],
+        );
+        check('an unmentioned dish is carried over from the last save', carried[0].meal === 'lachs');
+        check('an explicit null is not', carried[1].meal === null);
+        check('a dish mentioned is kept', carried[2].meal === 'rind');
+        check('with nothing before, unmentioned becomes null', carryMeals([{ name: 'Di' }], null)[0].meal === null);
+
+        /* the sheet */
+        const seatedWithMeals = [
+            person('Ada', ['GF'], { meal: 'lachs' }),
+            person('Bo', [], { meal: 'rind' }),
+            person('Cy', [], { meal: 'rind' }),
+            person('Di', ['KID', 'NUT'], { meal: null }),
+            person('Ed', ['NOM']),
+            person('Fay', []),
+            person('Gus', [], { meal: 'ente' }),
+        ];
+        const mt = mealTally(seatedWithMeals, menu);
+        check('plates are counted per dish', mt.dishes.rind === 2 && mt.dishes.lachs === 1 && !mt.dishes.risotto);
+        check('the kids plate and not eating are their own numbers', mt.KID === 1 && mt.NOM === 1);
+        check('no dish, or a dish no longer offered, is open', mt.open === 2, String(mt.open));
+        check('the parts add up to the headcount', 2 + 1 + mt.KID + mt.NOM + mt.open === mt.total && mt.total === 7);
+        check('plates are everyone but the ones not eating', mt.plates === 6);
+        const mparts = mealTallyParts(tally(seatedWithMeals), mt, menu, 8);
+        check('the line leads with the chairs, then the dishes in menu order',
+            mparts.slice(0, 3).join(' · ') === '7 besetzt von 8 · 2 Rinderfilet · 1 Lachsfilet', mparts.join(' · '));
+        check('then the kids plate and not eating, then the restrictions',
+            mparts.slice(3, 7).join(' · ') === '1 Kindermenü · 1 isst nicht mit · 1 glutenfrei · 1 nussallergie', mparts.join(' · '));
+        check('and ends with the open ones where the chicken used to be',
+            mparts[mparts.length - 1] === '2 ohne Wahl', mparts[mparts.length - 1]);
+        check('a dish nobody chose is left out', !mparts.some(p => p.includes('Pilzrisotto')));
+        const mchips = mealTallyChips(tally(seatedWithMeals), mt, menu);
+        check('the short tally names dishes, since they have no code',
+            mchips[0].label === 'Rinderfilet' && mchips[0].count === 2 && mchips[0].code === null);
+        check('and ends with the open bucket',
+            mchips[mchips.length - 1].label === 'ohne Wahl' && mchips[mchips.length - 1].count === 2);
+        check('the plate in words, from the sheet side',
+            mealLabelFor(seatedWithMeals[3], menu) === 'Kindermenü' && mealLabelFor(seatedWithMeals[5], menu) === null);
+
+        const withMenu: SeatingExportData = { ...data, menu, tables: [exTable(8, seatedWithMeals)] };
+        const mopts: ExportOptions = { ...DEFAULT_EXPORT_OPTIONS, format: 'csv' };
+        check('meals are on by default, and only with a menu to show',
+            mealsOn(withMenu, mopts) && !mealsOn(data, mopts) && !mealsOn(withMenu, { meals: false }));
+        const mheaders = csvHeaders(mopts, menu);
+        check('the spreadsheet gets one Hauptgang column, after the reply',
+            mheaders[mheaders.indexOf('Rückmeldung') + 1] === 'Hauptgang');
+        check('and none without a menu',
+            !csvHeaders(mopts).includes('Hauptgang') && !csvHeaders(mopts, { ...menu, enabled: false }).includes('Hauptgang'));
+        const mrows = csvRows(withMenu, mopts);
+        const col = mheaders.indexOf('Hauptgang');
+        check('every row has a cell for every column, dish included', mrows.every(r => r.length === mheaders.length));
+        check('the dish is named, not coded', mrows.find(r => r[2] === 'Ada')?.[col] === 'Lachsfilet');
+        check('the kids plate and not eating are said in the same column',
+            mrows.find(r => r[2] === 'Di')?.[col] === 'Kindermenü' && mrows.find(r => r[2] === 'Ed')?.[col] === 'Isst nicht mit');
+        check('an open plate says so',
+            mrows.find(r => r[2] === 'Fay')?.[col] === 'offen' && mrows.find(r => r[2] === 'Gus')?.[col] === 'offen');
+        const vrows = csvRows(
+            { ...withMenu, vendors: [vendor(1, 'Ivy Lund', 'DJ', [], true, 'rind'), vendor(2, 'Wes Okafor', 'Photo')] },
+            { ...mopts, vendors: true, unseated: false },
+        );
+        const vcol = csvHeaders({ ...mopts, vendors: true }, menu).indexOf('Hauptgang');
+        check('a vendor\'s dish is named, and none is blank rather than open',
+            vrows.find(r => r[2] === 'Ivy Lund')?.[vcol] === 'Rinderfilet' && vrows.find(r => r[2] === 'Wes Okafor')?.[vcol] === '');
+    }
 
     /* fitting on one page */
     check('a sheet that already fits is left alone',

@@ -1,4 +1,5 @@
 import { getSiteConfig } from '@/lib/config';
+import { menuOf } from '@/lib/dietary';
 import RSVPForm from '@/components/RSVPForm';
 
 // Read live config at request time (admin edits to the RSVP deadline, room block,
@@ -55,6 +56,7 @@ export default function RSVPPage() {
                         coupleNames={`${config.brideName} & ${config.groomName}`}
                         roomBlockHotel={config.roomBlockHotel || ''}
                         roomBlockUrl={config.roomBlockUrl || ''}
+                        menu={menuOf(config)}
                     />
 
                     {contactEmail && (

@@ -4,6 +4,7 @@ import { ADMIN_COOKIE, verifyAdminToken } from '@/lib/auth';
 import { DEFAULT_SITE_CONFIG, getSiteConfig, updateSiteConfig, type SiteConfig } from '@/lib/config';
 import { isDemoMode } from '@/lib/demo';
 import { publicScheduleEvents } from '@/lib/schedule';
+import { parseMenu } from '@/lib/dietary';
 
 const HEX = /^#[0-9a-fA-F]{3,8}$/;
 const COLOR_KEYS = ['accentColor', 'accentLightColor', 'accentDarkColor'] as const;
@@ -54,6 +55,15 @@ export async function POST(request: Request) {
             if (value !== undefined && value !== '' && (typeof value !== 'string' || !HEX.test(value))) {
                 return NextResponse.json({ error: `${key} muss ein Hex-Farbwert wie #D4AF37 sein` }, { status: 400 });
             }
+        }
+
+        // The menu is validated for the same reason the colours are: the RSVP
+        // form renders it to every guest, and a dish without an id is an answer
+        // nobody can store.
+        if (updates.rsvpMenu !== undefined) {
+            const menu = parseMenu(updates.rsvpMenu);
+            if (typeof menu === 'string') return NextResponse.json({ error: menu }, { status: 400 });
+            updates.rsvpMenu = menu;
         }
 
         const newConfig = await updateSiteConfig((current) => {

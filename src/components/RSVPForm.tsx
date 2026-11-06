@@ -2,24 +2,16 @@
 
 import { useState, useEffect } from 'react';
 import { DEFAULT_ROOM_BLOCK_MESSAGE } from '@/lib/roomBlock';
+import {
+    MENU_TAG_LABELS, answerParts, mealCode, mealMissing, menuActive, menuOf, menuTitle, setMeal,
+    type DietaryEntry, type RsvpMenu,
+} from '@/lib/dietary';
 
 interface PartyMember {
     name: string | null;
     // Whether this person is coming. Recorded per person by the RSVP form —
     // a party of three where one declines seats two, not three.
     attending?: boolean | null;
-}
-
-interface DietaryEntry {
-    name?: string | null;
-    vegetarian?: boolean;
-    vegan?: boolean;
-    gluten_free?: boolean;
-    nut_allergy?: boolean;
-    other?: boolean;
-    kids_meal?: boolean;
-    no_meal?: boolean;
-    other_text?: string;
 }
 
 interface VerifiedGuest {
@@ -46,6 +38,7 @@ interface RsvpPageConfig {
     roomBlockHotel?: string;
     roomBlockUrl?: string;
     roomBlockMessage?: string;
+    rsvpMenu?: unknown;
 }
 
 // Attendance is a tri-state on purpose: null means "not answered yet", which is
@@ -65,6 +58,24 @@ interface MemberCard {
     kids_meal: boolean;
     no_meal: boolean;
     other_text: string;
+    /** The dish they chose, by id. Null until they do; kids' meal and not eating live in the two flags. */
+    meal: string | null;
+}
+
+/** The card as the stored answer, which is what every rule and every label reads. */
+function entryOf(card: MemberCard): DietaryEntry {
+    return {
+        name: card.name,
+        vegetarian: card.vegetarian,
+        vegan: card.vegan,
+        gluten_free: card.gluten_free,
+        nut_allergy: card.nut_allergy,
+        kids_meal: card.kids_meal,
+        no_meal: card.no_meal,
+        other: card.other,
+        other_text: card.other ? card.other_text : '',
+        meal: card.meal,
+    };
 }
 
 function buildCards(primaryName: string, partyMembers: PartyMember[], existingDietary: DietaryEntry[], hasExistingRsvp: boolean): MemberCard[] {
@@ -102,6 +113,7 @@ function buildCards(primaryName: string, partyMembers: PartyMember[], existingDi
             no_meal: existing?.no_meal ?? false,
             other: existing?.other ?? false,
             other_text: existing?.other_text ?? '',
+            meal: typeof existing?.meal === 'string' ? existing.meal : null,
         };
     });
 }
@@ -111,6 +123,8 @@ interface RSVPFormProps {
     coupleNames?: string;
     roomBlockHotel?: string;
     roomBlockUrl?: string;
+    /** The dishes to choose from, read live by the page. Off or empty: nothing is asked. */
+    menu?: RsvpMenu;
 }
 
 // Render the editable message, expanding the protected tokens. The {book} link's
@@ -129,7 +143,7 @@ function renderRoomBlockMessage(message: string, names: string, hotel: string, b
     });
 }
 
-export default function RSVPForm({ coupleNames = '', roomBlockHotel = '', roomBlockUrl = '' }: RSVPFormProps = {}) {
+export default function RSVPForm({ coupleNames = '', roomBlockHotel = '', roomBlockUrl = '', menu: menuProp }: RSVPFormProps = {}) {
     const [step, setStep] = useState<'verification' | 'form'>('verification');
     const [verifiedGuest, setVerifiedGuest] = useState<VerifiedGuest | null>(null);
     // Who typed their name in — may be a plus-one/party member rather than the primary guest.
@@ -220,6 +234,31 @@ export default function RSVPForm({ coupleNames = '', roomBlockHotel = '', roomBl
         setCards(prev => prev.map((c, i) => i === index ? { ...c, ...patch } : c));
     };
 
+    // The page reads the menu at request time and hands it down; the fetched
+    // config is the fallback for a form mounted without it.
+    const menu: RsvpMenu = menuProp ?? menuOf(config);
+    const askMeal = menuActive(menu);
+
+    /** Answer one person's plate question — a dish, the kids' plate, not eating, or nothing. */
+    const chooseMeal = (index: number, choice: string | null) => {
+        setCards(prev => prev.map((c, i) => {
+            if (i !== index) return c;
+            const e = setMeal(entryOf(c), choice);
+            return {
+                ...c,
+                vegetarian: !!e.vegetarian,
+                vegan: !!e.vegan,
+                gluten_free: !!e.gluten_free,
+                nut_allergy: !!e.nut_allergy,
+                other: !!e.other,
+                other_text: e.other_text ?? '',
+                kids_meal: !!e.kids_meal,
+                no_meal: !!e.no_meal,
+                meal: e.meal ?? null,
+            };
+        }));
+    };
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
@@ -245,6 +284,11 @@ export default function RSVPForm({ coupleNames = '', roomBlockHotel = '', roomBl
                     setStatus('error');
                     return;
                 }
+                if (cards[i].attendance === 'yes' && mealMissing(entryOf(cards[i]), menu)) {
+                    setErrorMessage(`Bitte wählt für ${cards[i].name || `Gast ${i + 1}`} ein Gericht.`);
+                    setStatus('error');
+                    return;
+                }
             }
         }
 
@@ -260,17 +304,13 @@ export default function RSVPForm({ coupleNames = '', roomBlockHotel = '', roomBl
             name: c.name || null,
             attending: formData.attending === 'yes' ? c.attendance === 'yes' : false,
         }));
-        const dietaryRestrictions = attendingCards.map(c => ({
-            name: c.name,
-            vegetarian: c.vegetarian,
-            vegan: c.vegan,
-            gluten_free: c.gluten_free,
-            nut_allergy: c.nut_allergy,
-            kids_meal: c.kids_meal,
-            no_meal: c.no_meal,
-            other: c.other,
-            other_text: c.other ? c.other_text : '',
-        }));
+        // With the menu off the form never showed a dish, so it says nothing
+        // about one: the server keeps whatever was stored (`carryMeals`).
+        const dietaryRestrictions = attendingCards.map(c => {
+            const entry = entryOf(c);
+            if (!askMeal) delete entry.meal;
+            return entry;
+        });
 
         try {
             const isUpdate = existingRsvp !== null;
@@ -350,14 +390,23 @@ export default function RSVPForm({ coupleNames = '', roomBlockHotel = '', roomBl
                     {isAttending ? (
                         <>
                             <ul className="space-y-2">
-                                {attendees.map((c, i) => (
-                                    <li key={i} className="flex items-center gap-2 text-sm text-gray-800">
-                                        <svg className="h-4 w-4 text-green-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7" />
-                                        </svg>
-                                        <span>{c.name}</span>
-                                    </li>
-                                ))}
+                                {attendees.map((c, i) => {
+                                    // The plate and the restrictions, so a wrong click shows here.
+                                    const parts = answerParts(entryOf(c), menu);
+                                    return (
+                                        <li key={i} className="flex items-start gap-2 text-sm text-gray-800">
+                                            <svg className="h-4 w-4 mt-0.5 text-green-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7" />
+                                            </svg>
+                                            <span>
+                                                {c.name}
+                                                {parts.length > 0 && (
+                                                    <span className="block text-xs text-gray-500">{parts.join(' · ')}</span>
+                                                )}
+                                            </span>
+                                        </li>
+                                    );
+                                })}
                             </ul>
                             <p className="mt-3 text-xs text-gray-400">
                                 {attendees.length} {attendees.length === 1 ? 'Gast freut' : 'Gäste freuen'} sich auf die Feier ♥
@@ -465,6 +514,11 @@ export default function RSVPForm({ coupleNames = '', roomBlockHotel = '', roomBl
     const unansweredCount = formData.attending === 'yes'
         ? cards.filter(c => c.attendance === null).length
         : 0;
+    // Attending people whose plate is still to be chosen. Zero while the menu is
+    // off — then nobody is missing anything.
+    const missingMeals = formData.attending === 'yes'
+        ? cards.filter(c => c.attendance === 'yes' && mealMissing(entryOf(c), menu)).length
+        : 0;
 
     return (
         <form onSubmit={handleSubmit} className="space-y-6 bg-white p-8 rounded-3xl shadow-xl border-t-4 border-accent">
@@ -490,6 +544,14 @@ export default function RSVPForm({ coupleNames = '', roomBlockHotel = '', roomBl
                             <p className={`text-sm mt-2 font-semibold ${existingRsvp ? 'text-blue-800' : 'text-green-800'}`}>
                                 Bitte gebt für alle Personen an, ob sie kommen oder nicht – für jede
                                 Person muss eine Auswahl getroffen sein, bevor ihr eure Rückmeldung senden könnt.
+                            </p>
+                        )}
+                        {/* A household that answered before the menu existed is asked
+                            the one new thing, in so many words. */}
+                        {formData.attending === 'yes' && askMeal && (
+                            <p className={`text-sm mt-2 font-semibold ${existingRsvp ? 'text-blue-800' : 'text-green-800'}`}>
+                                {existingRsvp && missingMeals > 0 ? 'Neu seit eurer Rückmeldung: ' : ''}
+                                Bitte wählt für jede Person, die kommt, ein Gericht.
                             </p>
                         )}
                     </div>
@@ -530,16 +592,22 @@ export default function RSVPForm({ coupleNames = '', roomBlockHotel = '', roomBl
             {/* Per-member cards */}
             {formData.attending === 'yes' && cards.length > 0 && (
                 <div>
-                    <h3 className="text-sm font-medium text-gray-700 mb-3">Eure Gruppe</h3>
-                    <div className="space-y-3">
+                    <h3 className="text-sm font-medium text-gray-700 mb-1">Eure Gruppe</h3>
+                    {askMeal && menu.hint && (
+                        <p className="text-sm text-gray-500 mb-3">{menu.hint}</p>
+                    )}
+                    <div className={`space-y-3 ${askMeal && menu.hint ? '' : 'mt-2'}`}>
                         {cards.map((card, i) => {
                             const isFirst = i === 0;
+                            // The plate question's answer, or null while it is open.
+                            const choice = mealCode(entryOf(card), menu);
+                            const mealOpen = card.attendance === 'yes' && askMeal && choice === null;
                             return (
                                 <div
                                     key={i}
                                     className={`border rounded-2xl p-4 transition-colors ${
                                         card.attendance === 'yes'
-                                            ? 'bg-white border-gray-200'
+                                            ? mealOpen ? 'bg-amber-50 border-amber-300' : 'bg-white border-gray-200'
                                             : card.attendance === 'no'
                                                 ? 'bg-gray-50 border-gray-100 opacity-60'
                                                 : 'bg-amber-50 border-amber-300'
@@ -594,6 +662,78 @@ export default function RSVPForm({ coupleNames = '', roomBlockHotel = '', roomBl
                                         )}
                                     </div>
 
+                                    {/* The plate: one dish, the kids' plate, or no plate. Only
+                                        while the couple has a menu to offer; the two plate codes
+                                        otherwise stay among the checkboxes below, as they always were. */}
+                                    {card.attendance === 'yes' && askMeal && (
+                                        <div className="mb-3">
+                                            <p className="text-xs text-gray-500 mb-2">
+                                                {menuTitle(menu)} <span className="text-red-500">*</span>
+                                            </p>
+                                            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3" role="radiogroup" aria-label={`${menuTitle(menu)} für ${card.name || `Gast ${i + 1}`}`}>
+                                                {menu.options.map(option => {
+                                                    const on = choice === option.id;
+                                                    return (
+                                                        <label
+                                                            key={option.id}
+                                                            className={`flex items-start gap-2.5 rounded-xl border px-3 py-2.5 cursor-pointer transition-colors ${
+                                                                on ? 'border-accent bg-accent/5 ring-1 ring-accent' : 'border-gray-200 bg-white hover:border-gray-300'
+                                                            }`}
+                                                        >
+                                                            <input
+                                                                type="radio"
+                                                                name={`meal-${i}`}
+                                                                value={option.id}
+                                                                checked={on}
+                                                                onChange={() => chooseMeal(i, option.id)}
+                                                                className="mt-0.5 h-4 w-4 border-gray-300 text-accent focus:ring-accent"
+                                                            />
+                                                            <span className="min-w-0">
+                                                                <span className="block text-sm font-medium text-gray-800">{option.label}</span>
+                                                                {option.description && (
+                                                                    <span className="block text-xs text-gray-500">{option.description}</span>
+                                                                )}
+                                                                {option.diet && option.diet.length > 0 && (
+                                                                    <span className="mt-1 flex flex-wrap gap-1">
+                                                                        {option.diet.map(tag => (
+                                                                            <span key={tag} className="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-gray-100 text-gray-600">
+                                                                                {MENU_TAG_LABELS[tag]}
+                                                                            </span>
+                                                                        ))}
+                                                                    </span>
+                                                                )}
+                                                            </span>
+                                                        </label>
+                                                    );
+                                                })}
+                                            </div>
+                                            <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1.5">
+                                                <label className="flex items-center gap-2 cursor-pointer">
+                                                    <input type="radio" name={`meal-${i}`} value="KID" checked={choice === 'KID'} onChange={() => chooseMeal(i, 'KID')} className="h-4 w-4 border-gray-300 text-accent focus:ring-accent" />
+                                                    <span className="text-sm text-gray-700">Kindermenü</span>
+                                                </label>
+                                                <label className="flex items-center gap-2 cursor-pointer">
+                                                    <input type="radio" name={`meal-${i}`} value="NOM" checked={choice === 'NOM'} onChange={() => chooseMeal(i, 'NOM')} className="h-4 w-4 border-gray-300 text-accent focus:ring-accent" />
+                                                    <span className="text-sm text-gray-700">Isst nicht mit</span>
+                                                </label>
+                                            </div>
+                                            {choice === 'KID' && (
+                                                <p className="mt-2 text-xs text-gray-500">
+                                                    Ein eigener Teller für Kinder. Hinweise (zum Beispiel eine Allergie) bitte trotzdem ankreuzen.
+                                                </p>
+                                            )}
+                                            {choice === 'NOM' && (
+                                                <p className="mt-2 text-xs text-gray-500">
+                                                    Die Person bekommt trotzdem einen Platz – wir bestellen nur
+                                                    kein Essen für sie. Gedacht für ein Baby, dessen Nahrung ihr mitbringt.
+                                                </p>
+                                            )}
+                                            {choice === null && (
+                                                <p className="mt-2 text-xs font-medium text-amber-700">Bitte wählt ein Gericht.</p>
+                                            )}
+                                        </div>
+                                    )}
+
                                     {/* Dietary checkboxes — only when attending */}
                                     {card.attendance === 'yes' && (
                                         <div>
@@ -605,8 +745,10 @@ export default function RSVPForm({ coupleNames = '', roomBlockHotel = '', roomBl
                                                     { field: 'gluten_free', label: 'Glutenfrei' },
                                                     { field: 'nut_allergy', label: 'Nussallergie' },
                                                     { field: 'other', label: 'Sonstiges' },
-                                                    { field: 'kids_meal', label: 'Kindermenü' },
-                                                    { field: 'no_meal', label: 'Isst nicht mit' },
+                                                    ...(askMeal ? [] : [
+                                                        { field: 'kids_meal', label: 'Kindermenü' },
+                                                        { field: 'no_meal', label: 'Isst nicht mit' },
+                                                    ]),
                                                 ] as { field: keyof Pick<MemberCard, 'vegetarian' | 'vegan' | 'gluten_free' | 'nut_allergy' | 'other' | 'kids_meal' | 'no_meal'>; label: string }[]).map(({ field, label }) => (
                                                     <label key={field} className={`flex items-center gap-2 ${
                                                         card.no_meal && field !== 'no_meal'
@@ -641,7 +783,7 @@ export default function RSVPForm({ coupleNames = '', roomBlockHotel = '', roomBl
                                                     </label>
                                                 ))}
                                             </div>
-                                            {card.no_meal && (
+                                            {card.no_meal && !askMeal && (
                                                 <p className="mt-2 text-xs text-gray-500">
                                                     Die Person bekommt trotzdem einen Platz – wir bestellen nur
                                                     kein Essen für sie. Gedacht für ein Baby, dessen Nahrung ihr mitbringt.
@@ -690,6 +832,13 @@ export default function RSVPForm({ coupleNames = '', roomBlockHotel = '', roomBl
                         : `Für ${unansweredCount} Personen fehlt noch die Angabe, ob sie kommen oder nicht.`}
                 </p>
             )}
+            {missingMeals > 0 && (
+                <p className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-2xl p-3">
+                    {missingMeals === 1
+                        ? `Für 1 Person fehlt noch die Wahl: ${menuTitle(menu)}.`
+                        : `Für ${missingMeals} Personen fehlt noch die Wahl: ${menuTitle(menu)}.`}
+                </p>
+            )}
 
             <div className="flex gap-4">
                 <button
@@ -701,7 +850,7 @@ export default function RSVPForm({ coupleNames = '', roomBlockHotel = '', roomBl
                 </button>
                 <button
                     type="submit"
-                    disabled={status === 'submitting' || unansweredCount > 0}
+                    disabled={status === 'submitting' || unansweredCount > 0 || missingMeals > 0}
                     className="flex-1 flex justify-center py-3 px-6 border border-transparent rounded-full shadow-md text-base font-medium text-white bg-accent hover:bg-accent-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent disabled:opacity-50 transition-all transform hover:-translate-y-0.5"
                 >
                     {status === 'submitting'

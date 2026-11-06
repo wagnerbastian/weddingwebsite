@@ -49,7 +49,7 @@ a honeymoon fund, and an RSVP form that recognises them by name.
 **For you** — an admin panel covering:
 
 - **RSVPs and guests** — import a CSV, track a hundred-odd people and their
-  parties, dietary notes, addresses, and export a mailing list; plus the two of
+  parties, dietary notes and menu choices, addresses, and export a mailing list; plus the two of
   you (seatable and fed, never counted as invited) and a **vendors** list for the
   photographer, the DJ and anyone else who needs a plate
 - **Seating** — draw the room, drop tables in it, drag guests into seats — or
@@ -168,9 +168,22 @@ has no drag-and-drop). Then **Export**, for the people who need it on paper:
 Guests answer with five restrictions plus **Kids' Meal** and **Not Eating** — the
 latter being a seat with no plate against it, for the baby whose food comes with
 their mother. So the kitchen total counts *plates*, which stops being the
-headcount the moment anyone is not eating. A plate with no answer on it prints as
-**chicken**: the RSVP form has never asked for an entrée, so that is the whole of
-what can honestly be said.
+headcount the moment anyone is not eating.
+
+**The menu.** Under *Settings → Rückmeldungen → Menüwahl* you name the dishes
+(up to eight, each with a line of description and tags such as *vegetarisch*).
+Switch it on and every attending person has to pick one on the RSVP form — a
+dish, the kids' plate, or *not eating* — before the form will send; a household
+that answered before the menu existed is asked for just that when they open the
+form again. The admin shows the dish per person, a card with the count per dish
+and how many are still open, and a **Menü fehlt** filter on the guest list that,
+with *CSV exportieren*, is your follow-up list. The kitchen sheet then has two
+rows of tiles, the dishes and the restrictions, and the spreadsheet a
+*Hauptgang* column a pivot table turns into the caterer's order. Renaming a dish
+is safe (answers store its id); deleting one that has been chosen asks first and
+makes those people *open* again. With the menu off nothing is asked, and a plate
+with no answer on it prints as **chicken**: that is the whole of what can
+honestly be said without asking.
 
 Full details in
 [Seating and the Export](https://github.com/Soccerbeats/weddingwebsite/wiki/Seating-and-the-Export).

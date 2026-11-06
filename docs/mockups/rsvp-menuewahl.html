@@ -1,0 +1,873 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<!-- Klickbares Mockup zum Konzept docs/rsvp-menuewahl-konzept.md. Direkt im Browser zu öffnen; keine Abhängigkeiten außer den Google-Schriften (mit Fallback). -->
+<title>Menüwahl in der Rückmeldung</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600&family=Geist:wght@400;500;600&display=swap">
+<style>
+/* Layout: a quiet paper-coloured frame holds four screens of the real app, switched by
+   tabs. Each screen reproduces the site's own look (white rounded cards, gold accent,
+   serif headings) so the mockup reads as the product. One light theme on purpose: the
+   site it mocks is light-only, and a dark rendering would show something that will
+   never exist. */
+:root {
+  --bg: #f3f1ea;
+  --screen: #ffffff;
+  --fg: #1b1b19;
+  --muted: #6d6c66;
+  --faint: #a19f97;
+  --line: #e4e1d8;
+  --soft: #f8f7f3;
+  --accent: #D4AF37;
+  --accent-dark: #B8941F;
+  --accent-soft: #fbf5e3;
+  --warn-bg: #fff8e6;
+  --warn-line: #f1c76a;
+  --warn-fg: #8a5d00;
+  --ok-bg: #ecf6ee;
+  --ok-line: #bfe0c6;
+  --ok-fg: #2d6a3b;
+  --info-bg: #edf3fb;
+  --info-line: #bfd3ee;
+  --info-fg: #2a4b78;
+  --danger: #b23b35;
+  --danger-bg: #fdecea;
+  --ink: #1b1b19;
+  --serif: "Playfair Display", Georgia, "Times New Roman", serif;
+  --sans: "Geist", system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  color-scheme: light;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font: 15px/1.5 var(--sans);
+  padding-block: 0 56px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  -webkit-font-smoothing: antialiased;
+}
+button, input, select, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 2px solid var(--accent-dark); outline-offset: 2px; }
+.wrap { max-width: 1040px; margin: 0 auto; }
+
+/* ---------- mockup chrome ---------- */
+.mock-head { padding-block: 36px 20px; display: grid; gap: 8px; }
+.eyebrow { font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+.mock-head h1 { font: 600 30px/1.15 var(--serif); margin: 0; text-wrap: balance; }
+.mock-head p { margin: 0; max-width: 62ch; color: var(--muted); }
+.views { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 18px; }
+.views button {
+  border: 1px solid var(--line); background: var(--screen); border-radius: 999px;
+  padding: 8px 14px; font-size: 13px; font-weight: 500; color: var(--muted);
+}
+.views button[aria-selected="true"] { background: var(--ink); border-color: var(--ink); color: #fff; }
+.views button .k { display: inline-block; min-width: 18px; margin-right: 6px; font-size: 11px; color: var(--faint); }
+.views button[aria-selected="true"] .k { color: #cfc9b5; }
+.intro { display: grid; gap: 6px; margin-bottom: 14px; }
+.intro h2 { font: 600 20px/1.2 var(--serif); margin: 0; }
+.intro p { margin: 0; color: var(--muted); max-width: 70ch; }
+.new {
+  display: inline-block; vertical-align: 2px; margin-left: 6px; padding: 1px 7px; border-radius: 999px;
+  background: var(--accent); color: #fff; font-size: 10px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase;
+}
+.scenario { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 14px; font-size: 13px; color: var(--muted); }
+.scenario button { border: 1px solid var(--line); background: var(--screen); border-radius: 999px; padding: 5px 12px; font-size: 13px; }
+.scenario button[aria-pressed="true"] { border-color: var(--accent-dark); background: var(--accent-soft); color: var(--accent-dark); font-weight: 600; }
+
+/* the app screen */
+.screen { background: var(--screen); border: 1px solid var(--line); border-radius: 18px; overflow: hidden; }
+.screen-bar { display: flex; align-items: center; gap: 8px; padding: 10px 14px; border-bottom: 1px solid var(--line); background: var(--soft); font-size: 12px; color: var(--muted); }
+.screen-bar .dots { display: inline-flex; gap: 5px; }
+.screen-bar .dots i { width: 9px; height: 9px; border-radius: 50%; background: var(--line); }
+.screen-bar .url { margin-left: 6px; padding: 3px 10px; background: var(--screen); border: 1px solid var(--line); border-radius: 999px; font-variant-numeric: tabular-nums; }
+.screen-body { padding-block: 28px 32px; padding-left: max(16px, 3vw); padding-right: max(16px, 3vw); }
+
+/* ---------- public page ---------- */
+.public { max-width: 680px; margin: 0 auto; }
+.public .title { text-align: center; margin-bottom: 26px; }
+.public .title h1 { font: 400 36px/1.1 var(--serif); margin: 0 0 10px; letter-spacing: -.01em; }
+.public .title p { margin: 0; color: var(--muted); font-size: 16px; }
+.card-form { background: #fff; border: 1px solid var(--line); border-top: 4px solid var(--accent); border-radius: 22px; padding: 24px; box-shadow: 0 18px 40px -24px rgba(27,27,25,.28); display: grid; gap: 20px; }
+.banner { display: flex; gap: 10px; padding: 14px; border-radius: 14px; border: 1px solid; font-size: 14px; }
+.banner.green { background: var(--ok-bg); border-color: var(--ok-line); color: var(--ok-fg); }
+.banner.blue { background: var(--info-bg); border-color: var(--info-line); color: var(--info-fg); }
+.banner strong { display: block; }
+.banner .ico { flex: none; width: 18px; height: 18px; margin-top: 2px; }
+.banner p { margin: 4px 0 0; }
+.grid2 { display: grid; gap: 14px; grid-template-columns: 1fr 1fr; }
+.grid2 .full { grid-column: 1 / -1; }
+.field label, .lbl { display: block; font-size: 13px; font-weight: 500; color: #3f3e3a; margin: 0 0 5px 4px; }
+.in, .sel, .ta {
+  width: 100%; padding: 11px 14px; border: 1px solid #d6d3ca; border-radius: 14px; background: #fff; font-size: 14px;
+}
+.ta { min-height: 76px; resize: vertical; }
+.sel { appearance: none; background: #fff url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'><path d='M1 1l5 5 5-5' fill='none' stroke='%236d6c66' stroke-width='1.6'/></svg>") no-repeat right 14px center; padding-right: 36px; }
+.group-title { font-size: 13px; font-weight: 500; color: #3f3e3a; margin: 0 0 4px 4px; }
+.group-hint { margin: 0 0 10px 4px; font-size: 13px; color: var(--muted); }
+.cards { display: grid; gap: 12px; }
+.pcard { border: 1px solid var(--line); border-radius: 16px; padding: 14px; background: #fff; transition: background .15s, border-color .15s; }
+.pcard.no { background: var(--soft); opacity: .6; }
+.pcard.open, .pcard.missing { background: var(--warn-bg); border-color: var(--warn-line); }
+.pcard-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.pcard-head .name { font-weight: 600; font-size: 14px; }
+.pill-ok { font-size: 11px; font-weight: 600; color: var(--ok-fg); background: #d9eedd; padding: 3px 9px; border-radius: 999px; white-space: nowrap; }
+.att { display: flex; gap: 14px; flex-wrap: wrap; white-space: nowrap; font-size: 14px; color: #4a4944; }
+.att label { display: inline-flex; align-items: center; gap: 6px; cursor: pointer; }
+.cb { width: 16px; height: 16px; accent-color: var(--accent-dark); margin: 0; }
+.block { margin-top: 14px; padding-top: 12px; border-top: 1px dashed var(--line); }
+.block-title { font-size: 12px; color: var(--muted); margin-bottom: 8px; }
+.dishes { display: grid; gap: 8px; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.dish { position: relative; display: grid; align-content: start; gap: 2px; padding: 10px 12px 10px 34px; border: 1px solid #d6d3ca; border-radius: 12px; background: #fff; cursor: pointer; min-width: 0; }
+.dish input { position: absolute; left: 12px; top: 13px; margin: 0; width: 14px; height: 14px; accent-color: var(--accent-dark); }
+.dish .d-name { font-weight: 600; font-size: 14px; line-height: 1.3; }
+.dish .d-desc { font-size: 12px; color: var(--muted); line-height: 1.35; }
+.dish .d-tags { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 3px; }
+.tag { font-size: 10px; font-weight: 600; letter-spacing: .04em; padding: 1px 7px; border-radius: 999px; background: var(--soft); border: 1px solid var(--line); color: var(--muted); }
+.dish.on { border-color: var(--accent-dark); background: var(--accent-soft); box-shadow: inset 0 0 0 1px var(--accent-dark); }
+.dishes-alt { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 10px; font-size: 13px; color: #4a4944; }
+.dishes-alt label { display: inline-flex; align-items: center; gap: 6px; cursor: pointer; }
+.dishes-alt input { margin: 0; width: 14px; height: 14px; accent-color: var(--accent-dark); }
+.note { margin: 8px 0 0; font-size: 12px; color: var(--muted); }
+.note.warn { color: var(--warn-fg); font-weight: 500; }
+.flags { display: grid; gap: 8px 12px; grid-template-columns: repeat(3, minmax(0, 1fr)); font-size: 14px; color: #3f3e3a; }
+.flags label { display: inline-flex; align-items: center; gap: 8px; cursor: pointer; }
+.flags label.off { opacity: .4; cursor: not-allowed; }
+.flags .in { margin-top: 8px; grid-column: 1 / -1; padding: 8px 12px; font-size: 13px; }
+.hintbar { margin: 0; padding: 12px 14px; border-radius: 14px; background: var(--warn-bg); border: 1px solid var(--warn-line); color: var(--warn-fg); font-size: 14px; }
+.actions { display: flex; gap: 12px; }
+.btn { border: 1px solid transparent; border-radius: 999px; padding: 12px 24px; font-size: 15px; font-weight: 500; }
+.btn.ghost { background: #fff; border-color: #d6d3ca; color: #3f3e3a; }
+.btn.gold { flex: 1; background: var(--accent); color: #fff; box-shadow: 0 8px 18px -10px rgba(184,148,31,.9); }
+.btn.gold:disabled { opacity: .5; cursor: not-allowed; box-shadow: none; }
+.btn.sm { padding: 7px 16px; font-size: 13px; }
+.receipt { text-align: center; padding: 28px 20px 24px; background: var(--soft); border: 1px solid var(--line); border-radius: 22px; }
+.receipt .check { width: 56px; height: 56px; margin: 0 auto 12px; border-radius: 50%; border: 2px solid var(--ok-fg); display: grid; place-items: center; color: var(--ok-fg); }
+.receipt h3 { margin: 0; font-size: 17px; font-weight: 600; }
+.receipt > p { margin: 6px 0 0; color: var(--muted); font-size: 14px; }
+.slip { margin: 18px auto 0; max-width: 460px; text-align: left; background: #fff; border: 1px solid var(--line); border-radius: 16px; padding: 16px; }
+.slip-head { display: flex; justify-content: space-between; align-items: center; padding-bottom: 10px; margin-bottom: 10px; border-bottom: 1px dashed var(--line); }
+.slip-head .k { font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--faint); font-weight: 600; }
+.slip-head .v { font-size: 13px; font-weight: 600; color: var(--accent-dark); }
+.slip ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.slip li { display: grid; grid-template-columns: 18px 1fr; gap: 8px; font-size: 14px; align-items: start; }
+.slip li .tick { color: var(--ok-fg); font-weight: 700; }
+.slip li .meta { color: var(--muted); font-size: 13px; }
+.slip .foot { margin: 12px 0 0; font-size: 12px; color: var(--faint); }
+
+/* ---------- admin ---------- */
+.admin { display: grid; gap: 18px; }
+.admin h2 { font-size: 19px; font-weight: 600; margin: 0; }
+.acard { background: #fff; border: 1px solid var(--line); border-radius: 14px; padding: 18px; }
+.acard h3 { margin: 0 0 4px; font-size: 15px; font-weight: 600; }
+.acard .sub { margin: 0 0 14px; font-size: 13px; color: var(--muted); }
+.afield { display: grid; gap: 4px; margin-bottom: 14px; }
+.afield label { font-size: 13px; font-weight: 500; color: #3f3e3a; }
+.afield .in { border-radius: 10px; padding: 8px 10px; font-size: 14px; }
+.afield .help { font-size: 12px; color: var(--muted); }
+.switch { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border: 1px solid var(--line); border-radius: 12px; background: var(--soft); margin-bottom: 14px; }
+.switch strong { font-size: 14px; }
+.switch .help { font-size: 12px; color: var(--muted); }
+.toggle { flex: none; width: 42px; height: 24px; border-radius: 999px; background: #cfcbbf; border: 0; position: relative; transition: background .15s; }
+.toggle::after { content: ""; position: absolute; top: 3px; left: 3px; width: 18px; height: 18px; border-radius: 50%; background: #fff; transition: left .15s; box-shadow: 0 1px 2px rgba(0,0,0,.2); }
+.toggle[aria-checked="true"] { background: var(--accent-dark); }
+.toggle[aria-checked="true"]::after { left: 21px; }
+.optlist { display: grid; gap: 8px; }
+.optlist.off { opacity: .45; pointer-events: none; }
+.opt { display: grid; grid-template-columns: 22px 1fr auto; gap: 10px; align-items: start; padding: 10px; border: 1px solid var(--line); border-radius: 12px; background: #fff; }
+.opt .grip { color: var(--faint); font-size: 16px; line-height: 1; padding-top: 8px; text-align: center; user-select: none; }
+.opt .fields { display: grid; gap: 6px; min-width: 0; }
+.opt .fields .row { display: grid; gap: 6px; grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); }
+.opt .in { border-radius: 10px; padding: 7px 10px; font-size: 13px; }
+.opt .tags { display: flex; flex-wrap: wrap; gap: 10px; font-size: 12px; color: var(--muted); }
+.opt .tags label { display: inline-flex; align-items: center; gap: 5px; cursor: pointer; }
+.opt .side { display: grid; gap: 6px; justify-items: end; }
+.count { font-size: 11px; font-weight: 600; color: var(--muted); background: var(--soft); border: 1px solid var(--line); border-radius: 999px; padding: 2px 8px; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.count.zero { color: var(--faint); }
+.link { background: none; border: 0; padding: 0; color: var(--danger); font-size: 12px; text-decoration: underline; }
+.confirm { grid-column: 1 / -1; display: flex; flex-wrap: wrap; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 10px; background: var(--warn-bg); border: 1px solid var(--warn-line); color: var(--warn-fg); font-size: 13px; }
+.confirm .btn { padding: 6px 12px; font-size: 12px; }
+.confirm .btn.danger { background: var(--danger); color: #fff; }
+.add { justify-self: start; border: 1px dashed #c9c5b8; background: #fff; border-radius: 10px; padding: 8px 14px; font-size: 13px; color: var(--muted); }
+.consequence { margin: 14px 0 0; font-size: 13px; color: var(--muted); border-left: 3px solid var(--accent); padding-left: 10px; }
+.save { display: flex; justify-content: flex-end; align-items: center; gap: 10px; font-size: 12px; color: var(--muted); margin-top: 14px; }
+.save .btn { padding: 8px 18px; font-size: 13px; background: var(--ink); color: #fff; }
+
+/* rsvps tab */
+.stats { display: grid; gap: 10px; grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.stat { background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; min-width: 0; }
+.stat .k { font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+.stat .v { font: 600 26px/1.1 var(--serif); margin-top: 4px; font-variant-numeric: tabular-nums; }
+.stat .s { font-size: 12px; color: var(--muted); margin-top: 2px; }
+.stat.menu { border-color: #e8d9a6; background: linear-gradient(180deg, #fffdf6, #fff); }
+.stat.menu .v { font-size: 20px; }
+.breakdown { display: flex; flex-wrap: wrap; gap: 4px 10px; margin-top: 6px; font-size: 13px; }
+.breakdown span { font-variant-numeric: tabular-nums; }
+.breakdown b { font-weight: 600; }
+.breakdown button { border: 0; background: var(--warn-bg); color: var(--warn-fg); font-weight: 600; border-radius: 999px; padding: 0 8px; font-size: 12px; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { border: 1px solid var(--line); background: #fff; border-radius: 999px; padding: 4px 11px; font-size: 12px; color: var(--muted); }
+.chip[aria-pressed="true"] { background: var(--ink); color: #fff; border-color: var(--ink); }
+.chip.hl { border-color: var(--accent); }
+.tablewrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 12px; background: #fff; }
+table { border-collapse: collapse; width: 100%; min-width: 760px; font-size: 13px; }
+thead th { text-align: left; font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); font-weight: 600; padding: 10px 14px; background: var(--soft); border-bottom: 1px solid var(--line); white-space: nowrap; }
+tbody td { padding: 10px 14px; border-top: 1px solid var(--line); vertical-align: top; }
+tbody tr.member td { padding-block: 5px; background: #fafaf7; color: var(--muted); font-size: 12px; }
+tbody tr.member td:first-child { padding-left: 32px; font-style: italic; }
+tbody tr.member td:first-child::before { content: "└ "; color: #cfcbbf; font-style: normal; }
+td .sub { font-size: 11px; color: var(--faint); }
+.st { display: inline-block; font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 999px; }
+.st.yes { background: #d9eedd; color: var(--ok-fg); }
+.st.no { background: var(--danger-bg); color: var(--danger); }
+.st.sub { background: var(--soft); color: var(--muted); font-weight: 500; }
+.miss { display: inline-block; font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 999px; background: var(--warn-bg); color: var(--warn-fg); border: 1px solid var(--warn-line); }
+.dim { color: var(--faint); }
+.pills { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.pills + .pills { margin-top: 8px; }
+.pill { border: 0; border-radius: 999px; padding: 5px 12px; font-size: 12px; font-weight: 500; background: var(--soft); color: var(--muted); }
+.pill:hover { background: #efede6; color: #3f3e3a; }
+.pill[aria-pressed="true"] { background: var(--ink); color: #fff; }
+.pill.nom[aria-pressed="true"] { background: #4b5563; }
+.pill.sep { width: 1px; height: 18px; padding: 0; background: var(--line); border-radius: 0; }
+.pills .lab { width: 100%; font-size: 11px; color: var(--faint); }
+.pills .lab.warn { color: var(--warn-fg); font-weight: 600; }
+.editor-row { display: grid; grid-template-columns: 140px 1fr; gap: 10px; align-items: start; padding: 10px 0; border-top: 1px solid var(--line); }
+.editor-row:first-of-type { border-top: 0; }
+.editor-row .who { font-size: 13px; font-weight: 600; padding-top: 5px; }
+.editor-row .who small { display: block; font-weight: 400; color: var(--faint); font-size: 11px; }
+
+/* kitchen */
+.kit { display: grid; gap: 18px; grid-template-columns: 250px minmax(0, 1fr); align-items: start; }
+.dialog { background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 14px; font-size: 13px; }
+.dialog h4 { margin: 0 0 8px; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: var(--faint); }
+.dialog label { display: grid; grid-template-columns: 16px 1fr; gap: 8px; align-items: start; padding: 5px 4px; border-radius: 6px; }
+.dialog label .h { display: block; font-size: 11px; color: var(--faint); }
+.dialog label.was { opacity: .55; text-decoration: line-through; }
+.sheet { background: #fff; border: 1px solid var(--line); padding: 26px; box-shadow: 0 12px 30px -22px rgba(27,27,25,.4); min-width: 0; }
+.sheet h2 { font: 600 20px/1.2 var(--serif); margin: 0; }
+.sheet .meta { font-size: 12px; color: var(--muted); margin: 2px 0 18px; }
+.sheet h3 { font-size: 9px; letter-spacing: .14em; text-transform: uppercase; color: var(--faint); margin: 0 0 6px; font-weight: 600; }
+.rowlab { font-size: 9px; letter-spacing: .14em; text-transform: uppercase; color: var(--faint); margin: 10px 0 4px; }
+.tiles { display: grid; gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: 6px; overflow: hidden; grid-template-columns: repeat(6, minmax(0, 1fr)); }
+.tiles.seven { grid-template-columns: repeat(7, minmax(0, 1fr)); }
+.tile { background: #fff; padding: 8px 10px; min-width: 0; }
+.tile .l { font-size: 9px; color: var(--muted); line-height: 1.2; }
+.tile .n { font: 600 20px/1.2 var(--serif); font-variant-numeric: tabular-nums; }
+.tile.lead .n { color: var(--accent-dark); }
+.tile.warn .n { color: var(--warn-fg); }
+.total { font-size: 10px; color: var(--muted); margin: 8px 0 0; }
+.total b { color: var(--fg); }
+.tblock { margin-top: 22px; padding-top: 14px; border-top: 1px solid var(--line); }
+.tblock h4 { margin: 0; font: 600 15px/1.2 var(--serif); }
+.tblock .tally { font-size: 11px; color: var(--muted); margin: 3px 0 10px; }
+.tblock .tally b { color: var(--fg); font-weight: 600; }
+.seats { display: grid; gap: 2px 14px; grid-template-columns: 1fr 1fr; font-size: 12px; }
+.seats div { display: grid; grid-template-columns: 18px 1fr auto; gap: 6px; }
+.seats .n { color: var(--faint); font-variant-numeric: tabular-nums; }
+.seats .d { color: var(--muted); font-size: 11px; white-space: nowrap; }
+.csv { margin-top: 18px; padding: 12px 14px; background: var(--soft); border-radius: 8px; font: 12px/1.6 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; overflow-x: auto; white-space: nowrap; }
+.csv .hl { background: var(--accent-soft); color: var(--accent-dark); font-weight: 600; padding: 1px 4px; border-radius: 3px; }
+
+.legend { margin-top: 26px; padding: 14px 16px; border: 1px dashed #cfcbbf; border-radius: 12px; font-size: 13px; color: var(--muted); display: grid; gap: 4px; }
+.legend b { color: var(--fg); }
+
+@media (max-width: 720px) {
+  .grid2 { grid-template-columns: 1fr; }
+  .dishes { grid-template-columns: 1fr; }
+  .flags { grid-template-columns: 1fr 1fr; }
+  .stats { grid-template-columns: 1fr 1fr; }
+  .kit { grid-template-columns: 1fr; }
+  .tiles, .tiles.seven { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .seats { grid-template-columns: 1fr; }
+  .editor-row { grid-template-columns: 1fr; }
+  .opt { grid-template-columns: 1fr; }
+  .opt .grip { display: none; }
+  .opt .fields .row { grid-template-columns: 1fr; }
+  .opt .side { justify-items: start; }
+  .pcard-head { flex-direction: column; }
+  .public .title h1 { font-size: 30px; }
+  .sheet { padding: 16px; }
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header class="mock-head">
+    <div class="eyebrow">Mockup · zum Konzept „Menüwahl in der Rückmeldung“</div>
+    <h1>Menüwahl in der Rückmeldung</h1>
+    <p>Vier Bildschirme, wie sie nach dem Umbau aussehen. Das Gästeformular ist klickbar; Einstellungen, Rückmeldungen und Küchenexport zeigen dieselben drei Beispielgerichte. Alle Namen und Zahlen sind erfunden.</p>
+  </header>
+
+  <nav class="views" role="tablist" aria-label="Ansicht">
+    <button role="tab" data-view="formular" aria-selected="true"><span class="k">1</span>Gästeformular</button>
+    <button role="tab" data-view="einstellungen" aria-selected="false"><span class="k">2</span>Admin · Einstellungen</button>
+    <button role="tab" data-view="rueckmeldungen" aria-selected="false"><span class="k">3</span>Admin · Rückmeldungen</button>
+    <button role="tab" data-view="kueche" aria-selected="false"><span class="k">4</span>Küchenexport</button>
+  </nav>
+
+  <!-- ================= 1 · Gästeformular ================= -->
+  <section class="view" id="v-formular">
+    <div class="intro">
+      <h2>Was der Gast sieht</h2>
+      <p>Pro Person, die kommt, eine Karte: oben <b>Hauptgang</b> (genau eins), darunter die <b>Ernährungshinweise</b> wie bisher. Kindermenü und „Isst nicht mit“ gehören jetzt zur Einzelauswahl. Ohne Hauptgang lässt sich nicht senden; die Karte wird gelb, wie heute bei fehlender Zu-/Absage.</p>
+    </div>
+    <div class="scenario">
+      <span>Szenario:</span>
+      <button type="button" data-scenario="neu" aria-pressed="true">Neue Rückmeldung</button>
+      <button type="button" data-scenario="zurueck" aria-pressed="false">Hat vor der Menüwahl schon geantwortet</button>
+    </div>
+    <div class="screen">
+      <div class="screen-bar"><span class="dots"><i></i><i></i><i></i></span><span class="url">lena-und-jonas.de/rsvp</span></div>
+      <div class="screen-body">
+        <div class="public">
+          <div class="title">
+            <h1>Rückmeldung</h1>
+            <p>Wir können es kaum erwarten, mit euch zu feiern! Bitte sagt uns bis zum 15. März 2027 Bescheid, ob ihr dabei sein könnt, das sind nur noch 142 Tage!</p>
+          </div>
+          <div id="form-root"></div>
+        </div>
+      </div>
+    </div>
+    <div class="legend">
+      <div><b>Pflicht:</b> der Senden-Knopf bleibt aus, solange einer Person der Hauptgang fehlt. Die Hinweise sind freiwillig.</div>
+      <div><b>Isst nicht mit</b> graut die Hinweise aus (wie heute). <b>Kindermenü</b> lässt sie an: ein Kind kann eine Allergie haben.</div>
+      <div><b>Beleg:</b> nach dem Senden steht pro Person Name, Gericht und Hinweise, damit ein Verklicken auffällt.</div>
+    </div>
+  </section>
+
+  <!-- ================= 2 · Einstellungen ================= -->
+  <section class="view" id="v-einstellungen" hidden>
+    <div class="intro">
+      <h2>Wo das Brautpaar sein Menü einträgt</h2>
+      <p>Einstellungen → Rückmeldungen, unter Kontakt-E-Mail und Frist. Gespeichert wird in <code>site.json</code> als <code>rsvpMenu</code>; es gibt keine Datenbankänderung. Solange der Schalter aus ist, fragt das Formular nichts.</p>
+    </div>
+    <div class="screen">
+      <div class="screen-bar"><span class="dots"><i></i><i></i><i></i></span><span class="url">/admin/settings</span></div>
+      <div class="screen-body">
+        <div class="admin">
+          <h2>Rückmeldungen</h2>
+          <div class="acard">
+            <div class="afield">
+              <label for="s-mail">Kontakt-E-Mail</label>
+              <input class="in" id="s-mail" value="lena.jonas@beispiel.de">
+              <span class="help">Wird auf der Rückmeldeseite für Gäste mit Problemen angezeigt.</span>
+            </div>
+            <div class="afield">
+              <label for="s-deadline">Rückmeldefrist</label>
+              <input class="in" id="s-deadline" type="date" value="2027-03-15">
+              <span class="help">Die öffentliche Rückmeldeseite zeigt dieses Datum und zählt die verbleibenden Tage herunter.</span>
+            </div>
+          </div>
+
+          <div class="acard">
+            <h3>Menüwahl <span class="new">Neu</span></h3>
+            <p class="sub">Gäste wählen bei der Rückmeldung für jede Person ein Gericht. Kindermenü und „Isst nicht mit“ stehen immer zur Wahl und müssen hier nicht angelegt werden.</p>
+            <div class="switch">
+              <button type="button" class="toggle" id="menu-toggle" role="switch" aria-checked="true" aria-labelledby="menu-toggle-label"></button>
+              <div><strong id="menu-toggle-label">Gäste wählen ihren Hauptgang</strong><div class="help">Ein = die Frage ist im Formular Pflicht. Aus = nichts wird gefragt, gespeicherte Antworten bleiben erhalten.</div></div>
+            </div>
+            <div id="menu-fields">
+              <div class="afield">
+                <label for="s-title">Überschrift im Formular</label>
+                <input class="in" id="s-title" value="Hauptgang">
+              </div>
+              <div class="afield">
+                <label for="s-hint">Hinweis über den Gerichten (optional)</label>
+                <input class="in" id="s-hint" value="Es gibt ein 3-Gänge-Menü. Vorspeise und Dessert sind für alle gleich, den Hauptgang wählt ihr.">
+              </div>
+              <div class="afield">
+                <label>Gerichte <span class="help">(Reihenfolge = Reihenfolge im Formular, im Export und in der Statistik)</span></label>
+                <div class="optlist" id="optlist">
+                  <div class="opt" data-id="rind" data-count="24">
+                    <div class="grip" aria-hidden="true">⋮⋮</div>
+                    <div class="fields">
+                      <div class="row"><input class="in" value="Rinderfilet" aria-label="Name"><input class="in" value="mit Rosmarinkartoffeln und Marktgemüse" aria-label="Beschreibung"></div>
+                      <div class="tags"><label><input type="checkbox" class="cb"> vegetarisch</label><label><input type="checkbox" class="cb"> vegan</label><label><input type="checkbox" class="cb"> glutenfrei</label></div>
+                    </div>
+                    <div class="side"><span class="count">24 Gäste</span><button type="button" class="link" data-del>Löschen</button></div>
+                  </div>
+                  <div class="opt" data-id="lachs" data-count="18">
+                    <div class="grip" aria-hidden="true">⋮⋮</div>
+                    <div class="fields">
+                      <div class="row"><input class="in" value="Lachsfilet" aria-label="Name"><input class="in" value="auf Blattspinat mit Zitronenrisotto" aria-label="Beschreibung"></div>
+                      <div class="tags"><label><input type="checkbox" class="cb"> vegetarisch</label><label><input type="checkbox" class="cb"> vegan</label><label><input type="checkbox" class="cb" checked> glutenfrei</label></div>
+                    </div>
+                    <div class="side"><span class="count">18 Gäste</span><button type="button" class="link" data-del>Löschen</button></div>
+                  </div>
+                  <div class="opt" data-id="risotto" data-count="9">
+                    <div class="grip" aria-hidden="true">⋮⋮</div>
+                    <div class="fields">
+                      <div class="row"><input class="in" value="Pilzrisotto" aria-label="Name"><input class="in" value="mit Parmesan und Trüffelöl" aria-label="Beschreibung"></div>
+                      <div class="tags"><label><input type="checkbox" class="cb" checked> vegetarisch</label><label><input type="checkbox" class="cb"> vegan</label><label><input type="checkbox" class="cb" checked> glutenfrei</label></div>
+                    </div>
+                    <div class="side"><span class="count">9 Gäste</span><button type="button" class="link" data-del>Löschen</button></div>
+                  </div>
+                </div>
+                <button type="button" class="add" id="add-opt" style="margin-top:8px">+ Gericht hinzufügen</button>
+              </div>
+              <p class="consequence">Schaltet ihr die Wahl ein, nachdem schon Rückmeldungen da sind, zeigt der Tab <b>Rückmeldungen</b>, wem sie noch fehlt. Ein Gericht umbenennen ist jederzeit sicher; löschen fragt nach, wenn es schon gewählt wurde.</p>
+            </div>
+            <div class="save"><span id="save-state">Gespeichert · 14:02</span><button type="button" class="btn" id="save-btn">Speichern</button></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="legend">
+      <div><b>Gespeichert wird die ID</b> eines Gerichts (<code>lachs</code>), nie der Name. Umbenennen verliert keine Antwort.</div>
+      <div><b>Löschen mit Antworten:</b> Nachfrage mit Zahl; danach gelten diese Personen als „offen“ und tauchen im Filter <i>Menü fehlt</i> auf.</div>
+    </div>
+  </section>
+
+  <!-- ================= 3 · Rückmeldungen ================= -->
+  <section class="view" id="v-rueckmeldungen" hidden>
+    <div class="intro">
+      <h2>Was das Brautpaar sieht</h2>
+      <p>Eine Statistikkarte <b>Hauptgang</b>, eine Spalte in der Tabelle, ein Filter <b>Menü fehlt</b> für die Nachfass-Liste, und im Gästeeditor zwei Pill-Reihen, um eine telefonische Antwort nachzutragen.</p>
+    </div>
+    <div class="screen">
+      <div class="screen-bar"><span class="dots"><i></i><i></i><i></i></span><span class="url">/admin/rsvps</span></div>
+      <div class="screen-body">
+        <div class="admin">
+          <div class="stats">
+            <div class="stat"><div class="k">Zusagen</div><div class="v">41</div><div class="s">63 Personen</div></div>
+            <div class="stat"><div class="k">Absagen</div><div class="v">6</div><div class="s">9 Personen</div></div>
+            <div class="stat"><div class="k">Keine Antwort</div><div class="v">19</div><div class="s">Haushalte</div></div>
+            <div class="stat menu"><div class="k">Hauptgang <span class="new">Neu</span></div>
+              <div class="breakdown"><span><b>24</b> Rind</span><span><b>18</b> Lachs</span><span><b>9</b> Risotto</span><span><b>4</b> Kinder</span><span><b>1</b> isst nicht</span><span><button type="button" id="stat-open" title="Haushalte anzeigen, in denen jemandem die Wahl fehlt">7 offen</button></span></div>
+              <div class="s">62 Mahlzeiten · 55 davon gewählt</div>
+            </div>
+          </div>
+
+          <div class="chips" id="chips">
+            <button type="button" class="chip" data-filter="all" aria-pressed="true">Alle</button>
+            <button type="button" class="chip" data-filter="attending" aria-pressed="false">✓ Zusage</button>
+            <button type="button" class="chip" data-filter="declined" aria-pressed="false">✗ Absage</button>
+            <button type="button" class="chip" aria-pressed="false">⏳ Keine Antwort</button>
+            <button type="button" class="chip" aria-pressed="false">🧒 Kindermenü</button>
+            <button type="button" class="chip hl" data-filter="missing" aria-pressed="false">🍽 Menü fehlt<span class="new">Neu</span></button>
+            <button type="button" class="chip" aria-pressed="false">📌 Nachfassen</button>
+          </div>
+
+          <div class="tablewrap">
+            <table>
+              <thead><tr><th>Name</th><th>Status</th><th>Gäste</th><th>Hauptgang<span class="new">Neu</span></th><th>Ernährung</th><th>Nachricht</th><th>Datum</th></tr></thead>
+              <tbody id="rsvp-rows"></tbody>
+            </table>
+          </div>
+          <p class="note" id="rsvp-count"></p>
+
+          <div class="acard">
+            <h3>Gästeliste · Haushalt bearbeiten: Thomas Brandt</h3>
+            <p class="sub">Dieselbe Komponente wie heute (<code>DietaryPills</code>), um eine Reihe ergänzt. Oben genau eins, unten beliebig viele. Zum Ausprobieren anklicken.</p>
+            <div id="editor"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="legend">
+      <div><b>Nachfass-Liste:</b> Filter <i>Menü fehlt</i> → <i>CSV exportieren</i>. Das sind die Haushalte mit Zusage, denen die Wahl fehlt.</div>
+      <div><b>Thomas und Sabine Brandt</b> haben im September geantwortet, vor der Menüwahl; deshalb „fehlt“. Nina Hoffmann hat heute geantwortet und musste wählen.</div>
+    </div>
+  </section>
+
+  <!-- ================= 4 · Küche ================= -->
+  <section class="view" id="v-kueche" hidden>
+    <div class="intro">
+      <h2>Was der Caterer bekommt</h2>
+      <p>Der Sitzplan-Export (Drucken/PDF und Tabelle). „Für die Küche“ wird zwei Reihen: <b>Hauptgang</b> und <b>Hinweise</b>. Unter jedem Tisch die Zeile mit den Gerichten zuerst. Die Kachel „Hähnchen“ (die Annahme, dass ein Teller ohne Hinweis das Standardgericht ist) verschwindet, weil die Frage jetzt gestellt wird.</p>
+    </div>
+    <div class="screen">
+      <div class="screen-bar"><span class="dots"><i></i><i></i><i></i></span><span class="url">/admin/seating · Exportieren</span></div>
+      <div class="screen-body">
+        <div class="kit">
+          <div class="dialog">
+            <h4>Zusätzlich anzeigen</h4>
+            <label><input type="checkbox" class="cb" checked> <span>Küchenübersicht<span class="h">Gesamtzahlen der Hochzeit auf Seite eins</span></span></label>
+            <label><input type="checkbox" class="cb"> <span>Gruppe</span></label>
+            <label><input type="checkbox" class="cb"> <span>Seite</span></label>
+            <label><input type="checkbox" class="cb" checked> <span>Freie Plätze</span></label>
+            <label><input type="checkbox" class="cb" checked> <span>Noch ohne Platz</span></label>
+            <label><input type="checkbox" class="cb"> <span>Dienstleister<span class="h">Wer vor Ort ist und wer verpflegt wird</span></span></label>
+            <label><input type="checkbox" class="cb"> <span>Neue Seite pro Tisch</span></label>
+            <label><input type="checkbox" class="cb" checked> <span>Menüwahl<span class="new">aktiv</span><span class="h">Hauptgang je Person und je Tisch</span></span></label>
+            <label class="was"><input type="checkbox" class="cb" disabled> <span>Menüwahl<span class="h">Vorher: Wird nicht erfasst – die Rückmeldung fragt nur Ernährungshinweise ab</span></span></label>
+            <h4 style="margin-top:12px">Format</h4>
+            <label><input type="radio" name="fmt" checked> <span>Drucken / PDF</span></label>
+            <label><input type="radio" name="fmt"> <span>Tabelle <span class="h">.csv</span></span></label>
+          </div>
+
+          <div class="sheet">
+            <h2>Sitzplan · Lena &amp; Jonas</h2>
+            <p class="meta">Samstag, 12. Juni 2027 · Gut Falkenhof · Stand 24.10.2026</p>
+
+            <h3>Für die Küche</h3>
+            <div class="rowlab">Hauptgang <span class="new">Neu</span></div>
+            <div class="tiles">
+              <div class="tile lead"><div class="l">Mahlzeiten</div><div class="n">62</div></div>
+              <div class="tile"><div class="l">Rinderfilet</div><div class="n">24</div></div>
+              <div class="tile"><div class="l">Lachsfilet</div><div class="n">18</div></div>
+              <div class="tile"><div class="l">Pilzrisotto</div><div class="n">9</div></div>
+              <div class="tile"><div class="l">Kindermenü</div><div class="n">4</div></div>
+              <div class="tile warn"><div class="l">Ohne Wahl</div><div class="n">7</div></div>
+            </div>
+            <div class="rowlab">Hinweise</div>
+            <div class="tiles seven">
+              <div class="tile"><div class="l">Vegetarisch</div><div class="n">9</div></div>
+              <div class="tile"><div class="l">Vegan</div><div class="n">2</div></div>
+              <div class="tile"><div class="l">Glutenfrei</div><div class="n">3</div></div>
+              <div class="tile"><div class="l">Nussallergie</div><div class="n">1</div></div>
+              <div class="tile"><div class="l">Sonstiges</div><div class="n">2</div></div>
+              <div class="tile"><div class="l">Isst nicht mit</div><div class="n">1</div></div>
+              <div class="tile"><div class="l">Personen</div><div class="n">63</div></div>
+            </div>
+            <p class="total"><b>62 Mahlzeiten insgesamt</b> – 63 Gäste, davon 1 isst nicht mit. 7 ohne Wahl: siehe Filter „Menü fehlt“ in den Rückmeldungen.</p>
+
+            <div class="tblock">
+              <h4>Tisch 3 · Familie Weber &amp; Freunde</h4>
+              <p class="tally"><b>8 besetzt von 8</b> · 4 Rinderfilet · 2 Lachsfilet · 1 Pilzrisotto · 1 Kindermenü · 1 glutenfrei · 1 Nussallergie</p>
+              <div class="seats">
+                <div><span class="n">1</span><span>Julia Weber</span><span class="d">Lachsfilet · glutenfrei</span></div>
+                <div><span class="n">2</span><span>Markus Weber</span><span class="d">Rinderfilet</span></div>
+                <div><span class="n">3</span><span>Emma Weber</span><span class="d">Kindermenü · Nussallergie</span></div>
+                <div><span class="n">4</span><span>Nina Hoffmann</span><span class="d">Pilzrisotto</span></div>
+                <div><span class="n">5</span><span>Peter Keller</span><span class="d">Rinderfilet</span></div>
+                <div><span class="n">6</span><span>Anja Keller</span><span class="d">Rinderfilet</span></div>
+                <div><span class="n">7</span><span>Lukas Keller</span><span class="d">Rinderfilet</span></div>
+                <div><span class="n">8</span><span>Sophie Lang</span><span class="d">Lachsfilet</span></div>
+              </div>
+            </div>
+
+            <div class="csv">Tisch;Platz;Name;Rückmeldung;<span class="hl">Hauptgang</span>;Vegetarisch;Vegan;Glutenfrei;Nussallergie;Sonstiges;Kindermenü;Isst nicht mit;Notiz<br>Tisch 3;1;Julia Weber;Zusage;<span class="hl">Lachsfilet</span>;;;ja;;;;;<br>Tisch 3;3;Emma Weber;Zusage;<span class="hl">Kindermenü</span>;;;;ja;;ja;;<br>Tisch 5;2;Sabine Brandt;Zusage;<span class="hl">(offen)</span>;ja;;;;;;;</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="legend">
+      <div><b>Tabelle:</b> eine Spalte <i>Hauptgang</i> mit dem Namen des Gerichts; eine Pivot-Tabelle darüber ist die Bestellung beim Caterer. Kindermenü und Isst nicht mit bleiben eigene ja/leer-Spalten.</div>
+      <div><b>Menüwahl aus:</b> alles bleibt, wie es heute ist, inklusive „Hähnchen“ als Fallback-Kachel.</div>
+    </div>
+  </section>
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  /* ---------- shared data ---------- */
+  var MENU = [
+    { id: 'rind',    label: 'Rinderfilet', desc: 'mit Rosmarinkartoffeln und Marktgemüse', tags: [] },
+    { id: 'lachs',   label: 'Lachsfilet',  desc: 'auf Blattspinat mit Zitronenrisotto',   tags: ['glutenfrei'] },
+    { id: 'risotto', label: 'Pilzrisotto', desc: 'mit Parmesan und Trüffelöl',            tags: ['vegetarisch', 'glutenfrei'] }
+  ];
+  var FLAGS = [
+    { key: 'veg', label: 'Vegetarisch' },
+    { key: 'vgn', label: 'Vegan' },
+    { key: 'gf',  label: 'Glutenfrei' },
+    { key: 'nut', label: 'Nussallergie' },
+    { key: 'oth', label: 'Sonstiges' }
+  ];
+  function mealLabel(meal) {
+    if (meal === 'KID') return 'Kindermenü';
+    if (meal === 'NOM') return 'Isst nicht mit';
+    for (var i = 0; i < MENU.length; i++) if (MENU[i].id === meal) return MENU[i].label;
+    return null;
+  }
+  function flagLabels(p) {
+    var out = [];
+    FLAGS.forEach(function (f) {
+      if (!p.flags[f.key]) return;
+      out.push(f.key === 'oth' && p.othText ? p.othText : f.label);
+    });
+    return out;
+  }
+  function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+
+  /* ---------- view tabs ---------- */
+  var tabs = document.querySelectorAll('.views [role="tab"]');
+  function showView(name) {
+    var found = false;
+    tabs.forEach(function (t) { if (t.dataset.view === name) found = true; });
+    if (!found) name = 'formular';
+    tabs.forEach(function (t) { t.setAttribute('aria-selected', String(t.dataset.view === name)); });
+    document.querySelectorAll('.view').forEach(function (v) { v.hidden = v.id !== 'v-' + name; });
+  }
+  tabs.forEach(function (t) { t.addEventListener('click', function () { showView(t.dataset.view); }); });
+  showView((location.hash || '').replace('#', '') || 'formular');
+
+  /* ---------- 1 · form ---------- */
+  var root = document.getElementById('form-root');
+  var state;
+  function freshState(scenario) {
+    var ret = scenario === 'zurueck';
+    return {
+      scenario: scenario,
+      submitted: false,
+      email: 'julia.weber@beispiel.de',
+      phone: '0171 2345678',
+      attendingAll: 'yes',
+      message: ret ? 'Wir freuen uns riesig!' : '',
+      persons: [
+        { name: 'Julia Weber',  primary: true,  attendance: 'yes', meal: null, flags: { gf: ret }, othText: '' },
+        { name: 'Markus Weber', primary: false, attendance: ret ? 'yes' : null, meal: null, flags: {}, othText: '' },
+        { name: 'Emma Weber',   primary: false, attendance: ret ? 'yes' : null, meal: ret ? 'KID' : null, flags: { nut: ret }, othText: '' }
+      ]
+    };
+  }
+  function missingList() {
+    if (state.attendingAll !== 'yes') return [];
+    return state.persons.filter(function (p) { return p.attendance === 'yes' && !p.meal; });
+  }
+  function unansweredList() {
+    if (state.attendingAll !== 'yes') return [];
+    return state.persons.filter(function (p) { return p.attendance === null; });
+  }
+  function renderPerson(p, i) {
+    var cls = 'pcard';
+    if (p.attendance === 'no') cls += ' no';
+    else if (p.attendance === null) cls += ' open';
+    else if (!p.meal) cls += ' missing';
+    var h = '<div class="' + cls + '" data-i="' + i + '"><div class="pcard-head"><div class="name">' + esc(p.name) + '</div>';
+    if (p.primary) h += '<span class="pill-ok">Kommt</span>';
+    else h += '<div class="att"><label><input type="checkbox" class="cb" data-att="yes" ' + (p.attendance === 'yes' ? 'checked' : '') + '> Kommt</label><label><input type="checkbox" class="cb" data-att="no" ' + (p.attendance === 'no' ? 'checked' : '') + '> Kommt nicht</label></div>';
+    h += '</div>';
+    if (p.attendance === 'yes') {
+      h += '<div class="block"><div class="block-title">Hauptgang<span class="new">Neu</span></div><div class="dishes" role="radiogroup" aria-label="Hauptgang für ' + esc(p.name) + '">';
+      MENU.forEach(function (m) {
+        h += '<label class="dish' + (p.meal === m.id ? ' on' : '') + '"><input type="radio" name="meal-' + i + '" value="' + m.id + '" ' + (p.meal === m.id ? 'checked' : '') + '><span class="d-name">' + esc(m.label) + '</span><span class="d-desc">' + esc(m.desc) + '</span>' + (m.tags.length ? '<span class="d-tags">' + m.tags.map(function (t) { return '<span class="tag">' + (t === 'vegetarisch' ? '🌱 ' : t === 'glutenfrei' ? '🌾 ' : '') + t + '</span>'; }).join('') + '</span>' : '') + '</label>';
+      });
+      h += '</div><div class="dishes-alt"><label><input type="radio" name="meal-' + i + '" value="KID" ' + (p.meal === 'KID' ? 'checked' : '') + '> Kindermenü</label><label><input type="radio" name="meal-' + i + '" value="NOM" ' + (p.meal === 'NOM' ? 'checked' : '') + '> Isst nicht mit</label></div>';
+      if (p.meal === 'KID') h += '<p class="note">Ein eigener Teller für Kinder. Hinweise (zum Beispiel eine Allergie) bitte trotzdem ankreuzen.</p>';
+      if (p.meal === 'NOM') h += '<p class="note">Die Person bekommt trotzdem einen Platz – wir bestellen nur kein Essen für sie. Gedacht für ein Baby, dessen Nahrung ihr mitbringt.</p>';
+      if (!p.meal) h += '<p class="note warn">Bitte wählt ein Gericht.</p>';
+      h += '</div>';
+      var off = p.meal === 'NOM';
+      h += '<div class="block"><div class="block-title">Ernährungshinweise</div><div class="flags">';
+      FLAGS.forEach(function (f) {
+        h += '<label class="' + (off ? 'off' : '') + '"><input type="checkbox" class="cb" data-flag="' + f.key + '" ' + (p.flags[f.key] ? 'checked' : '') + (off ? ' disabled' : '') + '> ' + f.label + '</label>';
+      });
+      if (p.flags.oth && !off) h += '<input class="in" data-oth placeholder="Bitte beschreibt die Ernährungsbesonderheit" value="' + esc(p.othText) + '">';
+      h += '</div></div>';
+    }
+    return h + '</div>';
+  }
+  function renderForm() {
+    if (state.submitted) return renderReceipt();
+    var ret = state.scenario === 'zurueck';
+    var missing = missingList(), unanswered = unansweredList();
+    var h = '<form class="card-form" id="rsvp-form" novalidate>';
+    h += '<div class="banner ' + (ret ? 'blue' : 'green') + '"><svg class="ico" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg><div><strong>Willkommen' + (ret ? ' zurück' : '') + ', Julia Weber &amp; Gruppe!</strong>';
+    h += ret
+      ? '<p>Ihr könnt eure Rückmeldung unten ändern.</p><p><b>Neu seit eurer Rückmeldung:</b> Bitte wählt für jede Person ein Gericht.<span class="new">Neu</span></p>'
+      : '<p>Bitte füllt eure Rückmeldung unten aus.</p><p><b>Bitte gebt für alle Personen an, ob sie kommen oder nicht, und wählt für jede ein Gericht.</b></p>';
+    h += '</div></div>';
+    h += '<div class="grid2"><div class="field full"><label for="f-email">E-Mail *</label><input class="in" id="f-email" type="email" value="' + esc(state.email) + '"></div>';
+    h += '<div class="field"><label for="f-phone">Telefon *</label><input class="in" id="f-phone" type="tel" value="' + esc(state.phone) + '"></div>';
+    h += '<div class="field"><label for="f-att">Kommt ihr zur Feier? *</label><select class="sel" id="f-att"><option value="yes"' + (state.attendingAll === 'yes' ? ' selected' : '') + '>Wir kommen sehr gern</option><option value="no"' + (state.attendingAll === 'no' ? ' selected' : '') + '>Leider können wir nicht kommen</option></select></div></div>';
+    if (state.attendingAll === 'yes') {
+      h += '<div><p class="group-title">Eure Gruppe</p><p class="group-hint">Es gibt ein 3-Gänge-Menü. Vorspeise und Dessert sind für alle gleich, den Hauptgang wählt ihr.</p><div class="cards">';
+      state.persons.forEach(function (p, i) { h += renderPerson(p, i); });
+      h += '</div></div>';
+    }
+    h += '<div class="field"><label for="f-msg">Nachricht an Lena &amp; Jonas ♥</label><textarea class="ta" id="f-msg">' + esc(state.message) + '</textarea></div>';
+    if (unanswered.length) h += '<p class="hintbar">' + (unanswered.length === 1 ? 'Für 1 Person fehlt noch die Angabe, ob sie kommt oder nicht.' : 'Für ' + unanswered.length + ' Personen fehlt noch die Angabe, ob sie kommen oder nicht.') + '</p>';
+    if (missing.length) h += '<p class="hintbar">' + (missing.length === 1 ? 'Für 1 Person fehlt noch die Wahl des Hauptgangs.' : 'Für ' + missing.length + ' Personen fehlt noch die Wahl des Hauptgangs.') + '</p>';
+    var blocked = unanswered.length + missing.length > 0;
+    h += '<div class="actions"><button type="button" class="btn ghost">Zurück</button><button type="submit" class="btn gold" ' + (blocked ? 'disabled' : '') + '>' + (ret ? 'Rückmeldung aktualisieren' : 'Rückmeldung senden') + '</button></div>';
+    return h + '</form>';
+  }
+  function renderReceipt() {
+    var ret = state.scenario === 'zurueck';
+    var yes = state.attendingAll === 'yes' ? state.persons.filter(function (p) { return p.attendance === 'yes'; }) : [];
+    var h = '<div class="receipt"><div class="check" aria-hidden="true"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg></div>';
+    h += '<h3>Rückmeldung ' + (ret ? 'aktualisiert' : 'erhalten') + '!</h3><p>Danke, dass ihr uns Bescheid gegeben habt. Wir haben dem glücklichen Brautpaar eine Bestätigung geschickt ♥</p>';
+    h += '<div class="slip"><div class="slip-head"><span class="k">Eure Rückmeldung</span>' + (yes.length ? '<span class="v">' + yes.length + ' ' + (yes.length === 1 ? 'Person' : 'Personen') + '</span>' : '') + '</div>';
+    if (yes.length) {
+      h += '<ul>';
+      yes.forEach(function (p) {
+        var meta = [mealLabel(p.meal)].concat(p.meal === 'NOM' ? [] : flagLabels(p)).filter(Boolean).join(' · ');
+        h += '<li><span class="tick">✓</span><span>' + esc(p.name) + '<br><span class="meta">' + esc(meta) + '<span class="new">Neu</span></span></span></li>';
+      });
+      h += '</ul><p class="foot">' + yes.length + ' ' + (yes.length === 1 ? 'Gast freut' : 'Gäste freuen') + ' sich auf die Feier ♥</p>';
+    } else {
+      h += '<p style="margin:0;font-size:14px;color:var(--muted)">Wir werden euch sehr vermissen, aber danke, dass ihr uns Bescheid gegeben habt. ♥</p>';
+    }
+    h += '</div><div style="margin-top:18px"><button type="button" class="btn ghost sm" data-edit>Änderungen vornehmen</button></div></div>';
+    return h;
+  }
+  function paint() { root.innerHTML = renderForm(); }
+
+  root.addEventListener('change', function (e) {
+    var t = e.target;
+    if (t.id === 'f-att') { state.attendingAll = t.value; paint(); return; }
+    if (t.id === 'f-email') { state.email = t.value; return; }
+    if (t.id === 'f-phone') { state.phone = t.value; return; }
+    var card = t.closest('.pcard'); if (!card) return;
+    var p = state.persons[Number(card.dataset.i)];
+    if (t.dataset.att) {
+      var want = t.dataset.att;
+      p.attendance = p.attendance === want ? null : want;
+      paint(); return;
+    }
+    if (t.type === 'radio') {
+      p.meal = t.value;
+      if (t.value === 'NOM') { p.flags = {}; p.othText = ''; }
+      paint(); return;
+    }
+    if (t.dataset.flag) {
+      p.flags[t.dataset.flag] = t.checked;
+      if (t.dataset.flag === 'oth' && !t.checked) p.othText = '';
+      paint(); return;
+    }
+  });
+  root.addEventListener('input', function (e) {
+    var t = e.target;
+    if (t.id === 'f-msg') { state.message = t.value; return; }
+    if (t.hasAttribute('data-oth')) { var card = t.closest('.pcard'); state.persons[Number(card.dataset.i)].othText = t.value; }
+  });
+  root.addEventListener('submit', function (e) {
+    e.preventDefault();
+    if (missingList().length || unansweredList().length) return;
+    state.submitted = true; paint();
+    root.scrollIntoView({ block: 'start', behavior: 'smooth' });
+  });
+  root.addEventListener('click', function (e) {
+    if (e.target.hasAttribute('data-edit')) { state.submitted = false; paint(); }
+  });
+  document.querySelectorAll('[data-scenario]').forEach(function (b) {
+    b.addEventListener('click', function () {
+      document.querySelectorAll('[data-scenario]').forEach(function (x) { x.setAttribute('aria-pressed', String(x === b)); });
+      state = freshState(b.dataset.scenario); paint();
+    });
+  });
+  state = freshState('neu'); paint();
+
+  /* ---------- 2 · settings ---------- */
+  var toggle = document.getElementById('menu-toggle');
+  var optlist = document.getElementById('optlist');
+  toggle.addEventListener('click', function () {
+    var on = toggle.getAttribute('aria-checked') !== 'true';
+    toggle.setAttribute('aria-checked', String(on));
+    document.getElementById('menu-fields').classList.toggle('off', !on);
+    optlist.classList.toggle('off', !on);
+    document.getElementById('s-title').disabled = !on;
+    document.getElementById('s-hint').disabled = !on;
+  });
+  optlist.addEventListener('click', function (e) {
+    var opt = e.target.closest('.opt'); if (!opt) return;
+    if (e.target.hasAttribute('data-del')) {
+      var n = Number(opt.dataset.count || 0);
+      if (!n) { opt.remove(); return; }
+      if (opt.querySelector('.confirm')) return;
+      var c = document.createElement('div');
+      c.className = 'confirm';
+      c.innerHTML = '<span><b>' + n + ' Gäste</b> haben dieses Gericht gewählt. Nach dem Löschen gelten sie als „offen“ und erscheinen im Filter <i>Menü fehlt</i>.</span><button type="button" class="btn danger" data-confirm>Trotzdem löschen</button><button type="button" class="btn ghost" data-cancel>Abbrechen</button>';
+      opt.appendChild(c);
+      return;
+    }
+    if (e.target.hasAttribute('data-confirm')) { opt.remove(); return; }
+    if (e.target.hasAttribute('data-cancel')) { opt.querySelector('.confirm').remove(); return; }
+  });
+  document.getElementById('add-opt').addEventListener('click', function () {
+    var d = document.createElement('div');
+    d.className = 'opt'; d.dataset.count = '0';
+    d.innerHTML = '<div class="grip" aria-hidden="true">⋮⋮</div><div class="fields"><div class="row"><input class="in" placeholder="Name des Gerichts" aria-label="Name"><input class="in" placeholder="Kurze Beschreibung" aria-label="Beschreibung"></div><div class="tags"><label><input type="checkbox" class="cb"> vegetarisch</label><label><input type="checkbox" class="cb"> vegan</label><label><input type="checkbox" class="cb"> glutenfrei</label></div></div><div class="side"><span class="count zero">noch nicht gewählt</span><button type="button" class="link" data-del>Löschen</button></div>';
+    optlist.appendChild(d);
+    d.querySelector('input').focus();
+  });
+  document.getElementById('save-btn').addEventListener('click', function () {
+    var now = new Date();
+    document.getElementById('save-state').textContent = 'Gespeichert · ' + String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
+  });
+
+  /* ---------- 3 · rsvps table ---------- */
+  var HOUSEHOLDS = [
+    { name: 'Nina Hoffmann', email: 'nina.h@beispiel.de', attending: true, guests: 1, date: '24.10.2026', msg: 'Freue mich sehr auf euch!', people: [ { name: 'Nina Hoffmann', meal: 'risotto', flags: ['Vegan'] } ] },
+    { name: 'Julia Weber', email: 'julia.weber@beispiel.de', attending: true, guests: 3, date: '22.10.2026', msg: 'Wir kommen zu dritt, Emma ist dann 6.', people: [ { name: 'Julia Weber', meal: 'lachs', flags: ['Glutenfrei'] }, { name: 'Markus Weber', meal: 'rind', flags: [] }, { name: 'Emma Weber', meal: 'KID', flags: ['Nussallergie'] } ] },
+    { name: 'Peter Keller', email: 'keller.familie@beispiel.de', attending: true, guests: 4, date: '03.10.2026', msg: '', people: [ { name: 'Peter Keller', meal: 'rind', flags: [] }, { name: 'Anja Keller', meal: 'rind', flags: [] }, { name: 'Lukas Keller', meal: 'rind', flags: [] }, { name: 'Mia Keller', meal: 'NOM', flags: [] } ] },
+    { name: 'Thomas Brandt', email: 'brandt@beispiel.de', attending: true, guests: 2, date: '12.09.2026', msg: 'Bis dann!', people: [ { name: 'Thomas Brandt', meal: null, flags: [] }, { name: 'Sabine Brandt', meal: null, flags: ['Vegetarisch'] } ] },
+    { name: 'Daniel Roth', email: 'd.roth@beispiel.de', attending: false, guests: 0, date: '28.09.2026', msg: 'Leider sind wir im Urlaub. Wir denken an euch!', people: [] }
+  ];
+  var rows = document.getElementById('rsvp-rows');
+  var countEl = document.getElementById('rsvp-count');
+  var filter = 'all';
+  function mealCell(meal, isMember) {
+    if (meal === null) return '<span class="miss">fehlt</span>';
+    var l = mealLabel(meal);
+    return l ? (isMember ? l : '<b>' + l + '</b>') : '<span class="miss">unbekannt</span>';
+  }
+  function renderRows() {
+    var list = HOUSEHOLDS.filter(function (h) {
+      if (filter === 'attending') return h.attending;
+      if (filter === 'declined') return !h.attending;
+      if (filter === 'missing') return h.attending && h.people.some(function (p) { return p.meal === null; });
+      return true;
+    });
+    var h = '';
+    list.forEach(function (hh) {
+      var first = hh.people[0];
+      h += '<tr><td><b>' + esc(hh.name) + '</b><div class="sub">' + esc(hh.email) + '</div></td>';
+      h += '<td><span class="st ' + (hh.attending ? 'yes' : 'no') + '">' + (hh.attending ? 'Zusage' : 'Absage') + '</span></td>';
+      h += '<td>' + (hh.attending ? hh.guests : '<span class="dim">–</span>') + '</td>';
+      h += '<td>' + (hh.attending && first ? mealCell(first.meal, false) : '<span class="dim">–</span>') + '</td>';
+      h += '<td>' + (first && first.flags.length ? esc(first.flags.join(', ')) : '<span class="dim">–</span>') + '</td>';
+      h += '<td>' + (hh.msg ? esc(hh.msg) : '<span class="dim">–</span>') + '</td><td>' + hh.date + '</td></tr>';
+      hh.people.slice(1).forEach(function (p) {
+        h += '<tr class="member"><td>' + esc(p.name) + '</td><td><span class="st sub">Zusage</span></td><td class="dim">—</td><td>' + mealCell(p.meal, true) + '</td><td>' + (p.flags.length ? esc(p.flags.join(', ')) : '<span class="dim">–</span>') + '</td><td class="dim">—</td><td class="dim">—</td></tr>';
+      });
+    });
+    rows.innerHTML = h;
+    countEl.textContent = filter === 'missing'
+      ? list.length + ' Haushalt(e) mit Zusage, in denen jemandem die Menüwahl fehlt – das ist die Nachfass-Liste (CSV exportieren).'
+      : list.length + ' von ' + HOUSEHOLDS.length + ' Rückmeldungen (Ausschnitt).';
+  }
+  function setFilter(f) {
+    filter = f;
+    document.querySelectorAll('#chips .chip').forEach(function (c) { c.setAttribute('aria-pressed', String(c.dataset.filter === f)); });
+    renderRows();
+  }
+  document.querySelectorAll('#chips .chip[data-filter]').forEach(function (c) { c.addEventListener('click', function () { setFilter(c.dataset.filter); }); });
+  document.getElementById('stat-open').addEventListener('click', function () { setFilter('missing'); document.getElementById('chips').scrollIntoView({ block: 'nearest' }); });
+  renderRows();
+
+  /* ---------- 3 · editor pills ---------- */
+  var ED = [
+    { name: 'Thomas Brandt', role: 'Hauptgast', meal: null, flags: {} },
+    { name: 'Sabine Brandt', role: 'Gruppe', meal: null, flags: { veg: true } }
+  ];
+  var editor = document.getElementById('editor');
+  function renderEditor() {
+    var h = '';
+    ED.forEach(function (p, i) {
+      h += '<div class="editor-row" data-i="' + i + '"><div class="who">' + esc(p.name) + '<small>' + p.role + '</small></div><div>';
+      h += '<div class="pills" role="radiogroup" aria-label="Hauptgang">';
+      MENU.forEach(function (m) { h += '<button type="button" class="pill" data-meal="' + m.id + '" aria-pressed="' + (p.meal === m.id) + '">' + esc(m.label) + '</button>'; });
+      h += '<span class="pill sep" aria-hidden="true"></span><button type="button" class="pill" data-meal="KID" aria-pressed="' + (p.meal === 'KID') + '">Kindermenü</button><button type="button" class="pill nom" data-meal="NOM" aria-pressed="' + (p.meal === 'NOM') + '">Isst nicht mit</button>';
+      h += p.meal ? '' : '<span class="lab warn">Hauptgang fehlt</span>';
+      if (p.meal === 'NOM') h += '<span class="lab">Belegt einen Platz, isst aber nicht mit – wird bei den Essenszahlen nicht mitgezählt.</span>';
+      h += '</div><div class="pills" aria-label="Ernährungshinweise">';
+      FLAGS.forEach(function (f) { h += '<button type="button" class="pill" data-flag="' + f.key + '" aria-pressed="' + !!p.flags[f.key] + '" ' + (p.meal === 'NOM' ? 'disabled style="opacity:.4"' : '') + '>' + f.label + '</button>'; });
+      h += '</div></div></div>';
+    });
+    editor.innerHTML = h;
+  }
+  editor.addEventListener('click', function (e) {
+    var b = e.target.closest('button'); if (!b) return;
+    var p = ED[Number(b.closest('.editor-row').dataset.i)];
+    if (b.dataset.meal) { p.meal = p.meal === b.dataset.meal ? null : b.dataset.meal; if (p.meal === 'NOM') p.flags = {}; }
+    else if (b.dataset.flag) { p.flags[b.dataset.flag] = !p.flags[b.dataset.flag]; }
+    renderEditor();
+  });
+  renderEditor();
+})();
+</script>
+</body>
+</html>

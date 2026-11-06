@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import pool from '@/lib/db';
 import { getSiteConfig } from '@/lib/config';
+import { menuOf } from '@/lib/dietary';
 import { partyAttendees } from '@/lib/seating';
 import { cleanName, cleanNameSql } from '@/lib/names';
 import { dietCodes, dietNote, type DietaryEntry, type ExportPerson, type ExportTable, type ExportVendor, type SeatingExportData } from '@/lib/seatingExport';
@@ -37,6 +38,7 @@ function personFrom(
         rsvp_status: rsvpStatus,
         diet: dietCodes(entry),
         note: dietNote(entry),
+        meal: typeof entry?.meal === 'string' ? entry.meal : null,
     };
 }
 
@@ -73,6 +75,7 @@ async function loadVendors(client: import('pg').PoolClient): Promise<ExportVendo
             needs_meal: row.needs_meal !== false,
             diet: dietCodes(entry),
             note: dietNote(entry),
+            meal: typeof entry?.meal === 'string' ? entry.meal : null,
         };
     });
 }
@@ -88,6 +91,8 @@ export async function GET() {
             title: [config.brideName, config.groomName].filter(Boolean).join(' & ') || 'Seating chart',
             date: config.weddingDate || null,
             venue: config.weddingVenue || config.weddingLocation || null,
+            // The dishes, so the sheet can name and count them. Off: nothing is said about plates.
+            menu: menuOf(config),
         };
 
         const vendors = await loadVendors(client);

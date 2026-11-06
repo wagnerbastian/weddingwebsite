@@ -1,11 +1,13 @@
 'use client';
 
 import {
-    ALL_DIET_CODES, DIET_DISPLAY_CODES, DIET_LABELS, NO_RESTRICTION_LABEL, alphabetical, freeSeats, grandTotal,
+    ALL_DIET_CODES, DIET_CODES, DIET_DISPLAY_CODES, DIET_LABELS, NO_RESTRICTION_LABEL, OPEN_MEAL_LABEL,
+    alphabetical, freeSeats, grandTotal, mealLabelFor, mealTally, mealTallyChips, mealTallyParts, mealsOn,
     seatedPeople, sortedVendors, tableTypeLabel, tally, tallyChips, tallyParts, vendorMeals,
     type DietCode, type ExportOptions, type ExportPerson, type ExportTable, type ExportVendor,
-    type SeatingExportData,
+    type RsvpMenu, type SeatingExportData,
 } from '@/lib/seatingExport';
+import { isMealCode, menuTitle } from '@/lib/dietary';
 import { sideLabel } from '@/lib/seating';
 
 /**
@@ -54,34 +56,49 @@ function Diet({ diet }: { diet: DietCode[] }) {
     );
 }
 
-function TallyLine({ people, seatCount, compact = false, lead }: {
-    people: { diet: DietCode[] }[];
+/** The plate, as the roster prints it: the dish, or that it is still to be chosen. */
+function Meal({ person, menu }: { person: { meal: string | null; diet: DietCode[] }; menu: RsvpMenu }) {
+    const label = mealLabelFor(person, menu);
+    return label
+        ? <span className="text-gray-800">{label}</span>
+        : <span className="text-[10px] uppercase tracking-wide text-amber-700">offen</span>;
+}
+
+function TallyLine({ people, seatCount, compact = false, lead, menu = null }: {
+    people: { diet: DietCode[]; meal: string | null }[];
     seatCount?: number | null;
     compact?: boolean;
     /** What the leading number counts. "seated" unless told otherwise. */
     lead?: string;
+    /** The dishes, when the line is to count plates as well as restrictions. */
+    menu?: RsvpMenu | null;
 }) {
     const t = tally(people);
+    const m = menu ? mealTally(people, menu) : null;
 
     // Counts only: the codes are drawn as the very chips the legend defines, so
     // the green box beside "3" and the green box in the legend are visibly the
-    // same mark. Spelled in plain grey text they were not.
+    // same mark. Spelled in plain grey text they were not. A dish has no code,
+    // so it is its name.
     if (compact) {
+        const chips = menu && m ? mealTallyChips(t, m, menu) : tallyChips(t);
         return (
             <p className="mt-1 px-2 py-1 bg-gray-50 rounded text-[11px] text-gray-700 flex flex-wrap items-center gap-x-2.5 gap-y-1 tabular-nums">
-                {tallyChips(t).map(({ code, count }) => (
-                    <span key={code ?? 'none'} className="inline-flex items-center gap-1">
-                        <span className={code ? 'font-semibold text-gray-900' : 'text-gray-400'}>{count}</span>
+                {chips.map(({ code, count, label }) => (
+                    <span key={code ?? label ?? 'none'} className="inline-flex items-center gap-1">
+                        <span className={code || (label && label !== OPEN_MEAL_LABEL) ? 'font-semibold text-gray-900' : 'text-gray-400'}>{count}</span>
                         {code
                             ? <Chip code={code} />
-                            : <span className="text-gray-400">{NO_RESTRICTION_LABEL}</span>}
+                            : <span className={label && label !== OPEN_MEAL_LABEL ? 'text-gray-700' : 'text-gray-400'}>{label ?? NO_RESTRICTION_LABEL}</span>}
                     </span>
                 ))}
             </p>
         );
     }
 
-    const parts = tallyParts(t, seatCount ?? null, lead);
+    const parts = menu && m
+        ? mealTallyParts(t, m, menu, seatCount ?? null, lead)
+        : tallyParts(t, seatCount ?? null, lead);
     return (
         <p className="mt-1.5 px-3 py-1.5 gap-x-4 bg-gray-50 rounded text-[11px] text-gray-700 flex flex-wrap gap-y-0.5 tabular-nums">
             {parts.map((part, i) => {
@@ -98,10 +115,12 @@ function TallyLine({ people, seatCount, compact = false, lead }: {
     );
 }
 
-function Roster({ people, options, withSeat }: {
+function Roster({ people, options, withSeat, menu = null }: {
     people: ExportPerson[];
     options: ExportOptions;
     withSeat: boolean;
+    /** A column for the dish, when there is a menu to name one from. */
+    menu?: RsvpMenu | null;
 }) {
     return (
         <table className="w-full mt-2 text-[11.5px] border-collapse">
@@ -112,6 +131,7 @@ function Roster({ people, options, withSeat }: {
                     {!withSeat && <th className="text-left font-semibold pb-1 pr-2">Tisch</th>}
                     {options.household && <th className="text-left font-semibold pb-1 pr-2">Gruppe</th>}
                     {options.side && <th className="text-left font-semibold pb-1 pr-2">Seite</th>}
+                    {menu && <th className="text-left font-semibold pb-1 pr-2">{menuTitle(menu)}</th>}
                     <th className="text-right font-semibold pb-1">Ernährung</th>
                 </tr>
             </thead>
@@ -134,7 +154,12 @@ function Roster({ people, options, withSeat }: {
                         )}
                         {options.household && <td className="py-1 pr-2 text-gray-500">{person.household}</td>}
                         {options.side && <td className="py-1 pr-2 text-gray-500">{person.side ? sideLabel(person.side) : '—'}</td>}
-                        <td className="py-1 text-right whitespace-nowrap"><Diet diet={person.diet} /></td>
+                        {/* With the plate in its own column, the two plate codes are
+                            said there in words and are not chips as well. */}
+                        {menu && <td className="py-1 pr-2 whitespace-nowrap"><Meal person={person} menu={menu} /></td>}
+                        <td className="py-1 text-right whitespace-nowrap">
+                            <Diet diet={menu ? person.diet.filter(code => !isMealCode(code)) : person.diet} />
+                        </td>
                     </tr>
                 ))}
             </tbody>
@@ -142,11 +167,12 @@ function Roster({ people, options, withSeat }: {
     );
 }
 
-function TableBlock({ table, options, compact = false }: {
+function TableBlock({ table, options, compact = false, menu = null }: {
     table: ExportTable;
     options: ExportOptions;
     /** The two-column counts sheet, where every line has to earn its width. */
     compact?: boolean;
+    menu?: RsvpMenu | null;
 }) {
     const free = freeSeats(table);
     // Counts only is a heading and one line of numbers, so it does not need the
@@ -162,10 +188,10 @@ function TableBlock({ table, options, compact = false }: {
                 </span>
             </div>
             {options.detail !== 'names' && (
-                <TallyLine people={table.people} seatCount={table.seat_count} compact={compact} />
+                <TallyLine people={table.people} seatCount={table.seat_count} compact={compact} menu={menu} />
             )}
             {options.detail !== 'counts' && table.people.length > 0 && (
-                <Roster people={table.people} options={options} withSeat />
+                <Roster people={table.people} options={options} withSeat menu={menu} />
             )}
             {table.people.length === 0 && <p className="mt-2 text-[11px] italic text-gray-400">Hier sitzt noch niemand.</p>}
             {options.empty && free > 0 && (
@@ -175,17 +201,58 @@ function TableBlock({ table, options, compact = false }: {
     );
 }
 
-function Tile({ label, value, lead = false }: { label: string; value: number; lead?: boolean }) {
+function Tile({ label, value, lead = false, warn = false }: { label: string; value: number; lead?: boolean; warn?: boolean }) {
     return (
         <div className="bg-white px-3 py-2">
             <div className="text-[9px] text-gray-500 leading-tight">{label}</div>
             <div
-                className="font-serif text-xl font-semibold tabular-nums"
+                className={`font-serif text-xl font-semibold tabular-nums ${warn && value > 0 ? 'text-amber-700' : ''}`}
                 style={lead ? { color: 'var(--accent)' } : undefined}
             >
                 {value}
             </div>
         </div>
+    );
+}
+
+/**
+ * The kitchen numbers with a menu on: two rows, the plates and then the
+ * restrictions, because they are two different questions — "how many of each
+ * dish" is the order, "how many of those without nuts" is the note on it.
+ *
+ * Column counts come from the menu, so they are set inline rather than as a
+ * breakpoint class the build would have to know in advance.
+ */
+function MealTiles({ people, menu, lead, notEating }: {
+    people: { meal: string | null; diet: DietCode[] }[];
+    menu: RsvpMenu;
+    /** What the leading tile counts and says. */
+    lead: { label: string; value: number };
+    /** The not-eating tile, when it is not this group's own tally (a vendor's contract). */
+    notEating?: number;
+}) {
+    const t = tally(people);
+    const m = mealTally(people, menu);
+    const GRID = 'grid gap-px bg-gray-200 border border-gray-200 rounded overflow-hidden';
+    const ROW_LABEL = 'text-[8px] uppercase tracking-widest text-gray-400 mb-1';
+    const columns = (n: number) => ({ gridTemplateColumns: `repeat(${n}, minmax(0, 1fr))` });
+    return (
+        <>
+            <p className={ROW_LABEL}>{menuTitle(menu)}</p>
+            <div className={GRID} style={columns(3 + menu.options.length)}>
+                <Tile label={lead.label} value={lead.value} lead />
+                {menu.options.map(option => (
+                    <Tile key={option.id} label={option.label} value={m.dishes[option.id] ?? 0} />
+                ))}
+                <Tile label={DIET_LABELS.KID} value={m.KID} />
+                <Tile label={OPEN_MEAL_LABEL} value={m.open} warn />
+            </div>
+            <p className={`${ROW_LABEL} mt-2`}>Hinweise</p>
+            <div className={GRID} style={columns(DIET_CODES.length + 1)}>
+                {DIET_CODES.map(code => <Tile key={code} label={DIET_LABELS[code]} value={t[code]} />)}
+                <Tile label={DIET_LABELS.NOM} value={notEating ?? t.NOM} />
+            </div>
+        </>
     );
 }
 
@@ -197,10 +264,12 @@ function Tile({ label, value, lead = false }: { label: string; value: number; le
  * silently would hand a caterer a number that is wrong for both. The grand total
  * sits underneath so that nobody has to add the two tiles up by hand either.
  */
-function Kitchen({ people, vendors, showVendors }: {
+function Kitchen({ people, vendors, showVendors, menu = null }: {
     people: ExportPerson[];
     vendors: ExportVendor[];
     showVendors: boolean;
+    /** The dishes: two rows of tiles per group instead of one. */
+    menu?: RsvpMenu | null;
 }) {
     const t = tally(people);
     const fed = vendorMeals(vendors);
@@ -219,11 +288,15 @@ function Kitchen({ people, vendors, showVendors }: {
                 heading already carries them — so the gap is explained by the
                 *Not eating* tile and the total line rather than by a tile that
                 would read 0 for every vendor. */}
-            <div className={GRID}>
-                <Tile label="Mahlzeiten" value={t.plates} lead />
-                {ALL_DIET_CODES.map(code => <Tile key={code} label={DIET_LABELS[code]} value={t[code]} />)}
-                <Tile label={NO_RESTRICTION_LABEL} value={t.none} />
-            </div>
+            {menu ? (
+                <MealTiles people={people} menu={menu} lead={{ label: 'Mahlzeiten', value: t.plates }} />
+            ) : (
+                <div className={GRID}>
+                    <Tile label="Mahlzeiten" value={t.plates} lead />
+                    {ALL_DIET_CODES.map(code => <Tile key={code} label={DIET_LABELS[code]} value={t[code]} />)}
+                    <Tile label={NO_RESTRICTION_LABEL} value={t.none} />
+                </div>
+            )}
             {withVendors && (
                 <>
                     {/* The same columns as the guests above, so the two rows read
@@ -234,17 +307,21 @@ function Kitchen({ people, vendors, showVendors }: {
                         that tile is counted from the vendors rather than from
                         their tally. */}
                     <p className={`${ROW_LABEL} mt-3`}>Dienstleister</p>
-                    <div className={GRID}>
-                        <Tile label="Mahlzeiten" value={fed.length} lead />
-                        {ALL_DIET_CODES.map(code => (
-                            <Tile
-                                key={code}
-                                label={DIET_LABELS[code]}
-                                value={code === 'NOM' ? unfed : vt[code]}
-                            />
-                        ))}
-                        <Tile label={NO_RESTRICTION_LABEL} value={vt.none} />
-                    </div>
+                    {menu ? (
+                        <MealTiles people={fed} menu={menu} lead={{ label: 'Mahlzeiten', value: fed.length }} notEating={unfed} />
+                    ) : (
+                        <div className={GRID}>
+                            <Tile label="Mahlzeiten" value={fed.length} lead />
+                            {ALL_DIET_CODES.map(code => (
+                                <Tile
+                                    key={code}
+                                    label={DIET_LABELS[code]}
+                                    value={code === 'NOM' ? unfed : vt[code]}
+                                />
+                            ))}
+                            <Tile label={NO_RESTRICTION_LABEL} value={vt.none} />
+                        </div>
+                    )}
                     <p className="mt-2 text-[10px] text-gray-500 tabular-nums">
                         <span className="font-semibold text-gray-800">
                             {grandTotal(people, vendors)} Mahlzeiten insgesamt
@@ -281,10 +358,11 @@ function Kitchen({ people, vendors, showVendors }: {
  * listed, greyed, because "the DJ is not eating" is exactly the thing somebody
  * asks at six o'clock.
  */
-function Vendors({ vendors, compact = false }: {
+function Vendors({ vendors, compact = false, menu = null }: {
     vendors: ExportVendor[];
     /** Counts only: the tally, and the names of whoever is *not* being fed. */
     compact?: boolean;
+    menu?: RsvpMenu | null;
 }) {
     const list = sortedVendors(vendors);
     const fed = vendorMeals(list);
@@ -304,7 +382,7 @@ function Vendors({ vendors, compact = false }: {
                         {fed.length}/{list.length} essen mit
                     </span>
                 </div>
-                {fed.length > 0 && <TallyLine people={fed} compact />}
+                {fed.length > 0 && <TallyLine people={fed} compact menu={menu} />}
                 {unfed.length > 0 && (
                     <p className="mt-1 text-[10px] text-gray-500">
                         Ohne Mahlzeit: {unfed.map(v => v.name).join(', ')}
@@ -323,7 +401,7 @@ function Vendors({ vendors, compact = false }: {
                     {fed.length}/{list.length} essen mit
                 </span>
             </div>
-            {fed.length > 0 && <TallyLine people={fed} lead="Mahlzeiten" />}
+            {fed.length > 0 && <TallyLine people={fed} lead="Mahlzeiten" menu={menu} />}
             {list.length === 0 ? (
                 <p className="mt-2 text-[11px] italic text-gray-400">Noch keine Dienstleister angelegt.</p>
             ) : (
@@ -333,6 +411,7 @@ function Vendors({ vendors, compact = false }: {
                             <th className="text-left font-semibold pb-1 pr-2">Rolle</th>
                             <th className="text-left font-semibold pb-1 pr-2">Name</th>
                             <th className="text-left font-semibold pb-1 pr-2 w-14">Mahlzeit</th>
+                            {menu && <th className="text-left font-semibold pb-1 pr-2">{menuTitle(menu)}</th>}
                             <th className="text-right font-semibold pb-1">Ernährung</th>
                         </tr>
                     </thead>
@@ -348,6 +427,12 @@ function Vendors({ vendors, compact = false }: {
                                 <td className="py-1 pr-2 text-[10px] uppercase tracking-wide text-gray-500">
                                     {vendor.needs_meal ? 'Ja' : 'Nein'}
                                 </td>
+                                {/* A vendor's dish is optional: none is a dash, never "offen". */}
+                                {menu && (
+                                    <td className="py-1 pr-2 whitespace-nowrap text-gray-800">
+                                        {vendor.needs_meal ? (mealLabelFor(vendor, menu) ?? <span className="text-gray-300">—</span>) : <span className="text-gray-300">—</span>}
+                                    </td>
+                                )}
                                 <td className="py-1 text-right whitespace-nowrap">
                                     {vendor.needs_meal ? <Diet diet={vendor.diet} /> : <span className="text-gray-300">—</span>}
                                 </td>
@@ -409,6 +494,9 @@ export default function SeatingExportSheet({ data, options, preview = false }: {
     preview?: boolean;
 }) {
     const seated = seatedPeople(data);
+    // The dishes, when they are to be shown; null makes every block draw as it
+    // did before there was a menu.
+    const menu = mealsOn(data, options) ? (data.menu ?? null) : null;
     const showNames = options.detail !== 'counts';
     const showTables = options.sections === 'table' || options.sections === 'both';
     const showList = options.sections === 'list' || options.sections === 'both';
@@ -430,7 +518,7 @@ export default function SeatingExportSheet({ data, options, preview = false }: {
                 <>
                     <SheetHeader data={data} subtitle="Sitzplan · nach Tisch" />
                     {options.kitchen && (
-                        <Kitchen people={seated} vendors={data.vendors} showVendors={options.vendors} />
+                        <Kitchen people={seated} vendors={data.vendors} showVendors={options.vendors} menu={menu} />
                     )}
                     {(showNames || twoColumn) && <Legend />}
                     {data.tables.length === 0 && (
@@ -440,7 +528,7 @@ export default function SeatingExportSheet({ data, options, preview = false }: {
                     {data.tables.map((table, i) => (
                         <div key={table.id} className={twoColumn ? 'break-inside-avoid' : undefined}>
                             {preview && options.pageBreak && i > 0 && <PageBreak />}
-                            <TableBlock table={table} options={options} compact={twoColumn} />
+                            <TableBlock table={table} options={options} compact={twoColumn} menu={menu} />
                         </div>
                     ))}
                     {options.unseated && data.unseated.length > 0 && (
@@ -451,8 +539,8 @@ export default function SeatingExportSheet({ data, options, preview = false }: {
                                     {data.unseated.length}
                                 </span>
                             </div>
-                            {options.detail !== 'names' && <TallyLine people={data.unseated} compact={twoColumn} />}
-                            {showNames && <Roster people={data.unseated} options={options} withSeat={false} />}
+                            {options.detail !== 'names' && <TallyLine people={data.unseated} compact={twoColumn} menu={menu} />}
+                            {showNames && <Roster people={data.unseated} options={options} withSeat={false} menu={menu} />}
                         </section>
                     )}
                     </div>
@@ -464,9 +552,9 @@ export default function SeatingExportSheet({ data, options, preview = false }: {
                 <div className={showTables ? 'break-before-page pt-2' : ''}>
                     <SheetHeader data={data} subtitle="Sitzplan · alle Gäste, A–Z" />
                     {options.kitchen && !showTables && (
-                        <Kitchen people={seated} vendors={data.vendors} showVendors={options.vendors} />
+                        <Kitchen people={seated} vendors={data.vendors} showVendors={options.vendors} menu={menu} />
                     )}
-                    {options.detail !== 'names' && <TallyLine people={seated} />}
+                    {options.detail !== 'names' && <TallyLine people={seated} menu={menu} />}
                     {showNames ? (
                         <>
                             <div className="mt-4"><Legend /></div>
@@ -474,6 +562,7 @@ export default function SeatingExportSheet({ data, options, preview = false }: {
                                 people={alphabetical(data, options.unseated)}
                                 options={options}
                                 withSeat={false}
+                                menu={menu}
                             />
                         </>
                     ) : (
@@ -489,13 +578,15 @@ export default function SeatingExportSheet({ data, options, preview = false }: {
                 the block to sit and no reason to print it twice. */}
             {options.vendors && (
                 <div className={(showTables || showList) ? (countsMode ? 'mt-4' : 'mt-8 pt-2') : ''}>
-                    <Vendors vendors={data.vendors} compact={countsMode} />
+                    <Vendors vendors={data.vendors} compact={countsMode} menu={menu} />
                 </div>
             )}
 
             <p className="mt-6 pt-2 border-t border-gray-100 text-[10px] text-gray-400">
-                Ernährungshinweise stammen aus der Rückmeldung. Ein Strich bedeutet: nichts angegeben –
-                diese Mahlzeit ist das Gericht „{NO_RESTRICTION_LABEL}“.
+                {menu
+                    ? <>{menuTitle(menu)} und Ernährungshinweise stammen aus der Rückmeldung. „Offen“ bedeutet: noch kein Gericht gewählt.</>
+                    : <>Ernährungshinweise stammen aus der Rückmeldung. Ein Strich bedeutet: nichts angegeben –
+                        diese Mahlzeit ist das Gericht „{NO_RESTRICTION_LABEL}“.</>}
             </p>
         </div>
     );
